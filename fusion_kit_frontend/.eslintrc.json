@@ -22,6 +22,7 @@
       "@typescript-eslint"
     ],
     "ignorePatterns": [
+      "*.config.cjs",
       "src/generated/graphql.tsx",
       "vite.config.ts"
     ],
