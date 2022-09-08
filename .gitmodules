@@ -1,0 +1,3 @@
+[submodule "stable_diffusion"]
+	path = stable_diffusion
+	url = https://github.com/basujindal/stable-diffusion.git
