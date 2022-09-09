@@ -14,6 +14,7 @@ import {
 import { PaintBrushIcon as SolidPaintBrushIcon } from "@heroicons/react/24/solid";
 import { clsx } from "clsx";
 import Textarea from "react-expanding-textarea";
+import { gql, useMutation } from "@apollo/client";
 
 const navigation = [
   {
@@ -30,8 +31,32 @@ const navigation = [
   },
 ];
 
+interface DreamMutationResult {
+  dream: string,
+}
+
+interface DreamMutationVars {
+  prompt: string,
+}
+
 export const App: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const [dreamMutation, { loading }] = useMutation<DreamMutationResult, DreamMutationVars>(gql`
+    mutation Dream($prompt: String!) {
+      dream(prompt: $prompt)
+    }
+  `);
+
+  const onGenerate = useCallback(async (prompt: string) => {
+    console.info("Started dreaming with prompt", { prompt });
+    const response = await dreamMutation({
+      variables: {
+        prompt,
+      },
+    });
+    console.info("Finished dreaming with prompt", { prompt, response });
+  }, [dreamMutation]);
 
   return (
     <>
@@ -234,7 +259,8 @@ export const App: React.FC = () => {
           </div>
           <div className="flex flex-1 flex-col lg:flex-row h-full overflow-y-scroll">
             <main className="h-full flex-grow p-6">
-              <PromptInput />
+              <PromptInput onGenerate={onGenerate} />
+              {loading ? "Loading" : null}
             </main>
             <aside className="h-full w-auto lg:h-auto lg:w-80 border-l-0 lg:border-l p-6">Gallery</aside>
           </div>
@@ -244,7 +270,13 @@ export const App: React.FC = () => {
   );
 };
 
-const PromptInput: React.FC = () => {
+interface PromptInputProps {
+  onGenerate: (_prompt: string) => void,
+}
+
+const PromptInput: React.FC<PromptInputProps> = (props) => {
+  const { onGenerate } = props;
+
   const promptInputId = useId();
   const formRef = useRef<HTMLFormElement>(null);
   const [prompt, setPrompt] = useState("");
@@ -253,8 +285,8 @@ const PromptInput: React.FC = () => {
     e?.stopPropagation();
     e?.preventDefault();
 
-    console.info("Submitted prompt", { prompt });
-  }, [prompt]);
+    onGenerate(prompt);
+  }, [prompt, onGenerate]);
 
   const onPromptKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = useCallback((e) => {
     if (!e.shiftKey && e.key === "Enter") {
