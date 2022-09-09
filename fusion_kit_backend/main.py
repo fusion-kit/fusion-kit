@@ -26,8 +26,8 @@ def resolve_hello(*_):
 
 mutation = ObjectType("Mutation")
 
-@mutation.field("text_to_image")
-def resolve_text_to_image(*_, prompt):
+@mutation.field("dream")
+def resolve_dream(*_, prompt):
     tasks.txt2img()
     return "Generation complete"
 

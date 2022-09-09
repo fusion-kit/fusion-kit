@@ -3,5 +3,5 @@ type Query {
 }
 
 type Mutation {
-  text_to_image(prompt: String!): String!
+  dream(prompt: String!): String!
 }
