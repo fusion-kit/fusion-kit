@@ -1,21 +1,19 @@
 import sys
 sys.path.append('./stable_diffusion')
 
+import os
 from ariadne import gql, ObjectType, make_executable_schema
 from ariadne.asgi import GraphQL
 from starlette.applications import Starlette
 import uvicorn
 import tasks
 
-type_defs = gql("""
-    type Query {
-        hello: String!
-    }
+project_path = os.path.realpath(os.path.join(os.path.realpath(__file__), "..", ".."))
+graphql_schema_path = os.path.join(project_path, "schema.graphql")
 
-    type Mutation {
-        text_to_image(prompt: String!): String!
-    }
-""")
+# Parse and validate GraphQL schema
+with open(graphql_schema_path) as file:
+    type_defs = gql(file.read())
 
 query = ObjectType("Query")
 
