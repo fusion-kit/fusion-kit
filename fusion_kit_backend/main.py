@@ -5,6 +5,9 @@ import os
 from ariadne import gql, ObjectType, make_executable_schema
 from ariadne.asgi import GraphQL
 from starlette.applications import Starlette
+from starlette.routing import Route
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
 import uvicorn
 import tasks
 
@@ -30,8 +33,15 @@ def resolve_text_to_image(*_, prompt):
 
 schema = make_executable_schema(type_defs, query, mutation)
 
-app = Starlette(debug=True)
-app.mount("/graphql", GraphQL(schema, debug=True))
+routes = [
+    Route("/graphql", GraphQL(schema, debug=True), methods=["GET", "POST"])
+]
+
+middleware = [
+    Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["POST"])
+]
+
+app = Starlette(debug=True, routes=routes, middleware=middleware)
 
 if __name__ == "__main__":
     uvicorn.run(app, host='0.0.0.0', port=2425)
