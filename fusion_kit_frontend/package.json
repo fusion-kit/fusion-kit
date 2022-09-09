@@ -11,9 +11,11 @@
     "fix": "eslint --fix 'src/**/*.{js,jsx,ts,tsx}'"
   },
   "dependencies": {
+    "@apollo/client": "^3.6.9",
     "@headlessui/react": "^1.7.0",
     "@heroicons/react": "^2.0.10",
     "clsx": "^1.2.1",
+    "graphql": "^16.6.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-expanding-textarea": "^2.3.6"
