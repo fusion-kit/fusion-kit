@@ -5,3 +5,7 @@ type Query {
 type Mutation {
   dream(prompt: String!): [String!]!
 }
+
+type Subscription {
+  counter: Int!
+}

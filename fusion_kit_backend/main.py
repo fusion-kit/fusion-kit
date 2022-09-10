@@ -4,10 +4,12 @@ import sys
 sys.path.append('./stable_diffusion')
 
 import os
-from ariadne import gql, ObjectType, make_executable_schema
+import asyncio
+from ariadne import gql, ObjectType, SubscriptionType, make_executable_schema
 from ariadne.asgi import GraphQL
+from ariadne.asgi.handlers import GraphQLTransportWSHandler
 from starlette.applications import Starlette
-from starlette.routing import Route
+from starlette.routing import Route, WebSocketRoute
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 import uvicorn
@@ -40,10 +42,25 @@ def resolve_dream(*_, prompt):
         image_data.append(b64_uri)
     return image_data
 
-schema = make_executable_schema(type_defs, query, mutation)
+subscription = SubscriptionType()
+
+@subscription.source("counter")
+async def counter_generator(obj, info):
+    for i in range(5):
+        await asyncio.sleep(1)
+        yield i
+
+@subscription.field("counter")
+def counter_resolver(count, info):
+    return count + 1
+
+schema = make_executable_schema(type_defs, query, mutation, subscription)
+
+graphql_app = GraphQL(schema, debug=True, websocket_handler=GraphQLTransportWSHandler())
 
 routes = [
-    Route("/graphql", GraphQL(schema, debug=True), methods=["GET", "POST"])
+    Route("/graphql", graphql_app, methods=["GET", "POST"]),
+    WebSocketRoute("/graphql", endpoint=graphql_app),
 ]
 
 middleware = [
