@@ -1,19 +1,52 @@
 import {
-  ApolloClient, HttpLink, InMemoryCache,
+  ApolloClient, HttpLink, InMemoryCache, split,
 } from "@apollo/client";
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { getMainDefinition } from "@apollo/client/utilities";
+import { createClient } from "graphql-ws";
 import { nonEmptyString } from "./utils";
 
 const BACKEND_URL = nonEmptyString(import.meta.env.VITE_BACKEND_URL) ?? window.location.href;
 const GRAPHQL_URL = joinUrlPath(BACKEND_URL, "/graphql");
+// const GRAPHQL_WS_URL = httpUrlToWsUrl(joinUrlPath(BACKEND_URL, "/graphql"));
+const GRAPHQL_WS_URL = httpUrlToWsUrl(joinUrlPath(BACKEND_URL, "/graphql"));
 
 const httpLink = new HttpLink({
   uri: GRAPHQL_URL,
 });
 
+const wsLink = new GraphQLWsLink(createClient({
+  url: GRAPHQL_WS_URL,
+  lazy: true,
+}));
+
+const splitLink = split(
+  ({ query }) => {
+    const definition = getMainDefinition(query);
+    const isSubscriptionOperation = (
+      definition.kind === "OperationDefinition"
+      && definition.operation === "subscription"
+    );
+
+    return isSubscriptionOperation;
+  },
+  wsLink,
+  httpLink,
+);
+
 export const client = new ApolloClient({
-  link: httpLink,
+  link: splitLink,
   cache: new InMemoryCache(),
 });
+
+function httpUrlToWsUrl(url: string): string {
+  const anchor = document.createElement("a");
+  anchor.href = url;
+
+  anchor.protocol = anchor.protocol === "http:" ? "ws:" : "wss:";
+
+  return anchor.href;
+}
 
 function joinUrlPath(url: string, path: string): string {
   const anchor = document.createElement("a");
