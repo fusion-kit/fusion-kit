@@ -28,6 +28,7 @@ dependencies:
     - ariadne==0.16.0
     - starlette==0.20.4
     - uvicorn==0.18.3
+    - websockets==10.3
     - -e git+https://github.com/CompVis/taming-transformers.git@master#egg=taming-transformers
     - -e git+https://github.com/openai/CLIP.git@main#egg=clip
     - -e ./stable_diffusion
