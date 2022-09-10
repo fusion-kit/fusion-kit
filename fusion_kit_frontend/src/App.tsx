@@ -14,8 +14,8 @@ import {
 import { PaintBrushIcon as SolidPaintBrushIcon } from "@heroicons/react/24/solid";
 import { clsx } from "clsx";
 import Textarea from "react-expanding-textarea";
-import { useMutation } from "@apollo/client";
-import { DreamDocument } from "./generated/graphql";
+import { useMutation, useSubscription } from "@apollo/client";
+import { CountDocument, DreamDocument } from "./generated/graphql";
 
 const navigation = [
   {
@@ -36,6 +36,12 @@ export const App: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [dreamMutation, { loading, data }] = useMutation(DreamDocument);
+
+  useSubscription(CountDocument, {
+    onSubscriptionData: (opts) => {
+      console.log("count", opts.subscriptionData.data);
+    },
+  });
 
   const onGenerate = useCallback(async (prompt: string) => {
     console.info("Started dreaming with prompt", { prompt });

@@ -28,6 +28,16 @@ export type Query = {
   hello: Scalars['String'];
 };
 
+export type Subscription = {
+  __typename?: 'Subscription';
+  counter: Scalars['Int'];
+};
+
+export type CountSubscriptionVariables = Exact<{ [key: string]: never; }>;
+
+
+export type CountSubscription = { __typename?: 'Subscription', counter: number };
+
 export type DreamMutationVariables = Exact<{
   prompt: Scalars['String'];
 }>;
@@ -36,4 +46,5 @@ export type DreamMutationVariables = Exact<{
 export type DreamMutation = { __typename?: 'Mutation', dream: Array<string> };
 
 
+export const CountDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"subscription","name":{"kind":"Name","value":"Count"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"counter"}}]}}]} as unknown as DocumentNode<CountSubscription, CountSubscriptionVariables>;
 export const DreamDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"Dream"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"prompt"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"dream"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"prompt"},"value":{"kind":"Variable","name":{"kind":"Name","value":"prompt"}}}]}]}}]} as unknown as DocumentNode<DreamMutation, DreamMutationVariables>;
