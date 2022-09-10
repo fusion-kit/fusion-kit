@@ -25,7 +25,7 @@ dependencies:
     - transformers==4.19.2
     - torchmetrics==0.6.0
     - kornia==0.6
-    - ariadne==0.15.1
+    - ariadne==0.16.0
     - starlette==0.20.4
     - uvicorn==0.18.3
     - -e git+https://github.com/CompVis/taming-transformers.git@master#egg=taming-transformers
