@@ -1,0 +1,2 @@
+schema: "./schema.graphql"
+documents: "fusion_kit_frontend/src/**/*.graphql"

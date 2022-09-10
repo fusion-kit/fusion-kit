@@ -8,7 +8,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview --port 2424 --host 0.0.0.0",
     "lint": "eslint 'src/**/*.{js,jsx,ts,tsx}'",
-    "fix": "eslint --fix 'src/**/*.{js,jsx,ts,tsx}'"
+    "fix": "eslint --fix 'src/**/*.{js,jsx,ts,tsx}'",
+    "generate": "graphql-codegen --config codegen.yml"
   },
   "dependencies": {
     "@apollo/client": "^3.6.9",
@@ -21,6 +22,11 @@
     "react-expanding-textarea": "^2.3.6"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "^2.12.0",
+    "@graphql-codegen/introspection": "^2.2.1",
+    "@graphql-codegen/typed-document-node": "^2.3.3",
+    "@graphql-codegen/typescript": "^2.7.3",
+    "@graphql-codegen/typescript-operations": "^2.5.3",
     "@tailwindcss/forms": "^0.5.3",
     "@types/react": "^18.0.17",
     "@types/react-dom": "^18.0.6",
@@ -38,6 +44,7 @@
     "tailwindcss": "^3.1.8",
     "typescript": "^4.6.4",
     "vite": "^3.1.0",
-    "vite-plugin-checker": "^0.5.1"
+    "vite-plugin-checker": "^0.5.1",
+    "vite-plugin-graphql-codegen": "^2.3.0"
   }
 }

@@ -14,7 +14,8 @@ import {
 import { PaintBrushIcon as SolidPaintBrushIcon } from "@heroicons/react/24/solid";
 import { clsx } from "clsx";
 import Textarea from "react-expanding-textarea";
-import { gql, useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client";
+import { DreamDocument } from "./generated/graphql";
 
 const navigation = [
   {
@@ -31,22 +32,10 @@ const navigation = [
   },
 ];
 
-interface DreamMutationResult {
-  dream: string[],
-}
-
-interface DreamMutationVars {
-  prompt: string,
-}
-
 export const App: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const [dreamMutation, { loading, data }] = useMutation<DreamMutationResult, DreamMutationVars>(gql`
-    mutation Dream($prompt: String!) {
-      dream(prompt: $prompt)
-    }
-  `);
+  const [dreamMutation, { loading, data }] = useMutation(DreamDocument);
 
   const onGenerate = useCallback(async (prompt: string) => {
     console.info("Started dreaming with prompt", { prompt });
