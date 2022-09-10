@@ -32,7 +32,7 @@ const navigation = [
 ];
 
 interface DreamMutationResult {
-  dream: string,
+  dream: string[],
 }
 
 interface DreamMutationVars {
@@ -42,7 +42,7 @@ interface DreamMutationVars {
 export const App: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const [dreamMutation, { loading }] = useMutation<DreamMutationResult, DreamMutationVars>(gql`
+  const [dreamMutation, { loading, data }] = useMutation<DreamMutationResult, DreamMutationVars>(gql`
     mutation Dream($prompt: String!) {
       dream(prompt: $prompt)
     }
@@ -257,12 +257,26 @@ export const App: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="flex flex-1 flex-col lg:flex-row h-full overflow-y-scroll">
-            <main className="h-full flex-grow p-6">
-              <PromptInput onGenerate={onGenerate} />
-              {loading ? "Loading" : null}
+          <div className="flex flex-1 flex-col lg:flex-row h-full">
+            <main className="h-full flex-grow p-6 overflow-auto">
+              <div className="w-full max-w-2xl mx-auto">
+                <PromptInput onGenerate={onGenerate} />
+                {loading ? "Loading" : null}
+                <ul className="py-6 gap-2 md:gap-4 grid justify-center grid-cols-repeat-fit-20">
+                  {data?.dream.map((imageUri) => (
+                    <li key={imageUri}>
+                      <div className="relative group max-w-32 aspect-w-10 aspect-h-7 block w-full overflow-hidden rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
+                        <img src={imageUri} alt="" className="pointer-events-none object-cover group-hover:opacity-75" />
+                        <button type="button" className="absolute inset-0 focus:outline-none">
+                          <span className="sr-only">Expand image</span>
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </main>
-            <aside className="h-full w-auto lg:h-auto lg:w-80 border-l-0 lg:border-l p-6">Gallery</aside>
+            <aside className="hidden xl:block h-80 max-h-full w-auto lg:h-auto lg:w-80 border-l-0 lg:border-l p-6">Recent</aside>
           </div>
         </div>
       </div>
@@ -333,7 +347,7 @@ const PromptInput: React.FC<PromptInputProps> = (props) => {
               className="group -my-2 -ml-2 inline-flex items-center rounded-full px-3 py-2 text-left text-gray-400"
             >
               <PhotoIcon className="-ml-1 mr-2 h-5 w-5 group-hover:text-gray-500" aria-hidden="true" />
-              <span className="text-sm italic text-gray-400 group-hover:text-gray-700">No starting image selected</span>
+              <span className="text-sm italic text-gray-400 group-hover:text-gray-700">Add base image</span>
             </button>
           </div>
           <div className="flex-shrink-0">
