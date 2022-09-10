@@ -1,3 +1,5 @@
+import base64
+from io import BytesIO
 import sys
 sys.path.append('./stable_diffusion')
 
@@ -28,8 +30,15 @@ mutation = ObjectType("Mutation")
 
 @mutation.field("dream")
 def resolve_dream(*_, prompt):
-    tasks.txt2img()
-    return "Generation complete"
+    images = tasks.txt2img()
+    image_data = []
+    for image in images:
+        data = BytesIO()
+        image.save(data, format="png")
+        b64_data = str(base64.b64encode(data.getvalue()), "utf-8")
+        b64_uri = f"data:image/png;base64,{b64_data}"
+        image_data.append(b64_uri)
+    return image_data
 
 schema = make_executable_schema(type_defs, query, mutation)
 

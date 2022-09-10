@@ -147,6 +147,7 @@ def txt2img():
         precision_scope = nullcontext
 
     seeds = ""
+    images = []
     with torch.no_grad():
 
         all_samples = list()
@@ -208,9 +209,8 @@ def txt2img():
                         x_samples_ddim = modelFS.decode_first_stage(samples_ddim[i].unsqueeze(0))
                         x_sample = torch.clamp((x_samples_ddim + 1.0) / 2.0, min=0.0, max=1.0)
                         x_sample = 255.0 * rearrange(x_sample[0].cpu().numpy(), "c h w -> h w c")
-                        Image.fromarray(x_sample.astype(np.uint8)).save(
-                            os.path.join(sample_path, "seed_" + str(opt_seed) + "_" + f"{base_count:05}.{opt_format}")
-                        )
+                        image = Image.fromarray(x_sample.astype(np.uint8))
+                        images.append(image)
                         seeds += str(opt_seed) + ","
                         opt_seed += 1
                         base_count += 1
@@ -235,3 +235,5 @@ def txt2img():
             + seeds[:-1]
         ).format(time_taken)
     )
+
+    return images

@@ -3,5 +3,5 @@ type Query {
 }
 
 type Mutation {
-  dream(prompt: String!): String!
+  dream(prompt: String!): [String!]!
 }
