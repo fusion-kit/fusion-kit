@@ -5,9 +5,15 @@ module.exports = {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      gridTemplateColumns: ({ theme }) => (
+        Object.fromEntries(Object.entries(theme("spacing")).map(([key, value]) => (
+          [`repeat-fit-${key}`, `repeat(auto-fit, ${value})`]
+        )))
+      ),
+    },
   },
   plugins: [
-    require('@tailwindcss/forms'),
+    require("@tailwindcss/forms"),
   ],
 }
