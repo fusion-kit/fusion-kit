@@ -1,6 +1,7 @@
 # Anaconda dependencies
 src/clip
 src/taming-transformers
+condaenv.*.requirements.txt
 
 ### Standard Python ignores ###
 
