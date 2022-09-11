@@ -67,7 +67,7 @@ def fusion_kit_manager_processor(req_queue, res_queue):
         request = req_queue.get()
         print("got request")
         if request['request'] == 'txt2img':
-            images = tasks.txt2img()
+            images = tasks.txt2img(request['prompt'])
             res_queue.put({
                 'id': request['id'],
                 'images': images,

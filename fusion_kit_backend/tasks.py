@@ -41,8 +41,8 @@ CONFIG_FILE = "stable_diffusion/optimizedSD/v1-inference.yaml"
 CKPT_FILE = "stable_diffusion/models/ldm/stable-diffusion-v1/model.ckpt"
 
 
-def txt2img():
-    opt_prompt = "high speed photo of a lightning bolt at night"
+def txt2img(prompt):
+    opt_prompt = prompt
     opt_outdir = "../sd-outputs-test/"
     opt_ddim_steps = 50 # number of ddim sampling steps
     opt_fixed_code = False # if enabled, uses the same starting code across samples
