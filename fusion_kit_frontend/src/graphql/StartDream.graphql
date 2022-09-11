@@ -1,0 +1,3 @@
+mutation StartDream($prompt: String!) {
+  startDream(prompt: $prompt)
+}

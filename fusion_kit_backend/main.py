@@ -1,12 +1,13 @@
 import base64
 from io import BytesIO
 import multiprocessing
+from PIL import Image
 import sys
 sys.path.append('./stable_diffusion')
 
 import os
 import asyncio
-from ariadne import gql, ObjectType, SubscriptionType, make_executable_schema
+from ariadne import gql, ObjectType, SubscriptionType, UnionType, make_executable_schema, convert_kwargs_to_snake_case
 from ariadne.asgi import GraphQL
 from ariadne.asgi.handlers import GraphQLTransportWSHandler
 from starlette.applications import Starlette
@@ -31,32 +32,42 @@ def resolve_hello(*_):
 
 mutation = ObjectType("Mutation")
 
-@mutation.field("dream")
+@mutation.field("startDream")
 async def resolve_dream(_, info, prompt):
     manager = info.context['manager']
 
-    images = await manager.txt2img(prompt)
-
-    image_data = []
-    for image in images:
-        data = BytesIO()
-        image.save(data, format="png")
-        b64_data = str(base64.b64encode(data.getvalue()), "utf-8")
-        b64_uri = f"data:image/png;base64,{b64_data}"
-        image_data.append(b64_uri)
-    return image_data
+    dream = await manager.start_dream(prompt)
+    return dream.id
 
 subscription = SubscriptionType()
 
-@subscription.source("counter")
-async def counter_generator(obj, info):
-    for i in range(5):
-        await asyncio.sleep(1)
-        yield i
+@subscription.source("watchDream")
+@convert_kwargs_to_snake_case
+async def watch_dream_generator(obj, info, dream_id):
+    manager = info.context['manager']
+    async for dream_state in manager.watch_dream(dream_id = dream_id):
+        yield dream_state
 
-@subscription.field("counter")
-def counter_resolver(count, info):
-    return count + 1
+@subscription.field("watchDream")
+@convert_kwargs_to_snake_case
+async def watch_dream_resolver(dream_state, info, dream_id):
+    return dream_state
+
+dream_state_type = UnionType("DreamState")
+
+@dream_state_type.type_resolver
+def resolve_dream_state_type(obj, *_):
+    return obj['state']
+
+dream_image_type = ObjectType("DreamImage")
+
+@dream_image_type.field("imageUri")
+def resolve_image_uri(image, *_):
+    data = BytesIO()
+    image.save(data, format="png")
+    b64_data = str(base64.b64encode(data.getvalue()), "utf-8")
+    b64_uri = f"data:image/png;base64,{b64_data}"
+    return b64_uri
 
 async def main():
     async with FusionKitManager() as manager:
@@ -65,7 +76,7 @@ async def main():
             'manager': manager,
         }
 
-        schema = make_executable_schema(type_defs, query, mutation, subscription)
+        schema = make_executable_schema(type_defs, query, mutation, subscription, dream_state_type, dream_image_type)
 
         graphql_app = GraphQL(
             schema,

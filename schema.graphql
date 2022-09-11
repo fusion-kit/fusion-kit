@@ -3,9 +3,27 @@ type Query {
 }
 
 type Mutation {
-  dream(prompt: String!): [String!]!
+  startDream(prompt: String!): ID!
 }
 
 type Subscription {
-  counter: Int!
+  watchDream(dreamId: ID!): DreamState!
+}
+
+type DreamPending {
+  complete: Boolean
+}
+
+type DreamComplete {
+  images: [DreamImage!]!
+}
+
+type DreamError {
+  errorMessage: String!
+}
+
+union DreamState = DreamPending | DreamComplete | DreamError
+
+type DreamImage {
+  imageUri: String!
 }

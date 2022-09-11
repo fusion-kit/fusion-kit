@@ -13,13 +13,30 @@ export type Scalars = {
   Float: number;
 };
 
+export type DreamComplete = {
+  __typename?: 'DreamComplete';
+  images: Array<DreamImage>;
+};
+
+export type DreamImage = {
+  __typename?: 'DreamImage';
+  imageUri: Scalars['String'];
+};
+
+export type DreamPending = {
+  __typename?: 'DreamPending';
+  complete?: Maybe<Scalars['Boolean']>;
+};
+
+export type DreamState = DreamComplete | DreamPending;
+
 export type Mutation = {
   __typename?: 'Mutation';
-  dream: Array<Scalars['String']>;
+  startDream: Scalars['ID'];
 };
 
 
-export type MutationDreamArgs = {
+export type MutationStartDreamArgs = {
   prompt: Scalars['String'];
 };
 
@@ -30,21 +47,28 @@ export type Query = {
 
 export type Subscription = {
   __typename?: 'Subscription';
-  counter: Scalars['Int'];
+  watchDream: DreamState;
 };
 
-export type CountSubscriptionVariables = Exact<{ [key: string]: never; }>;
 
+export type SubscriptionWatchDreamArgs = {
+  dreamId: Scalars['ID'];
+};
 
-export type CountSubscription = { __typename?: 'Subscription', counter: number };
-
-export type DreamMutationVariables = Exact<{
+export type StartDreamMutationVariables = Exact<{
   prompt: Scalars['String'];
 }>;
 
 
-export type DreamMutation = { __typename?: 'Mutation', dream: Array<string> };
+export type StartDreamMutation = { __typename?: 'Mutation', startDream: string };
+
+export type WatchDreamSubscriptionVariables = Exact<{
+  dreamId: Scalars['ID'];
+}>;
 
 
-export const CountDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"subscription","name":{"kind":"Name","value":"Count"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"counter"}}]}}]} as unknown as DocumentNode<CountSubscription, CountSubscriptionVariables>;
-export const DreamDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"Dream"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"prompt"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"dream"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"prompt"},"value":{"kind":"Variable","name":{"kind":"Name","value":"prompt"}}}]}]}}]} as unknown as DocumentNode<DreamMutation, DreamMutationVariables>;
+export type WatchDreamSubscription = { __typename?: 'Subscription', watchDream: { __typename: 'DreamComplete', images: Array<{ __typename?: 'DreamImage', imageUri: string }> } | { __typename: 'DreamPending' } };
+
+
+export const StartDreamDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"StartDream"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"prompt"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"startDream"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"prompt"},"value":{"kind":"Variable","name":{"kind":"Name","value":"prompt"}}}]}]}}]} as unknown as DocumentNode<StartDreamMutation, StartDreamMutationVariables>;
+export const WatchDreamDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"subscription","name":{"kind":"Name","value":"WatchDream"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"dreamId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"watchDream"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"dreamId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"dreamId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"DreamComplete"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"images"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"imageUri"}}]}}]}}]}}]}}]} as unknown as DocumentNode<WatchDreamSubscription, WatchDreamSubscriptionVariables>;

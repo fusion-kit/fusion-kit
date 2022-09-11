@@ -1,3 +1,0 @@
-mutation Dream($prompt: String!) {
-  dream(prompt: $prompt)
-}

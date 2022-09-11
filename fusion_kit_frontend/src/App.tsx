@@ -15,7 +15,7 @@ import { PaintBrushIcon as SolidPaintBrushIcon } from "@heroicons/react/24/solid
 import { clsx } from "clsx";
 import Textarea from "react-expanding-textarea";
 import { useMutation, useSubscription } from "@apollo/client";
-import { CountDocument, DreamDocument } from "./generated/graphql";
+import { StartDreamDocument, WatchDreamDocument } from "./generated/graphql";
 
 const navigation = [
   {
@@ -35,23 +35,25 @@ const navigation = [
 export const App: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const [dreamMutation, { loading, data }] = useMutation(DreamDocument);
+  const [startDream, startDreamResult] = useMutation(StartDreamDocument);
 
-  useSubscription(CountDocument, {
-    onSubscriptionData: (opts) => {
-      console.log("count", opts.subscriptionData.data);
+  const watchDreamResult = useSubscription(WatchDreamDocument, {
+    variables: {
+      dreamId: startDreamResult.data?.startDream!,
     },
+    skip: startDreamResult.data == null,
   });
 
   const onGenerate = useCallback(async (prompt: string) => {
-    console.info("Started dreaming with prompt", { prompt });
-    const response = await dreamMutation({
+    const response = await startDream({
       variables: {
         prompt,
       },
     });
-    console.info("Finished dreaming with prompt", { prompt, response });
-  }, [dreamMutation]);
+    console.info("Started dream", { prompt, response });
+  }, [startDream]);
+
+  const dreamImages = watchDreamResult.data?.watchDream.__typename === "DreamComplete" ? watchDreamResult.data.watchDream.images : [];
 
   return (
     <>
@@ -256,12 +258,12 @@ export const App: React.FC = () => {
             <main className="h-full flex-grow p-6 overflow-auto">
               <div className="w-full max-w-2xl mx-auto">
                 <PromptInput onGenerate={onGenerate} />
-                {loading ? "Loading" : null}
+                {!startDreamResult.called || watchDreamResult.data?.watchDream.__typename === "DreamComplete" ? null : "Loading"}
                 <ul className="py-6 gap-2 md:gap-4 grid justify-center grid-cols-repeat-fit-20">
-                  {data?.dream.map((imageUri) => (
-                    <li key={imageUri}>
+                  {dreamImages.map((dreamImage) => (
+                    <li key={dreamImage.imageUri}>
                       <div className="relative group max-w-32 aspect-w-10 aspect-h-7 block w-full overflow-hidden rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100">
-                        <img src={imageUri} alt="" className="pointer-events-none object-cover group-hover:opacity-75" />
+                        <img src={dreamImage.imageUri} alt="" className="pointer-events-none object-cover group-hover:opacity-75" />
                         <button type="button" className="absolute inset-0 focus:outline-none">
                           <span className="sr-only">Expand image</span>
                         </button>

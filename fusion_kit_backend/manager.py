@@ -1,13 +1,47 @@
 import asyncio
 from broadcaster import Broadcast
 import multiprocessing
+from PIL import Image
 import tasks
 from ulid import ULID
+
+async def dream_watcher(dream, broadcast):
+    print("starting dream watcher")
+    async with broadcast.subscribe(channel='response') as subscriber:
+        async for event in subscriber:
+            response = event.message
+            if response['id'] == dream.id:
+                dream.state = {
+                    'state': 'DreamComplete',
+                    'images': response['images'],
+                    'complete': True,
+                }
+                await broadcast.publish(channel='dream', message=dream)
+                return
+            elif response.get('watchdog') == 'process_died':
+                dream.state = {
+                    'state': 'DreamError',
+                    'errorMessage': 'Dream process died',
+                    'complete': True,
+                }
+                await broadcast.publish(channel='dream', message=dream)
+                raise Exception("Process died while dreaming")
+
+class Dream():
+    def __init__(self, id, broadcast):
+        self.id = id
+        self.state = {
+            'state': 'DreamPending',
+            'complete': False,
+        }
+
+        self.task = asyncio.create_task(dream_watcher(self, broadcast))
 
 class FusionKitManager():
     def __init__(self):
         self.process = None
         self.broadcast = Broadcast("memory://")
+        self.dreams = {}
         self.get_processor()
 
     async def __aenter__(self):
@@ -17,22 +51,34 @@ class FusionKitManager():
     async def __aexit__(self, exc_type, exc_value, traceback):
         await self.broadcast.disconnect()
 
-    async def txt2img(self, prompt):
-        request_id = ULID()
+    async def start_dream(self, prompt):
+        dream_id = str(ULID())
         processor = self.get_processor()
         processor['req_queue'].put({
-            'id': request_id,
+            'id': dream_id,
             'request': 'txt2img',
             'prompt': prompt,
         })
 
-        async with self.broadcast.subscribe(channel='response') as subscriber:
+        dream = Dream(dream_id, self.broadcast)
+
+        self.dreams[dream_id] = dream
+
+        return dream
+
+    async def watch_dream(self, dream_id):
+        dream = self.dreams[dream_id]
+        yield dream.state
+        if dream.state['complete']:
+            return
+
+        async with self.broadcast.subscribe(channel='dream') as subscriber:
             async for event in subscriber:
-                response = event.message
-                if response['id'] == request_id:
-                    return response['images']
-                elif response.get('watchdog') == 'process_died':
-                    raise Exception("Process died")
+                event_dream = event.message
+                if event_dream.id == dream_id:
+                    yield event_dream.state
+                    if event_dream.state['complete']:
+                        return
 
     def get_processor(self):
         if self.process is None or not self.process.is_alive():
@@ -65,7 +111,6 @@ def fusion_kit_manager_processor(req_queue, res_queue):
     print("started processor")
     while True:
         request = req_queue.get()
-        print("got request")
         if request['request'] == 'txt2img':
             images = tasks.txt2img(request['prompt'])
             res_queue.put({
