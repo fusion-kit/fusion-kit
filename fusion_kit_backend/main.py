@@ -1,5 +1,6 @@
 import base64
 from io import BytesIO
+import multiprocessing
 import sys
 sys.path.append('./stable_diffusion')
 
@@ -13,7 +14,7 @@ from starlette.routing import Route, WebSocketRoute
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 import uvicorn
-import tasks
+from manager import FusionKitManager
 
 project_path = os.path.realpath(os.path.join(os.path.realpath(__file__), "..", ".."))
 graphql_schema_path = os.path.join(project_path, "schema.graphql")
@@ -31,8 +32,11 @@ def resolve_hello(*_):
 mutation = ObjectType("Mutation")
 
 @mutation.field("dream")
-def resolve_dream(*_, prompt):
-    images = tasks.txt2img()
+async def resolve_dream(_, info, prompt):
+    manager = info.context['manager']
+
+    images = await manager.txt2img(prompt)
+
     image_data = []
     for image in images:
         data = BytesIO()
@@ -54,20 +58,36 @@ async def counter_generator(obj, info):
 def counter_resolver(count, info):
     return count + 1
 
-schema = make_executable_schema(type_defs, query, mutation, subscription)
+async def main():
+    async with FusionKitManager() as manager:
+        context = lambda request: {
+            'request': request,
+            'manager': manager,
+        }
 
-graphql_app = GraphQL(schema, debug=True, websocket_handler=GraphQLTransportWSHandler())
+        schema = make_executable_schema(type_defs, query, mutation, subscription)
 
-routes = [
-    Route("/graphql", graphql_app, methods=["GET", "POST"]),
-    WebSocketRoute("/graphql", endpoint=graphql_app),
-]
+        graphql_app = GraphQL(
+            schema,
+            debug=True,
+            websocket_handler=GraphQLTransportWSHandler(),
+            context_value=context,
+        )
 
-middleware = [
-    Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["POST"])
-]
+        routes = [
+            Route("/graphql", graphql_app, methods=["GET", "POST"]),
+            WebSocketRoute("/graphql", endpoint=graphql_app),
+        ]
 
-app = Starlette(debug=True, routes=routes, middleware=middleware)
+        middleware = [
+            Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["POST"])
+        ]
+
+        app = Starlette(debug=True, routes=routes, middleware=middleware)
+
+        config = uvicorn.Config(app, host='0.0.0.0', port=2425)
+        server = uvicorn.Server(config)
+        await server.serve()
 
 if __name__ == "__main__":
-    uvicorn.run(app, host='0.0.0.0', port=2425)
+    asyncio.run(main())
