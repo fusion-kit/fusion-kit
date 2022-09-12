@@ -118,9 +118,6 @@ def txt2img(prompt, image_sample_callback=None):
     modelFS.eval()
     del sd
 
-    # # Get a copy of the model to generate preview images
-    step_preview_model = copy.deepcopy(modelFS).to("cpu")
-
     # # if not opt.no_half:
     # step_preview_model.float()
 
@@ -194,7 +191,8 @@ def txt2img(prompt, image_sample_callback=None):
                             time.sleep(1)
 
                     if image_sample_callback is not None:
-                        img_callback = lambda image_sample, n: image_sample_callback(image_sample_to_image(image_sample, n, step_preview_model), n)
+                        modelFS.to(opt_device)
+                        img_callback = lambda image_samples, n: image_sample_callback(image_samples_to_image(image_samples, n, modelFS, batch_size), n)
                     else:
                         None
 
@@ -255,23 +253,12 @@ def txt2img(prompt, image_sample_callback=None):
 #
 # Full file here:
 # https://github.com/cobryan05/stable-diffusion-webui/blob/19dc3779f603a736f3f15dbf78ea402640bff3af/webui.py
-def image_sample_to_image(image_sample, iter_num, step_preview_model):
-    # if opt.optimized:
-    image_sample = image_sample.to("cpu")
-
-    batch_ddim = step_preview_model.decode_first_stage(image_sample)
-    batch_ddim = torch.clamp((batch_ddim + 1.0) / 2.0, min=0.0, max=1.0)
-    # preview_elapsed_timed = time.time() - preview_start_time
-
-    # if preview_elapsed_timed > 1:
-    #     print(
-    #         f"Warning: Preview generation is slow! It took {preview_elapsed_timed:.2f}s to generate one preview!")
-
+def image_samples_to_image(image_samples, iter_num, modelFS, batch_size):
     images = []
-    for ddim in batch_ddim:
-        x_sample = 255. * rearrange(ddim.cpu().numpy(), 'c h w -> h w c')
-        x_sample = x_sample.astype(np.uint8)
-        image = Image.fromarray(x_sample)
+    for i in range(batch_size):
+        x_samples_ddim = modelFS.decode_first_stage(image_samples[i].unsqueeze(0))
+        x_sample = torch.clamp((x_samples_ddim + 1.0) / 2.0, min=0.0, max=1.0)
+        x_sample = 255.0 * rearrange(x_sample[0].cpu().numpy(), "c h w -> h w c")
+        image = Image.fromarray(x_sample.astype(np.uint8))
         images.append(image)
-
     return images
