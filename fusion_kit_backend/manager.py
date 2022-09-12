@@ -1,4 +1,5 @@
 import asyncio
+from functools import partial
 from broadcaster import Broadcast
 import multiprocessing
 from PIL import Image
@@ -11,13 +12,23 @@ async def dream_watcher(dream, broadcast):
         async for event in subscriber:
             response = event.message
             if response['id'] == dream.id:
-                dream.state = {
-                    'state': 'DreamComplete',
-                    'images': response['images'],
-                    'complete': True,
-                }
-                await broadcast.publish(channel='dream', message=dream)
-                return
+                if response['state'] == 'running':
+                    dream.state = {
+                        'state': 'DreamRunning',
+                        'previewImages': response['preview_images'],
+                        'complete': False,
+                    }
+                    await broadcast.publish(channel='dream', message=dream)
+                elif response['state'] == 'complete':
+                    dream.state = {
+                        'state': 'DreamComplete',
+                        'images': response['images'],
+                        'complete': True,
+                    }
+                    await broadcast.publish(channel='dream', message=dream)
+                    return
+                else:
+                    raise Exception(f"Unknown dream response state: {response['state']}")
             elif response.get('watchdog') == 'process_died':
                 dream.state = {
                     'state': 'DreamError',
@@ -112,13 +123,26 @@ def fusion_kit_manager_processor(req_queue, res_queue):
     while True:
         request = req_queue.get()
         if request['request'] == 'txt2img':
-            images = tasks.txt2img(request['prompt'])
+            image_sample_callback = partial(
+                txt2img_sample_callback,
+                request_id=request['id'],
+                res_queue=res_queue,
+            )
+            images = tasks.txt2img(request['prompt'], image_sample_callback=image_sample_callback)
             res_queue.put({
                 'id': request['id'],
+                'state': 'complete',
                 'images': images,
             })
         else:
             print(f"Unkown request type: {request['request']}")
+
+def txt2img_sample_callback(images, n, request_id, res_queue):
+    res_queue.put({
+        'id': request_id,
+        'state': 'running',
+        'preview_images': images,
+    })
 
 async def fusion_kit_manager_broadcaster(res_queue, broadcast):
     print("started broadcaster")

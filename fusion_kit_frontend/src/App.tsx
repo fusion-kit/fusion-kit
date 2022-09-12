@@ -15,7 +15,10 @@ import { PaintBrushIcon as SolidPaintBrushIcon } from "@heroicons/react/24/solid
 import { clsx } from "clsx";
 import Textarea from "react-expanding-textarea";
 import { useMutation, useSubscription } from "@apollo/client";
-import { StartDreamDocument, WatchDreamDocument } from "./generated/graphql";
+import {
+  DreamImage, StartDreamDocument, WatchDreamDocument, WatchDreamSubscription,
+} from "./generated/graphql";
+import { unreachable } from "./utils";
 
 const navigation = [
   {
@@ -53,7 +56,7 @@ export const App: React.FC = () => {
     console.info("Started dream", { prompt, response });
   }, [startDream]);
 
-  const dreamImages = watchDreamResult.data?.watchDream.__typename === "DreamComplete" ? watchDreamResult.data.watchDream.images : [];
+  const dreamImages = getDreamImages(watchDreamResult.data);
 
   return (
     <>
@@ -361,3 +364,22 @@ const PromptInput: React.FC<PromptInputProps> = (props) => {
     </form>
   );
 };
+
+function getDreamImages(dream?: WatchDreamSubscription): DreamImage[] {
+  if (dream == null) {
+    return [];
+  }
+
+  switch (dream.watchDream.__typename) {
+    case "DreamComplete":
+      return dream.watchDream.images;
+    case "DreamRunning":
+      return dream.watchDream.previewImages;
+    case "DreamPending":
+      return [];
+    case "DreamError":
+      return [];
+    default:
+      return unreachable(dream.watchDream);
+  }
+}

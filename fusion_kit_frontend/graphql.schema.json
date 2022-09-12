@@ -57,6 +57,33 @@
       },
       {
         "kind": "OBJECT",
+        "name": "DreamError",
+        "description": null,
+        "fields": [
+          {
+            "name": "errorMessage",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
         "name": "DreamImage",
         "description": null,
         "fields": [
@@ -106,6 +133,41 @@
         "possibleTypes": null
       },
       {
+        "kind": "OBJECT",
+        "name": "DreamRunning",
+        "description": null,
+        "fields": [
+          {
+            "name": "previewImages",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "DreamImage",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
         "kind": "UNION",
         "name": "DreamState",
         "description": null,
@@ -121,7 +183,17 @@
           },
           {
             "kind": "OBJECT",
+            "name": "DreamError",
+            "ofType": null
+          },
+          {
+            "kind": "OBJECT",
             "name": "DreamPending",
+            "ofType": null
+          },
+          {
+            "kind": "OBJECT",
+            "name": "DreamRunning",
             "ofType": null
           }
         ]

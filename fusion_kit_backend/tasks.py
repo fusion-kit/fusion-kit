@@ -3,6 +3,7 @@
 import argparse, os, re
 import torch
 import numpy as np
+import copy
 from random import randint
 from omegaconf import OmegaConf
 from PIL import Image
@@ -41,7 +42,7 @@ CONFIG_FILE = "stable_diffusion/optimizedSD/v1-inference.yaml"
 CKPT_FILE = "stable_diffusion/models/ldm/stable-diffusion-v1/model.ckpt"
 
 
-def txt2img(prompt):
+def txt2img(prompt, image_sample_callback=None):
     opt_prompt = prompt
     opt_outdir = "../sd-outputs-test/"
     opt_ddim_steps = 50 # number of ddim sampling steps
@@ -117,6 +118,12 @@ def txt2img(prompt):
     modelFS.eval()
     del sd
 
+    # # Get a copy of the model to generate preview images
+    step_preview_model = copy.deepcopy(modelFS).to("cpu")
+
+    # # if not opt.no_half:
+    # step_preview_model.float()
+
     if opt_device != "cpu" and opt_precision == "autocast":
         model.half()
         modelCS.half()
@@ -149,7 +156,6 @@ def txt2img(prompt):
     seeds = ""
     images = []
     with torch.no_grad():
-
         all_samples = list()
         for n in trange(opt_n_iter, desc="Sampling"):
             for prompts in tqdm(data, desc="data"):
@@ -187,6 +193,11 @@ def txt2img(prompt):
                         while torch.cuda.memory_allocated() / 1e6 >= mem:
                             time.sleep(1)
 
+                    if image_sample_callback is not None:
+                        img_callback = lambda image_sample, n: image_sample_callback(image_sample_to_image(image_sample, n, step_preview_model), n)
+                    else:
+                        None
+
                     samples_ddim = model.sample(
                         S=opt_ddim_steps,
                         conditioning=c,
@@ -198,6 +209,7 @@ def txt2img(prompt):
                         eta=opt_ddim_eta,
                         x_T=start_code,
                         sampler = opt_sampler,
+                        img_callback=img_callback
                     )
 
                     modelFS.to(opt_device)
@@ -235,5 +247,31 @@ def txt2img(prompt):
             + seeds[:-1]
         ).format(time_taken)
     )
+
+    return images
+
+# Based on `sample_iteration_callback` from this PR:
+# https://github.com/sd-webui/stable-diffusion-webui/pull/611
+#
+# Full file here:
+# https://github.com/cobryan05/stable-diffusion-webui/blob/19dc3779f603a736f3f15dbf78ea402640bff3af/webui.py
+def image_sample_to_image(image_sample, iter_num, step_preview_model):
+    # if opt.optimized:
+    image_sample = image_sample.to("cpu")
+
+    batch_ddim = step_preview_model.decode_first_stage(image_sample)
+    batch_ddim = torch.clamp((batch_ddim + 1.0) / 2.0, min=0.0, max=1.0)
+    # preview_elapsed_timed = time.time() - preview_start_time
+
+    # if preview_elapsed_timed > 1:
+    #     print(
+    #         f"Warning: Preview generation is slow! It took {preview_elapsed_timed:.2f}s to generate one preview!")
+
+    images = []
+    for ddim in batch_ddim:
+        x_sample = 255. * rearrange(ddim.cpu().numpy(), 'c h w -> h w c')
+        x_sample = x_sample.astype(np.uint8)
+        image = Image.fromarray(x_sample)
+        images.append(image)
 
     return images

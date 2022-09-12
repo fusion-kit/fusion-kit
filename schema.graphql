@@ -14,6 +14,10 @@ type DreamPending {
   complete: Boolean
 }
 
+type DreamRunning {
+  previewImages: [DreamImage!]!
+}
+
 type DreamComplete {
   images: [DreamImage!]!
 }
@@ -22,7 +26,7 @@ type DreamError {
   errorMessage: String!
 }
 
-union DreamState = DreamPending | DreamComplete | DreamError
+union DreamState = DreamPending | DreamRunning | DreamComplete | DreamError
 
 type DreamImage {
   imageUri: String!
