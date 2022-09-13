@@ -1,3 +1,5 @@
 mutation StartDream($prompt: String!) {
-  startDream(prompt: $prompt)
+  startDream(prompt: $prompt) {
+    id
+  }
 }

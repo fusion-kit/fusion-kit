@@ -1,15 +1,22 @@
 subscription WatchDream($dreamId: ID!) {
   watchDream(dreamId: $dreamId) {
     __typename
-    ...on DreamRunning {
-      previewImages {
+    images {
+      __typename
+      ...on RunningDreamImage {
+        numFinishedSteps
+        numTotalSteps
+        previewImageUri
+      }
+      ...on FinishedDreamImage {
         imageUri
       }
     }
-    ...on DreamComplete {
-      images {
-        imageUri
-      }
+    ...on RunningDream {
+      numFinishedImages
+      numTotalImages
+      numFinishedSteps
+      numTotalSteps
     }
   }
 }

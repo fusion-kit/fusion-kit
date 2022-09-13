@@ -13,36 +13,32 @@ export type Scalars = {
   Float: number;
 };
 
-export type DreamComplete = {
-  __typename?: 'DreamComplete';
+export type Dream = {
+  id: Scalars['ID'];
   images: Array<DreamImage>;
 };
 
-export type DreamError = {
-  __typename?: 'DreamError';
-  errorMessage: Scalars['String'];
+export type DreamImage = {
+  dreamId: Scalars['ID'];
+  id: Scalars['ID'];
 };
 
-export type DreamImage = {
-  __typename?: 'DreamImage';
+export type FinishedDream = Dream & {
+  __typename?: 'FinishedDream';
+  id: Scalars['ID'];
+  images: Array<FinishedDreamImage>;
+};
+
+export type FinishedDreamImage = DreamImage & {
+  __typename?: 'FinishedDreamImage';
+  dreamId: Scalars['ID'];
+  id: Scalars['ID'];
   imageUri: Scalars['String'];
 };
 
-export type DreamPending = {
-  __typename?: 'DreamPending';
-  complete?: Maybe<Scalars['Boolean']>;
-};
-
-export type DreamRunning = {
-  __typename?: 'DreamRunning';
-  previewImages: Array<DreamImage>;
-};
-
-export type DreamState = DreamComplete | DreamError | DreamPending | DreamRunning;
-
 export type Mutation = {
   __typename?: 'Mutation';
-  startDream: Scalars['ID'];
+  startDream: Dream;
 };
 
 
@@ -50,14 +46,63 @@ export type MutationStartDreamArgs = {
   prompt: Scalars['String'];
 };
 
+export type PendingDream = Dream & {
+  __typename?: 'PendingDream';
+  id: Scalars['ID'];
+  images: Array<PendingDreamImage>;
+};
+
+export type PendingDreamImage = DreamImage & {
+  __typename?: 'PendingDreamImage';
+  dreamId: Scalars['ID'];
+  id: Scalars['ID'];
+};
+
 export type Query = {
   __typename?: 'Query';
   hello: Scalars['String'];
 };
 
+export type RunningDream = Dream & {
+  __typename?: 'RunningDream';
+  id: Scalars['ID'];
+  images: Array<DreamImage>;
+  numFinishedImages: Scalars['Int'];
+  numFinishedSteps: Scalars['Int'];
+  numTotalImages: Scalars['Int'];
+  numTotalSteps: Scalars['Int'];
+};
+
+export type RunningDreamImage = DreamImage & {
+  __typename?: 'RunningDreamImage';
+  dreamId: Scalars['ID'];
+  id: Scalars['ID'];
+  numFinishedSteps: Scalars['Int'];
+  numTotalSteps: Scalars['Int'];
+  previewImageUri?: Maybe<Scalars['String']>;
+};
+
+export type StoppedDream = Dream & {
+  __typename?: 'StoppedDream';
+  id: Scalars['ID'];
+  images: Array<DreamImage>;
+  message?: Maybe<Scalars['String']>;
+  reason: StoppedDreamReason;
+};
+
+export type StoppedDreamImage = DreamImage & {
+  __typename?: 'StoppedDreamImage';
+  dreamId: Scalars['ID'];
+  id: Scalars['ID'];
+};
+
+export enum StoppedDreamReason {
+  DreamError = 'DREAM_ERROR'
+}
+
 export type Subscription = {
   __typename?: 'Subscription';
-  watchDream: DreamState;
+  watchDream: Dream;
 };
 
 
@@ -70,15 +115,15 @@ export type StartDreamMutationVariables = Exact<{
 }>;
 
 
-export type StartDreamMutation = { __typename?: 'Mutation', startDream: string };
+export type StartDreamMutation = { __typename?: 'Mutation', startDream: { __typename?: 'FinishedDream', id: string } | { __typename?: 'PendingDream', id: string } | { __typename?: 'RunningDream', id: string } | { __typename?: 'StoppedDream', id: string } };
 
 export type WatchDreamSubscriptionVariables = Exact<{
   dreamId: Scalars['ID'];
 }>;
 
 
-export type WatchDreamSubscription = { __typename?: 'Subscription', watchDream: { __typename: 'DreamComplete', images: Array<{ __typename?: 'DreamImage', imageUri: string }> } | { __typename: 'DreamError' } | { __typename: 'DreamPending' } | { __typename: 'DreamRunning', previewImages: Array<{ __typename?: 'DreamImage', imageUri: string }> } };
+export type WatchDreamSubscription = { __typename?: 'Subscription', watchDream: { __typename: 'FinishedDream', images: Array<{ __typename: 'FinishedDreamImage', imageUri: string }> } | { __typename: 'PendingDream', images: Array<{ __typename: 'PendingDreamImage' }> } | { __typename: 'RunningDream', numFinishedImages: number, numTotalImages: number, numFinishedSteps: number, numTotalSteps: number, images: Array<{ __typename: 'FinishedDreamImage', imageUri: string } | { __typename: 'PendingDreamImage' } | { __typename: 'RunningDreamImage', numFinishedSteps: number, numTotalSteps: number, previewImageUri?: string | null } | { __typename: 'StoppedDreamImage' }> } | { __typename: 'StoppedDream', images: Array<{ __typename: 'FinishedDreamImage', imageUri: string } | { __typename: 'PendingDreamImage' } | { __typename: 'RunningDreamImage', numFinishedSteps: number, numTotalSteps: number, previewImageUri?: string | null } | { __typename: 'StoppedDreamImage' }> } };
 
 
-export const StartDreamDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"StartDream"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"prompt"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"startDream"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"prompt"},"value":{"kind":"Variable","name":{"kind":"Name","value":"prompt"}}}]}]}}]} as unknown as DocumentNode<StartDreamMutation, StartDreamMutationVariables>;
-export const WatchDreamDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"subscription","name":{"kind":"Name","value":"WatchDream"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"dreamId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"watchDream"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"dreamId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"dreamId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"DreamRunning"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"previewImages"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"imageUri"}}]}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"DreamComplete"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"images"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"imageUri"}}]}}]}}]}}]}}]} as unknown as DocumentNode<WatchDreamSubscription, WatchDreamSubscriptionVariables>;
+export const StartDreamDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"StartDream"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"prompt"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"startDream"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"prompt"},"value":{"kind":"Variable","name":{"kind":"Name","value":"prompt"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<StartDreamMutation, StartDreamMutationVariables>;
+export const WatchDreamDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"subscription","name":{"kind":"Name","value":"WatchDream"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"dreamId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"watchDream"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"dreamId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"dreamId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"Field","name":{"kind":"Name","value":"images"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"RunningDreamImage"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"numFinishedSteps"}},{"kind":"Field","name":{"kind":"Name","value":"numTotalSteps"}},{"kind":"Field","name":{"kind":"Name","value":"previewImageUri"}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"FinishedDreamImage"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"imageUri"}}]}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"RunningDream"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"numFinishedImages"}},{"kind":"Field","name":{"kind":"Name","value":"numTotalImages"}},{"kind":"Field","name":{"kind":"Name","value":"numFinishedSteps"}},{"kind":"Field","name":{"kind":"Name","value":"numTotalSteps"}}]}}]}}]}}]} as unknown as DocumentNode<WatchDreamSubscription, WatchDreamSubscriptionVariables>;

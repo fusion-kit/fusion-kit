@@ -3,31 +3,73 @@ type Query {
 }
 
 type Mutation {
-  startDream(prompt: String!): ID!
+  startDream(prompt: String!): Dream!
 }
 
 type Subscription {
-  watchDream(dreamId: ID!): DreamState!
+  watchDream(dreamId: ID!): Dream!
 }
 
-type DreamPending {
-  complete: Boolean
-}
-
-type DreamRunning {
-  previewImages: [DreamImage!]!
-}
-
-type DreamComplete {
+interface Dream {
+  id: ID!
   images: [DreamImage!]!
 }
 
-type DreamError {
-  errorMessage: String!
+type PendingDream implements Dream {
+  id: ID!
+  images: [PendingDreamImage!]!
 }
 
-union DreamState = DreamPending | DreamRunning | DreamComplete | DreamError
+type RunningDream implements Dream {
+  id: ID!
+  images: [DreamImage!]!
+  numFinishedImages: Int!
+  numTotalImages: Int!
+  numFinishedSteps: Int!
+  numTotalSteps: Int!
+}
 
-type DreamImage {
+type FinishedDream implements Dream {
+  id: ID!
+  images: [FinishedDreamImage!]!
+}
+
+type StoppedDream implements Dream {
+  id: ID!
+  images: [DreamImage!]!
+  reason: StoppedDreamReason!
+  message: String
+}
+
+enum StoppedDreamReason {
+  DREAM_ERROR,
+}
+
+interface DreamImage {
+  id: ID!
+  dreamId: ID!
+}
+
+type PendingDreamImage implements DreamImage {
+  id: ID!
+  dreamId: ID!
+}
+
+type RunningDreamImage implements DreamImage {
+  id: ID!
+  dreamId: ID!
+  previewImageUri: String
+  numFinishedSteps: Int!
+  numTotalSteps: Int!
+}
+
+type FinishedDreamImage implements DreamImage {
+  id: ID!
+  dreamId: ID!
   imageUri: String!
+}
+
+type StoppedDreamImage implements DreamImage {
+  id: ID!
+  dreamId: ID!
 }

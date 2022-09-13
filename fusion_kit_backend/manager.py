@@ -5,48 +5,7 @@ import multiprocessing
 from PIL import Image
 import tasks
 from ulid import ULID
-
-async def dream_watcher(dream, broadcast):
-    print("starting dream watcher")
-    async with broadcast.subscribe(channel='response') as subscriber:
-        async for event in subscriber:
-            response = event.message
-            if response['id'] == dream.id:
-                if response['state'] == 'running':
-                    dream.state = {
-                        'state': 'DreamRunning',
-                        'previewImages': response['preview_images'],
-                        'complete': False,
-                    }
-                    await broadcast.publish(channel='dream', message=dream)
-                elif response['state'] == 'complete':
-                    dream.state = {
-                        'state': 'DreamComplete',
-                        'images': response['images'],
-                        'complete': True,
-                    }
-                    await broadcast.publish(channel='dream', message=dream)
-                    return
-                else:
-                    raise Exception(f"Unknown dream response state: {response['state']}")
-            elif response.get('watchdog') == 'process_died':
-                dream.state = {
-                    'state': 'DreamError',
-                    'errorMessage': 'Dream process died',
-                    'complete': True,
-                }
-                await broadcast.publish(channel='dream', message=dream)
-                raise Exception("Process died while dreaming")
-
-class Dream():
-    def __init__(self, id, broadcast):
-        self.id = id
-        self.state = {
-            'state': 'DreamPending',
-            'complete': False,
-        }
-
-        self.task = asyncio.create_task(dream_watcher(self, broadcast))
+from domain.dream import Dream
 
 class FusionKitManager():
     def __init__(self):
@@ -71,7 +30,8 @@ class FusionKitManager():
             'prompt': prompt,
         })
 
-        dream = Dream(dream_id, self.broadcast)
+        # TODO: Take num_images and num_steps_per_image as input
+        dream = Dream(dream_id, self.broadcast, num_images=1, num_steps_per_image=50)
 
         self.dreams[dream_id] = dream
 
@@ -79,16 +39,16 @@ class FusionKitManager():
 
     async def watch_dream(self, dream_id):
         dream = self.dreams[dream_id]
-        yield dream.state
-        if dream.state['complete']:
+        yield dream
+        if dream.is_complete():
             return
 
         async with self.broadcast.subscribe(channel='dream') as subscriber:
             async for event in subscriber:
                 event_dream = event.message
                 if event_dream.id == dream_id:
-                    yield event_dream.state
-                    if event_dream.state['complete']:
+                    yield event_dream
+                    if event_dream.is_complete():
                         return
 
     def get_processor(self):

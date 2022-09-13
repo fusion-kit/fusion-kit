@@ -16,7 +16,7 @@ import { clsx } from "clsx";
 import Textarea from "react-expanding-textarea";
 import { useMutation, useSubscription } from "@apollo/client";
 import {
-  DreamImage, StartDreamDocument, WatchDreamDocument, WatchDreamSubscription,
+  StartDreamDocument, WatchDreamDocument, WatchDreamSubscription,
 } from "./generated/graphql";
 import { unreachable } from "./utils";
 
@@ -40,11 +40,13 @@ export const App: React.FC = () => {
 
   const [startDream, startDreamResult] = useMutation(StartDreamDocument);
 
+  const dreamId = startDreamResult.data?.startDream.id;
+
   const watchDreamResult = useSubscription(WatchDreamDocument, {
     variables: {
-      dreamId: startDreamResult.data?.startDream!,
+      dreamId: dreamId!,
     },
-    skip: startDreamResult.data == null,
+    skip: dreamId == null,
   });
 
   const onGenerate = useCallback(async (prompt: string) => {
@@ -261,7 +263,7 @@ export const App: React.FC = () => {
             <main className="h-full flex-grow p-6 overflow-auto absolute inset-0">
               <div className="w-full max-w-2xl mx-auto">
                 <PromptInput onGenerate={onGenerate} />
-                {!startDreamResult.called || watchDreamResult.data?.watchDream.__typename === "DreamComplete" ? null : "Loading"}
+                {!startDreamResult.called || watchDreamResult.data?.watchDream.__typename === "FinishedDream" ? null : "Loading"}
                 <ul className="py-6 gap-2 md:gap-4 grid justify-center grid-cols-repeat-fit-20">
                   {dreamImages.map((dreamImage) => (
                     <li key={dreamImage.imageUri}>
@@ -365,21 +367,23 @@ const PromptInput: React.FC<PromptInputProps> = (props) => {
   );
 };
 
-function getDreamImages(dream?: WatchDreamSubscription): DreamImage[] {
+function getDreamImages(dream?: WatchDreamSubscription): { imageUri: string }[] {
   if (dream == null) {
     return [];
   }
 
-  switch (dream.watchDream.__typename) {
-    case "DreamComplete":
-      return dream.watchDream.images;
-    case "DreamRunning":
-      return dream.watchDream.previewImages;
-    case "DreamPending":
-      return [];
-    case "DreamError":
-      return [];
-    default:
-      return unreachable(dream.watchDream);
-  }
+  return dream.watchDream.images.flatMap((dreamImage) => {
+    switch (dreamImage.__typename) {
+      case "PendingDreamImage":
+        return [];
+      case "RunningDreamImage":
+        return dreamImage.previewImageUri != null ? [{ imageUri: dreamImage.previewImageUri }] : [];
+      case "FinishedDreamImage":
+        return [{ imageUri: dreamImage.imageUri }];
+      case "StoppedDreamImage":
+        return [];
+      default:
+        return unreachable(dreamImage);
+    }
+  });
 }
