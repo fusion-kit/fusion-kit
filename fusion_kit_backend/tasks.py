@@ -53,17 +53,17 @@ def txt2img(prompt, image_sample_callback=None):
     opt_W = 512 # image width, in pixel space
     opt_C = 4 # latent channels
     opt_f = 8 # downsampling factor
-    opt_n_samples = 5 # how many samples to produce for each given prompt. A.k.a. batch size
+    opt_n_samples = 1 # how many samples to produce for each given prompt. A.k.a. batch size
     opt_n_rows = 0 # rows in the grid (default: n_samples)
     opt_scale = 7.5 # unconditional guidance scale: eps = eps(x, empty) + scale * (eps(x, cond) - eps(x, empty))
     opt_device = "cuda" # specify GPU (cuda/cuda:0/cuda:1/...)
     opt_from_file = None # if specified, load prompts from this file
     opt_seed = None # the seed (for reproducible sampling)
     opt_unet_bs = 1 # Slightly reduces inference time at the expense of high VRAM (value > 1 not recommended)
-    opt_turbo = False # Reduces inference time on the expense of 1GB VRAM
+    opt_turbo = True # Reduces inference time on the expense of 1GB VRAM
     opt_precision = "autocast" # evaluate at this precision [full, autocast]
     opt_format = "png" # output image format [jpg, png]
-    opt_sampler = "plms" # sampler [ddim, plms]
+    opt_sampler = "ddim" # sampler [ddim, plms]
 
     config = CONFIG_FILE
     ckpt = CKPT_FILE
