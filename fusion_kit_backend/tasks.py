@@ -42,7 +42,7 @@ CONFIG_FILE = "stable_diffusion/optimizedSD/v1-inference.yaml"
 CKPT_FILE = "stable_diffusion/models/ldm/stable-diffusion-v1/model.ckpt"
 
 
-def txt2img(prompt, image_sample_callback=None):
+def txt2img(prompt, image_sample_callback=None, steps_per_image_preview=10):
     opt_prompt = prompt
     opt_outdir = "../sd-outputs-test/"
     opt_ddim_steps = 50 # number of ddim sampling steps
@@ -190,11 +190,18 @@ def txt2img(prompt, image_sample_callback=None):
                         while torch.cuda.memory_allocated() / 1e6 >= mem:
                             time.sleep(1)
 
+
                     if image_sample_callback is not None:
                         modelFS.to(opt_device)
-                        img_callback = lambda image_samples, n: image_sample_callback(image_samples_to_image(image_samples, n, modelFS, batch_size), n)
+                        img_callback = make_img_callback(
+                            image_sample_callback=image_sample_callback,
+                            total_steps=opt_ddim_steps,
+                            steps_per_preview=steps_per_image_preview,
+                            modelFS=modelFS,
+                            batch_size=batch_size,
+                        )
                     else:
-                        None
+                        img_callback = None
 
                     samples_ddim = model.sample(
                         S=opt_ddim_steps,
@@ -253,7 +260,7 @@ def txt2img(prompt, image_sample_callback=None):
 #
 # Full file here:
 # https://github.com/cobryan05/stable-diffusion-webui/blob/19dc3779f603a736f3f15dbf78ea402640bff3af/webui.py
-def image_samples_to_image(image_samples, iter_num, modelFS, batch_size):
+def image_samples_to_images(image_samples, modelFS, batch_size):
     images = []
     for i in range(batch_size):
         x_samples_ddim = modelFS.decode_first_stage(image_samples[i].unsqueeze(0))
@@ -262,3 +269,19 @@ def image_samples_to_image(image_samples, iter_num, modelFS, batch_size):
         image = Image.fromarray(x_sample.astype(np.uint8))
         images.append(image)
     return images
+
+def make_img_callback(image_sample_callback, total_steps, steps_per_preview, modelFS, batch_size):
+    if image_sample_callback is None:
+        return None
+
+    def img_callback(image_samples, step_index):
+        should_generate_preview = step_index % steps_per_preview == 0
+        if should_generate_preview:
+            images = image_samples_to_images(
+                image_samples=image_samples,
+                modelFS=modelFS,
+                batch_size=batch_size,
+            )
+            image_sample_callback(images, step_index)
+
+    return img_callback
