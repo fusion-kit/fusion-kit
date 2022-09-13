@@ -257,8 +257,8 @@ export const App: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="flex flex-1 flex-col lg:flex-row h-full">
-            <main className="h-full flex-grow p-6 overflow-auto">
+          <div className="flex flex-1 flex-col lg:flex-row h-full relative">
+            <main className="h-full flex-grow p-6 overflow-auto absolute inset-0">
               <div className="w-full max-w-2xl mx-auto">
                 <PromptInput onGenerate={onGenerate} />
                 {!startDreamResult.called || watchDreamResult.data?.watchDream.__typename === "DreamComplete" ? null : "Loading"}
