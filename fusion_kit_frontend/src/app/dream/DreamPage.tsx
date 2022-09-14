@@ -31,7 +31,7 @@ export const DreamPage: React.FC = () => {
 
   return (
     <>
-      <main className="h-full flex-grow p-6 overflow-auto absolute inset-0">
+      <main className="h-full flex-grow p-6 overflow-auto absolute lg:static inset-0">
         <div className="w-full max-w-2xl mx-auto">
           <PromptInput onStartDream={onStartDream} />
           {!startDreamResult.called || watchDreamResult.data?.watchDream.__typename === "FinishedDream" ? null : "Loading"}
