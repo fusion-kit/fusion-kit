@@ -10,6 +10,7 @@ import appdirs
 from ariadne import gql
 from ariadne.asgi import GraphQL
 from ariadne.asgi.handlers import GraphQLWSHandler
+import logging
 from starlette.applications import Starlette
 from starlette.routing import Route, WebSocketRoute
 from starlette.middleware import Middleware
@@ -29,7 +30,7 @@ images_dir = os.path.join(data_dir, "images")
 if data_dir.count("?") > 0:
     raise Exception(f"invalid data dir path: {data_dir}")
 
-db_url = f"sqlite:///{data_dir}/fusion-kit.sql?mode=rwc"
+db_url = f"sqlite:///{data_dir}/fusion-kit.db?mode=rwc"
 
 os.makedirs(data_dir, exist_ok=True)
 os.makedirs(images_dir, exist_ok=True)
@@ -75,6 +76,8 @@ async def main():
         ]
 
         app = Starlette(debug=True, routes=routes, middleware=middleware)
+
+        logging.getLogger("uvicorn").propagate = False
 
         config = uvicorn.Config(app, host='0.0.0.0', port=2425)
         server = uvicorn.Server(config)
