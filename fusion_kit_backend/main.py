@@ -5,7 +5,7 @@ import os
 import asyncio
 from ariadne import gql
 from ariadne.asgi import GraphQL
-from ariadne.asgi.handlers import GraphQLTransportWSHandler
+from ariadne.asgi.handlers import GraphQLWSHandler
 from starlette.applications import Starlette
 from starlette.routing import Route, WebSocketRoute
 from starlette.middleware import Middleware
@@ -28,10 +28,12 @@ async def main():
 
         schema = domain.graphql.make_schema(type_defs)
 
+        # TODO: Switch to `GraphQLTransportWSHandler` after this bug is resolved:
+        # https://github.com/mirumee/ariadne/issues/927
         graphql_app = GraphQL(
             schema,
             debug=True,
-            websocket_handler=GraphQLTransportWSHandler(),
+            websocket_handler=GraphQLWSHandler(),
             context_value=context_builder,
         )
 

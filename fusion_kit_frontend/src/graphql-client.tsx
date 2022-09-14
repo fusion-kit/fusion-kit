@@ -1,9 +1,9 @@
 import {
   ApolloClient, HttpLink, InMemoryCache, split,
 } from "@apollo/client";
-import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { WebSocketLink } from "@apollo/client/link/ws";
 import { getMainDefinition } from "@apollo/client/utilities";
-import { createClient } from "graphql-ws";
+import { SubscriptionClient } from "subscriptions-transport-ws";
 import { nonEmptyString } from "./utils";
 
 const BACKEND_URL = nonEmptyString(import.meta.env.VITE_BACKEND_URL) ?? window.location.href;
@@ -14,8 +14,8 @@ const httpLink = new HttpLink({
   uri: GRAPHQL_URL,
 });
 
-const wsLink = new GraphQLWsLink(createClient({
-  url: GRAPHQL_WS_URL,
+const wsLink = new WebSocketLink(new SubscriptionClient(GRAPHQL_WS_URL, {
+  reconnect: true,
   lazy: true,
 }));
 
