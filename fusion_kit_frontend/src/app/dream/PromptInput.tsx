@@ -6,11 +6,11 @@ import { PaintBrushIcon } from "@heroicons/react/24/solid";
 import Textarea from "react-expanding-textarea";
 
 interface PromptInputProps {
-  onGenerate: (_prompt: string) => void,
+  onStartDream: (_prompt: string) => void,
 }
 
 export const PromptInput: React.FC<PromptInputProps> = (props) => {
-  const { onGenerate } = props;
+  const { onStartDream } = props;
 
   const promptInputId = useId();
   const formRef = useRef<HTMLFormElement>(null);
@@ -20,8 +20,8 @@ export const PromptInput: React.FC<PromptInputProps> = (props) => {
     e?.stopPropagation();
     e?.preventDefault();
 
-    onGenerate(prompt);
-  }, [prompt, onGenerate]);
+    onStartDream(prompt);
+  }, [prompt, onStartDream]);
 
   const onPromptKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = useCallback((e) => {
     if (!e.shiftKey && e.key === "Enter") {
@@ -77,7 +77,7 @@ export const PromptInput: React.FC<PromptInputProps> = (props) => {
               className="inline-flex items-center space-x-2 rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
               <PaintBrushIcon className="h-5 w-5" aria-hidden="true" />
-              <span>Generate</span>
+              <span>Dream</span>
             </button>
           </div>
         </div>

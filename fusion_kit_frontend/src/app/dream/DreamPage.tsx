@@ -18,7 +18,7 @@ export const DreamPage: React.FC = () => {
     skip: dreamId == null,
   });
 
-  const onGenerate = useCallback(async (prompt: string) => {
+  const onStartDream = useCallback(async (prompt: string) => {
     const response = await startDream({
       variables: {
         prompt,
@@ -33,7 +33,7 @@ export const DreamPage: React.FC = () => {
     <>
       <main className="h-full flex-grow p-6 overflow-auto absolute inset-0">
         <div className="w-full max-w-2xl mx-auto">
-          <PromptInput onGenerate={onGenerate} />
+          <PromptInput onStartDream={onStartDream} />
           {!startDreamResult.called || watchDreamResult.data?.watchDream.__typename === "FinishedDream" ? null : "Loading"}
           <ul className="py-6 gap-2 md:gap-4 grid justify-center grid-cols-repeat-fit-20">
             {dreamImages.map((dreamImage) => (
