@@ -1,63 +1,38 @@
-import { MutationResult, useSubscription } from "@apollo/client";
 import { clsx } from "clsx";
 import React from "react";
-import {
-  StartDreamMutation, StoppedDreamReason, WatchDreamDocument, WatchDreamSubscription,
-} from "../../generated/graphql";
 import { unreachable } from "../../utils";
 import { ErrorBox } from "../ErrorBox";
+import { DreamState, Dream } from "./hooks";
 
 interface CurrentDreamProps {
-  startDreamResult: MutationResult<StartDreamMutation>,
+  dreamState: DreamState,
   numImages: number,
 }
 
 export const CurrentDream: React.FC<CurrentDreamProps> = (props) => {
-  const { startDreamResult, numImages } = props;
+  const { dreamState, numImages } = props;
 
-  const currentDreamId = startDreamResult.data?.startDream.id;
-
-  const watchDreamResult = useSubscription(WatchDreamDocument, {
-    variables: {
-      dreamId: currentDreamId!,
-    },
-    skip: currentDreamId == null,
-  });
-
-  if (!startDreamResult.called) {
-    return null;
-  }
-
-  const error = startDreamResult.error ?? watchDreamResult.error;
-  if (error != null) {
-    return (
-      <ErrorBox>
-        <h3 className="text-sm font-medium text-red-800">Got error while generating dream</h3>
-        <div className="mt-2 text-sm text-red-700">
-          <p>
-            Error message:
-            {" "}
-            {error.message}
-          </p>
-        </div>
-      </ErrorBox>
-    );
-  }
-
-  const dream = watchDreamResult.data?.watchDream;
+  const { dream } = dreamState;
 
   const images = dream?.images
     ?? Array(numImages).fill(null).map(() => pendingImage());
 
   return (
     <>
-      {dream?.__typename === "StoppedDream" ? <ShowStoppedDream dream={dream} /> : null}
+      {dreamState.type === "error" ? (
+        <ErrorBox>
+          <h3 className="text-sm font-medium text-red-800">Got error while creating dream</h3>
+          <div className="mt-2 text-sm text-red-700">
+            <p>
+              {dreamState.message}
+            </p>
+          </div>
+        </ErrorBox>
+      ) : null}
       <ShowDreamImages images={images} />
     </>
   );
 };
-
-type Dream = WatchDreamSubscription["watchDream"];
 
 type DreamImage = Dream["images"][0];
 
@@ -100,31 +75,6 @@ export const ShowDreamImages: React.FC<ShowDreamImagesProps> = (props) => {
       })}
     </ul>
   );
-};
-
-interface ShowStoppedDreamProps {
-  dream: Dream & {__typename: "StoppedDream"},
-}
-
-const ShowStoppedDream: React.FC<ShowStoppedDreamProps> = (props) => {
-  const { dream } = props;
-
-  switch (dream.reason) {
-    case StoppedDreamReason.DreamError:
-      return (
-        <ErrorBox>
-          <h3 className="text-sm font-medium text-red-800">Dream stopped due to error</h3>
-          <div className="mt-2 text-sm text-red-700">
-            {dream.message != null ? (
-              <p>{dream.message}</p>
-            ) : <p>Unknown error</p>}
-
-          </div>
-        </ErrorBox>
-      );
-    default:
-      return unreachable(dream.reason);
-  }
 };
 
 function getDreamImageUri(dreamImage: DreamImage): string | null {
