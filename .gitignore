@@ -3,6 +3,9 @@ src/clip
 src/taming-transformers
 condaenv.*.requirements.txt
 
+# Alembic migration DB
+/fusion_kit_backend/alembic.db
+
 ### Standard Python ignores ###
 
 # Byte-compiled / optimized / DLL files

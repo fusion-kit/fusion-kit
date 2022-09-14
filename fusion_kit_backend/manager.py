@@ -8,18 +8,21 @@ from ulid import ULID
 from domain.dream import Dream
 
 class FusionKitManager():
-    def __init__(self):
+    def __init__(self, db_engine):
+        self.db_engine = db_engine
         self.process = None
         self.broadcast = Broadcast("memory://")
         self.dreams = {}
         self.get_processor()
 
     async def __aenter__(self):
+        self.db_conn = self.db_engine.connect()
         await self.broadcast.connect()
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         await self.broadcast.disconnect()
+        self.db_conn.close()
 
     async def start_dream(self, prompt):
         dream_id = str(ULID())
