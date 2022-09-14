@@ -6,6 +6,7 @@ import asyncio
 import alembic.config
 import alembic.command
 from alembic.migration import MigrationContext
+import appdirs
 from ariadne import gql
 from ariadne.asgi import GraphQL
 from ariadne.asgi.handlers import GraphQLWSHandler
@@ -22,7 +23,16 @@ project_path = os.path.realpath(os.path.join(os.path.realpath(__file__), "..", "
 graphql_schema_path = os.path.join(project_path, "schema.graphql")
 alembic_ini_path = os.path.join(project_path, "fusion_kit_backend", "alembic.ini")
 alembic_script_path = os.path.join(project_path, "fusion_kit_backend", "alembic")
-db_url = "sqlite://"
+data_dir = appdirs.user_data_dir("fusion-kit")
+images_dir = os.path.join(data_dir, "images")
+
+if data_dir.count("?") > 0:
+    raise Exception(f"invalid data dir path: {data_dir}")
+
+db_url = f"sqlite:///{data_dir}/fusion-kit.sql?mode=rwc"
+
+os.makedirs(data_dir, exist_ok=True)
+os.makedirs(images_dir, exist_ok=True)
 
 # Parse and validate GraphQL schema
 with open(graphql_schema_path) as file:
@@ -38,7 +48,7 @@ def run_db_migrations(db_conn):
     alembic.command.upgrade(alembic_cfg, "head")
 
 async def main():
-    async with FusionKitManager(db_engine=db_engine) as manager:
+    async with FusionKitManager(db_engine=db_engine, images_dir=images_dir) as manager:
         # Run datababase migrations
         run_db_migrations(manager.db_conn)
 

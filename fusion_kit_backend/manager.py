@@ -8,8 +8,10 @@ from ulid import ULID
 from domain.dream import Dream
 
 class FusionKitManager():
-    def __init__(self, db_engine):
+    def __init__(self, db_engine, images_dir):
         self.db_engine = db_engine
+        self.images_dir = images_dir
+
         self.process = None
         self.broadcast = Broadcast("memory://")
         self.dreams = {}
