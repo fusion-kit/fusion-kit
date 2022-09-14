@@ -18,5 +18,9 @@ subscription WatchDream($dreamId: ID!) {
       numFinishedSteps
       numTotalSteps
     }
+    ...on StoppedDream {
+      reason
+      message
+    }
   }
 }
