@@ -8,7 +8,6 @@ import { nonEmptyString } from "./utils";
 
 const BACKEND_URL = nonEmptyString(import.meta.env.VITE_BACKEND_URL) ?? window.location.href;
 const GRAPHQL_URL = joinUrlPath(BACKEND_URL, "/graphql");
-// const GRAPHQL_WS_URL = httpUrlToWsUrl(joinUrlPath(BACKEND_URL, "/graphql"));
 const GRAPHQL_WS_URL = httpUrlToWsUrl(joinUrlPath(BACKEND_URL, "/graphql"));
 
 const httpLink = new HttpLink({
