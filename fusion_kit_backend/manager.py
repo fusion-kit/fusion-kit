@@ -2,6 +2,7 @@ import asyncio
 from functools import partial
 from broadcaster import Broadcast
 import multiprocessing
+import os
 from PIL import Image
 import tasks
 from ulid import ULID
@@ -36,7 +37,7 @@ class FusionKitManager():
         })
 
         # TODO: Take num_images and num_steps_per_image as input
-        dream = Dream(dream_id, self.broadcast, num_images=1, num_steps_per_image=50)
+        dream = Dream(dream_id, self, num_images=1, num_steps_per_image=50)
 
         self.dreams[dream_id] = dream
 
@@ -55,6 +56,14 @@ class FusionKitManager():
                     yield event_dream
                     if event_dream.is_complete():
                         return
+
+    def persist_dream(self, dream):
+        for image in dream.images:
+            image_dir = os.path.join(self.images_dir, image.id)
+            os.mkdir(image_dir)
+
+            image_path = os.path.join(image_dir, "image.png")
+            image.image.save(image_path, format="png")
 
     def get_processor(self):
         if self.process is None or not self.process.is_alive():

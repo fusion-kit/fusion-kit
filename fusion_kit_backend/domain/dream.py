@@ -9,8 +9,9 @@ gql_dream = InterfaceType("Dream")
 def resolve_dream_type(dream, *_):
     return dream.state
 
-async def dream_watcher(dream, broadcast):
+async def dream_watcher(dream, manager):
     print("starting dream watcher")
+    broadcast = manager.broadcast
     async with broadcast.subscribe(channel='response') as subscriber:
         async for event in subscriber:
             response = event.message
@@ -26,6 +27,7 @@ async def dream_watcher(dream, broadcast):
                     for i, image in enumerate(response['images']):
                         dream.images[i].state = 'FinishedDreamImage'
                         dream.images[i].image = image
+                    manager.persist_dream(dream)
                     await broadcast.publish(channel='dream', message=dream)
                     return
                 else:
@@ -41,7 +43,7 @@ async def dream_watcher(dream, broadcast):
                 return
 
 class Dream():
-    def __init__(self, id, broadcast, num_images, num_steps_per_image):
+    def __init__(self, id, manager, num_images, num_steps_per_image):
         self.id = id
         self.images = []
         self.state = 'PendingDream'
@@ -57,7 +59,7 @@ class Dream():
             )
             self.images.append(dream_image)
 
-        self.task = asyncio.create_task(dream_watcher(self, broadcast))
+        self.task = asyncio.create_task(dream_watcher(self, manager))
 
     def is_complete(self):
         return self.state == 'FinishedDream' or self.state == 'StoppedDream'
