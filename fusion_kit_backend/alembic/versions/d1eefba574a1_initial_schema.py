@@ -32,6 +32,11 @@ def upgrade() -> None:
         sa.Column('id', sa.String, primary_key=True),
         sa.Column('dream_id', sa.String, sa.ForeignKey('dreams.id'), nullable=False),
         sa.Column('seed', sa.Integer, nullable=False),
+        sa.Column('index', sa.Integer, nullable=False),
+        sa.Column('image_path', sa.Integer, nullable=False),
+        sa.Column('width', sa.Integer, nullable=False),
+        sa.Column('height', sa.Integer, nullable=False),
+        sa.Column('blurhash', sa.String, nullable=False),
     )
 
     op.create_table(
