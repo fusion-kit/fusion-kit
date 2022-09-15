@@ -45,13 +45,22 @@ async def dream_watcher(dream, manager):
                 return
 
 class Dream():
-    def __init__(self, id, manager, num_images, num_steps_per_image, seed=None):
+    def __init__(
+        self,
+        id,
+        manager,
+        prompt,
+        num_images,
+        num_steps_per_image,
+        seed=None
+    ):
         self.id = id
         self.seed = seed
+        self.prompt = prompt
         self.images = []
         self.state = 'PendingDream'
-        self.num_total_images = num_images
-        self.num_total_steps = num_images * num_steps_per_image
+        self.num_images = num_images
+        self.num_steps_per_image = num_steps_per_image
 
         for _ in range(num_images):
             dream_image_id = str(ULID())
@@ -68,6 +77,12 @@ class Dream():
         return self.state == 'FinishedDream' or self.state == 'StoppedDream'
 
     ### GraphQL resolvers ###
+
+    def num_total_images(self, *_):
+        return self.num_images
+
+    def num_total_steps(self, *_):
+        return self.num_images * self.num_steps_per_image
 
     def num_finished_images(self, *_):
         return sum(1 for image in self.images if image.is_complete())

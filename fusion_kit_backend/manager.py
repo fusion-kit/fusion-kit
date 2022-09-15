@@ -37,7 +37,13 @@ class FusionKitManager():
         })
 
         # TODO: Take num_images and num_steps_per_image as input
-        dream = Dream(dream_id, self, num_images=1, num_steps_per_image=50)
+        dream = Dream(
+            dream_id,
+            self,
+            prompt=prompt,
+            num_images=1,
+            num_steps_per_image=50
+        )
 
         self.dreams[dream_id] = dream
 
