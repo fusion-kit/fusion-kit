@@ -1,11 +1,15 @@
 import asyncio
 from functools import partial
 from broadcaster import Broadcast
+import blurhash
+import json
 import multiprocessing
+import numpy
 import os
 from PIL import Image
 import tasks
 from ulid import ULID
+import db
 from domain.dream import Dream
 
 class FusionKitManager():
@@ -64,12 +68,39 @@ class FusionKitManager():
                         return
 
     def persist_dream(self, dream):
-        for image in dream.images:
-            image_dir = os.path.join(self.images_dir, image.id)
-            os.mkdir(image_dir)
+        with db.Session() as session:
+            db_dream = db.Dream(
+                id=dream.id,
+                prompt=dream.prompt,
+                seed=dream.seed,
+                num_images=dream.num_images,
+                settings_json=json.dumps({}),
+            )
+            session.add(db_dream)
 
-            image_path = os.path.join(image_dir, "image.png")
-            image.image.save(image_path, format="png")
+            for index, image in enumerate(dream.images):
+                image_dir = os.path.join(self.images_dir, image.id)
+                os.mkdir(image_dir)
+
+                image_path = os.path.join(image_dir, "image.png")
+                image.image.save(image_path, format="png")
+
+                image_blurhash = blurhash.encode(numpy.array(image.image.convert("RGB")))
+
+                db_image = db.DreamImage(
+                    id=image.id,
+                    dream_id=image.dream_id,
+                    seed=image.seed,
+                    index=index,
+                    image_path=os.path.relpath(image_path, start=self.images_dir),
+                    width=image.image.width,
+                    height=image.image.height,
+                    blurhash=image_blurhash
+                )
+                session.add(db_image)
+
+            session.commit()
+
 
     def get_processor(self):
         if self.process is None or not self.process.is_alive():
