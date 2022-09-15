@@ -3,19 +3,16 @@ sys.path.append('./stable_diffusion')
 
 import os
 import asyncio
-import alembic.config
-import alembic.command
-from alembic.migration import MigrationContext
 import appdirs
 from ariadne import gql
 from ariadne.asgi import GraphQL
 from ariadne.asgi.handlers import GraphQLWSHandler
+import db
 import logging
 from starlette.applications import Starlette
 from starlette.routing import Route, WebSocketRoute
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
-import sqlalchemy
 import uvicorn
 import domain.graphql
 from manager import FusionKitManager
@@ -26,11 +23,7 @@ alembic_ini_path = os.path.join(project_path, "fusion_kit_backend", "alembic.ini
 alembic_script_path = os.path.join(project_path, "fusion_kit_backend", "alembic")
 data_dir = appdirs.user_data_dir("fusion-kit")
 images_dir = os.path.join(data_dir, "images")
-
-if data_dir.count("?") > 0:
-    raise Exception(f"invalid data dir path: {data_dir}")
-
-db_url = f"sqlite:///{data_dir}/fusion-kit.db?mode=rwc"
+db_path = os.path.join(data_dir, "fusion-kit.db")
 
 os.makedirs(data_dir, exist_ok=True)
 os.makedirs(images_dir, exist_ok=True)
@@ -39,19 +32,16 @@ os.makedirs(images_dir, exist_ok=True)
 with open(graphql_schema_path) as file:
     type_defs = gql(file.read())
 
-db_engine = sqlalchemy.create_engine(db_url)
-
-def run_db_migrations(db_conn):
-    alembic_cfg = alembic.config.Config(alembic_ini_path)
-    alembic_cfg.attributes['connection'] = db_conn
-    alembic_cfg.set_main_option("script_location", alembic_script_path)
-    alembic_cfg.set_main_option("sqlalchemy.url", db_url)
-    alembic.command.upgrade(alembic_cfg, "head")
+db_config = db.DbConfig(
+    alembic_ini_path=alembic_ini_path,
+    alembic_script_path=alembic_script_path,
+    db_path=db_path
+)
 
 async def main():
-    async with FusionKitManager(db_engine=db_engine, images_dir=images_dir) as manager:
+    async with FusionKitManager(db_config=db_config, images_dir=images_dir) as manager:
         # Run datababase migrations
-        run_db_migrations(manager.db_conn)
+        db.run_db_migrations(db_config=db_config, db_conn=manager.db_conn)
 
         context_builder = domain.graphql.context_builder(manager)
 
