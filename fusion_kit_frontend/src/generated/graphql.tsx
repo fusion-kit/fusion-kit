@@ -27,6 +27,7 @@ export type FinishedDream = Dream & {
   __typename?: 'FinishedDream';
   id: Scalars['ID'];
   images: Array<FinishedDreamImage>;
+  seed: Scalars['Int'];
 };
 
 export type FinishedDreamImage = DreamImage & {
@@ -34,6 +35,7 @@ export type FinishedDreamImage = DreamImage & {
   dreamId: Scalars['ID'];
   id: Scalars['ID'];
   imageUri: Scalars['String'];
+  seed: Scalars['Int'];
 };
 
 export type Mutation = {

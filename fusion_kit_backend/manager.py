@@ -102,11 +102,12 @@ def fusion_kit_manager_processor(req_queue, res_queue):
                 request_id=request['id'],
                 res_queue=res_queue,
             )
-            images = tasks.txt2img(request['prompt'], image_sample_callback=image_sample_callback)
+            result = tasks.txt2img(request['prompt'], image_sample_callback=image_sample_callback)
             res_queue.put({
                 'id': request['id'],
                 'state': 'complete',
-                'images': images,
+                'images': result['images'],
+                'seed': result['seed'],
             })
         else:
             print(f"Unkown request type: {request['request']}")

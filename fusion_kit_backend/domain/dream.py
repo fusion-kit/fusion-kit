@@ -24,9 +24,11 @@ async def dream_watcher(dream, manager):
                     await broadcast.publish(channel='dream', message=dream)
                 elif response['state'] == 'complete':
                     dream.state = 'FinishedDream'
+                    dream.seed = response['seed']
                     for i, image in enumerate(response['images']):
                         dream.images[i].state = 'FinishedDreamImage'
-                        dream.images[i].image = image
+                        dream.images[i].image = image['image']
+                        dream.images[i].seed = image['seed']
                     manager.persist_dream(dream)
                     await broadcast.publish(channel='dream', message=dream)
                     return
@@ -43,8 +45,9 @@ async def dream_watcher(dream, manager):
                 return
 
 class Dream():
-    def __init__(self, id, manager, num_images, num_steps_per_image):
+    def __init__(self, id, manager, num_images, num_steps_per_image, seed=None):
         self.id = id
+        self.seed = seed
         self.images = []
         self.state = 'PendingDream'
         self.num_total_images = num_images

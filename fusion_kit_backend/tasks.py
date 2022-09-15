@@ -74,9 +74,12 @@ def txt2img(prompt, image_sample_callback=None, steps_per_image_preview=10):
     outpath = opt_outdir
     grid_count = len(os.listdir(outpath)) - 1
 
-    if opt_seed == None:
-        opt_seed = randint(0, 1000000)
-    seed_everything(opt_seed)
+    initial_seed = opt_seed
+    if initial_seed == None:
+        initial_seed = randint(0, 1000000)
+    seed_everything(initial_seed)
+
+    current_seed = initial_seed
 
     # Logging
     # logger(vars(opt), log_csv = "logs/txt2img_logs.csv")
@@ -206,7 +209,7 @@ def txt2img(prompt, image_sample_callback=None, steps_per_image_preview=10):
                     samples_ddim = model.sample(
                         S=opt_ddim_steps,
                         conditioning=c,
-                        seed=opt_seed,
+                        seed=current_seed,
                         shape=shape,
                         verbose=False,
                         unconditional_guidance_scale=opt_scale,
@@ -227,9 +230,12 @@ def txt2img(prompt, image_sample_callback=None, steps_per_image_preview=10):
                         x_sample = torch.clamp((x_samples_ddim + 1.0) / 2.0, min=0.0, max=1.0)
                         x_sample = 255.0 * rearrange(x_sample[0].cpu().numpy(), "c h w -> h w c")
                         image = Image.fromarray(x_sample.astype(np.uint8))
-                        images.append(image)
-                        seeds += str(opt_seed) + ","
-                        opt_seed += 1
+                        images.append({
+                            'image': image,
+                            'seed': current_seed,
+                        })
+                        seeds += str(current_seed) + ","
+                        current_seed += 1
                         base_count += 1
 
                     if opt_device != "cpu":
@@ -253,7 +259,10 @@ def txt2img(prompt, image_sample_callback=None, steps_per_image_preview=10):
         ).format(time_taken)
     )
 
-    return images
+    return {
+        'images': images,
+        'seed': initial_seed,
+    }
 
 # Based on `sample_iteration_callback` from this PR:
 # https://github.com/sd-webui/stable-diffusion-webui/pull/611
