@@ -1,8 +1,9 @@
 from functools import partial
-from .txt2img import txt2img
+from .dreamer import Dreamer
 
 def processor_runner(req_queue, res_queue):
     print("started processor")
+    dreamer = Dreamer()
     while True:
         request = req_queue.get()
         request_id = request['request_id']
@@ -14,7 +15,10 @@ def processor_runner(req_queue, res_queue):
                 request_id=request_id,
                 res_queue=res_queue,
             )
-            result = txt2img(request_body['prompt'], image_sample_callback=image_sample_callback)
+            result = dreamer.txt2img(
+                prompt=request_body['prompt'],
+                image_sample_callback=image_sample_callback
+            )
             res_queue.put({
                 'request_id': request_id,
                 'stopped': True,
