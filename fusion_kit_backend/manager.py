@@ -7,7 +7,7 @@ import multiprocessing
 import numpy
 import os
 from PIL import Image
-import tasks
+from processor import Processor, ProcessorError
 from ulid import ULID
 import db
 from domain.dream import Dream
@@ -17,10 +17,9 @@ class FusionKitManager():
         self.db_engine = db_config.db_engine
         self.images_dir = images_dir
 
-        self.process = None
         self.broadcast = Broadcast("memory://")
+        self.processor = Processor(broadcast=self.broadcast)
         self.active_dreams = {}
-        self.get_processor()
 
     async def __aenter__(self):
         self.db_conn = self.db_engine.connect()
@@ -33,12 +32,13 @@ class FusionKitManager():
 
     async def start_dream(self, prompt):
         dream_id = str(ULID())
-        processor = self.get_processor()
-        processor['req_queue'].put({
-            'id': dream_id,
-            'request': 'txt2img',
-            'prompt': prompt,
-        })
+        responses = self.processor.send_request_and_watch(
+            request_id=dream_id,
+            request='txt2img',
+            body={
+                'prompt': prompt,
+            }
+        )
 
         # TODO: Take num_images and num_steps_per_image as input
         dream = Dream(
@@ -48,8 +48,7 @@ class FusionKitManager():
             num_steps_per_image=50,
         )
 
-        watcher_coro = dream_watcher(manager=self, dream=dream)
-        watcher_task = asyncio.create_task(watcher_coro)
+        watcher_task = asyncio.create_task(dream_watcher(manager=self, dream=dream, responses=responses))
         self.active_dreams[dream_id] = {
             'dream': dream,
             'task': watcher_task,
@@ -60,7 +59,7 @@ class FusionKitManager():
     async def watch_dream(self, dream_id):
         active_dream = self.active_dreams.get(dream_id)
         if active_dream is None:
-            raise Exception(f"Active dream not found with ID: {dream_id}")
+            raise Exception(f"active dream not found with ID {dream_id}")
 
         dream = active_dream['dream']
         yield dream
@@ -110,120 +109,29 @@ class FusionKitManager():
 
             session.commit()
 
-
-    def get_processor(self):
-        if self.process is None or not self.process.is_alive():
-            self.req_queue = multiprocessing.Queue()
-            self.res_queue = multiprocessing.Queue()
-            self.process = multiprocessing.Process(
-                target=fusion_kit_manager_processor,
-                kwargs={
-                    'req_queue': self.req_queue,
-                    'res_queue': self.res_queue,
-                }
-            )
-            self.process.start()
-
-            self.broadcast_task = asyncio.create_task(
-                fusion_kit_manager_broadcaster(
-                    res_queue=self.res_queue,
-                    broadcast=self.broadcast,
-                )
-            )
-
-            self.watchdog_task = asyncio.create_task(fusion_kit_manager_watchdog(self))
-
-        return {
-            'req_queue': self.req_queue,
-            'res_queue': self.res_queue,
-        }
-
-def fusion_kit_manager_processor(req_queue, res_queue):
-    print("started processor")
-    while True:
-        request = req_queue.get()
-        if request['request'] == 'txt2img':
-            image_sample_callback = partial(
-                txt2img_sample_callback,
-                request_id=request['id'],
-                res_queue=res_queue,
-            )
-            result = tasks.txt2img(request['prompt'], image_sample_callback=image_sample_callback)
-            res_queue.put({
-                'id': request['id'],
-                'state': 'complete',
-                'images': result['images'],
-                'seed': result['seed'],
-            })
-        else:
-            print(f"Unkown request type: {request['request']}")
-
-def txt2img_sample_callback(images, n, request_id, res_queue):
-    res_queue.put({
-        'id': request_id,
-        'state': 'running',
-        'preview_images': images,
-    })
-
-async def fusion_kit_manager_broadcaster(res_queue, broadcast):
-    print("started broadcaster")
-    loop = asyncio.get_running_loop()
-    while True:
-        response = await loop.run_in_executor(None, res_queue.get)
-        await broadcast.publish(channel="response", message=response)
-
-
-async def fusion_kit_manager_watchdog(fusion_kit_manager):
-    print("started watchdog")
-    was_active = False
-    while True:
-        is_active = fusion_kit_manager.process is not None and fusion_kit_manager.process.is_alive()
-
-        # Check if process switched from active to inactive
-        if was_active and not is_active:
-            print("watchdog failed")
-            await fusion_kit_manager.broadcast.publish(
-                channel="response",
-                message={
-                    'id': None,
-                    'watchdog': 'process_died'
-                }
-            )
-
-        was_active = is_active
-        await asyncio.sleep(5)
-
-async def dream_watcher(manager, dream):
-    print("starting dream watcher")
+async def dream_watcher(manager, dream, responses):
     broadcast = manager.broadcast
-    async with broadcast.subscribe(channel='response') as subscriber:
-        async for event in subscriber:
-            response = event.message
-            if response['id'] == dream.id:
-                if response['state'] == 'running':
-                    dream.state = 'RunningDream'
-                    for i, image in enumerate(response['preview_images']):
-                        dream.images[i].state = 'RunningDreamImage'
-                        dream.images[i].image = image
-                    await broadcast.publish(channel='dream', message=dream)
-                elif response['state'] == 'complete':
-                    dream.state = 'FinishedDream'
-                    dream.seed = response['seed']
-                    for i, image in enumerate(response['images']):
-                        dream.images[i].state = 'FinishedDreamImage'
-                        dream.images[i].image = image['image']
-                        dream.images[i].seed = image['seed']
-                    manager.persist_dream(dream)
-                    await broadcast.publish(channel='dream', message=dream)
-                    return
-                else:
-                    raise Exception(f"Unknown dream response state: {response['state']}")
-            elif response.get('watchdog') == 'process_died':
-                print("Got 'process died' message while waiting for dream")
-                dream.state = 'StoppedDream'
-                dream.reason = "DREAM_ERROR"
-                dream.message = 'Error: dream process died'
-                for image in dream.images:
-                    image.state = 'StoppedDreamImage'
-                await broadcast.publish(channel='dream', message=dream)
-                return
+
+    async for response in responses:
+        if response.get('error') is not None:
+            dream.state = 'StoppedDream'
+            dream.reason = "DREAM_ERROR"
+            dream.message = f"Error running dream: {response['error']}"
+            for image in dream.images:
+                image.state = 'StoppedDreamImage'
+            await broadcast.publish(channel='dream', message=dream)
+        elif response.get('state') == 'running':
+            dream.state = 'RunningDream'
+            for i, image in enumerate(response['preview_images']):
+                dream.images[i].state = 'RunningDreamImage'
+                dream.images[i].image = image
+            await broadcast.publish(channel='dream', message=dream)
+        elif response.get('state') == 'complete':
+            dream.state = 'FinishedDream'
+            dream.seed = response['seed']
+            for i, image in enumerate(response['images']):
+                dream.images[i].state = 'FinishedDreamImage'
+                dream.images[i].image = image['image']
+                dream.images[i].seed = image['seed']
+            manager.persist_dream(dream)
+            await broadcast.publish(channel='dream', message=dream)
