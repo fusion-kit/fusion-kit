@@ -19,7 +19,7 @@ class FusionKitManager():
 
         self.process = None
         self.broadcast = Broadcast("memory://")
-        self.dreams = {}
+        self.active_dreams = {}
         self.get_processor()
 
     async def __aenter__(self):
@@ -42,19 +42,27 @@ class FusionKitManager():
 
         # TODO: Take num_images and num_steps_per_image as input
         dream = Dream(
-            dream_id,
-            self,
+            id=dream_id,
             prompt=prompt,
             num_images=1,
-            num_steps_per_image=50
+            num_steps_per_image=50,
         )
 
-        self.dreams[dream_id] = dream
+        watcher_coro = dream_watcher(manager=self, dream=dream)
+        watcher_task = asyncio.create_task(watcher_coro)
+        self.active_dreams[dream_id] = {
+            'dream': dream,
+            'task': watcher_task,
+        }
 
         return dream
 
     async def watch_dream(self, dream_id):
-        dream = self.dreams[dream_id]
+        active_dream = self.active_dreams.get(dream_id)
+        if active_dream is None:
+            raise Exception(f"Active dream not found with ID: {dream_id}")
+
+        dream = active_dream['dream']
         yield dream
         if dream.is_complete():
             return
@@ -184,3 +192,38 @@ async def fusion_kit_manager_watchdog(fusion_kit_manager):
 
         was_active = is_active
         await asyncio.sleep(5)
+
+async def dream_watcher(manager, dream):
+    print("starting dream watcher")
+    broadcast = manager.broadcast
+    async with broadcast.subscribe(channel='response') as subscriber:
+        async for event in subscriber:
+            response = event.message
+            if response['id'] == dream.id:
+                if response['state'] == 'running':
+                    dream.state = 'RunningDream'
+                    for i, image in enumerate(response['preview_images']):
+                        dream.images[i].state = 'RunningDreamImage'
+                        dream.images[i].image = image
+                    await broadcast.publish(channel='dream', message=dream)
+                elif response['state'] == 'complete':
+                    dream.state = 'FinishedDream'
+                    dream.seed = response['seed']
+                    for i, image in enumerate(response['images']):
+                        dream.images[i].state = 'FinishedDreamImage'
+                        dream.images[i].image = image['image']
+                        dream.images[i].seed = image['seed']
+                    manager.persist_dream(dream)
+                    await broadcast.publish(channel='dream', message=dream)
+                    return
+                else:
+                    raise Exception(f"Unknown dream response state: {response['state']}")
+            elif response.get('watchdog') == 'process_died':
+                print("Got 'process died' message while waiting for dream")
+                dream.state = 'StoppedDream'
+                dream.reason = "DREAM_ERROR"
+                dream.message = 'Error: dream process died'
+                for image in dream.images:
+                    image.state = 'StoppedDreamImage'
+                await broadcast.publish(channel='dream', message=dream)
+                return
