@@ -1,7 +1,7 @@
 import asyncio
 from functools import partial
 from broadcaster import Broadcast
-import blurhash
+import blurhash_numba
 import json
 import multiprocessing
 import numpy
@@ -85,7 +85,8 @@ class FusionKitManager():
                 image_path = os.path.join(image_dir, "image.png")
                 image.image.save(image_path, format="png")
 
-                image_blurhash = blurhash.encode(numpy.array(image.image.convert("RGB")))
+                image_array = numpy.array(image.image.convert("RGB"), dtype=numpy.float)
+                image_blurhash = blurhash_numba.encode(image_array)
 
                 db_image = db.DreamImage(
                     id=image.id,
