@@ -37,6 +37,10 @@ class FusionKitManager():
             request='txt2img',
             body={
                 'prompt': prompt,
+                'num_images': 1,
+                'num_images_per_batch': 1,
+                'num_steps_per_image': 50,
+                'steps_per_image_preview': 10,
             }
         )
 

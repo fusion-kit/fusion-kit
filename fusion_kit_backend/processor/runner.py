@@ -10,14 +10,18 @@ def processor_runner(req_queue, res_queue):
         request_type = request['request']
         request_body = request['body']
         if request_type == 'txt2img':
-            image_sample_callback = partial(
-                txt2img_sample_callback,
+            image_preview_callback = partial(
+                txt2img_preview_callback,
                 request_id=request_id,
                 res_queue=res_queue,
             )
             result = dreamer.txt2img(
                 prompt=request_body['prompt'],
-                image_sample_callback=image_sample_callback
+                num_images=request_body['num_images'],
+                num_steps_per_image=request_body['num_steps_per_image'],
+                num_images_per_batch=request_body['num_images_per_batch'],
+                steps_per_image_preview=request_body['steps_per_image_preview'],
+                image_preview_callback=image_preview_callback,
             )
             res_queue.put({
                 'request_id': request_id,
@@ -38,7 +42,7 @@ def processor_runner(req_queue, res_queue):
                 }
             })
 
-def txt2img_sample_callback(images, n, request_id, res_queue):
+def txt2img_preview_callback(images, n, request_id, res_queue):
     res_queue.put({
         'request_id': request_id,
         'stopped': False,
