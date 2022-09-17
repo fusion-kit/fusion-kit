@@ -30,25 +30,25 @@ class FusionKitManager():
         await self.broadcast.disconnect()
         self.db_conn.close()
 
-    async def start_dream(self, prompt):
+    async def start_dream(self, prompt, num_images):
         dream_id = str(ULID())
         responses = self.processor.send_request_and_watch(
             request_id=dream_id,
             request='txt2img',
             body={
                 'prompt': prompt,
-                'num_images': 1,
-                'num_images_per_batch': 1,
+                'num_images': num_images,
+                'num_images_per_batch': 2,
                 'num_steps_per_image': 50,
                 'steps_per_image_preview': 10,
             }
         )
 
-        # TODO: Take num_images and num_steps_per_image as input
+        # TODO: Take num_steps_per_image as input
         dream = Dream(
             id=dream_id,
             prompt=prompt,
-            num_images=1,
+            num_images=num_images,
             num_steps_per_image=50,
         )
 

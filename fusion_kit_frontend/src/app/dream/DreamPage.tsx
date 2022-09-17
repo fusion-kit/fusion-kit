@@ -7,7 +7,7 @@ export const DreamPage: React.FC = () => {
   const { createDream, dreamState } = useCreateDream();
 
   const onStartDream = useCallback(async (prompt: string) => {
-    const response = await createDream({ prompt });
+    const response = await createDream({ prompt, numImages: 1 });
     console.info("Started dream", { prompt, response });
   }, [createDream]);
 

@@ -3,14 +3,12 @@ import {
 } from "@apollo/client";
 import { useCallback } from "react";
 import {
-  StartDreamDocument, StartDreamMutation, StoppedDreamReason,
-  WatchDreamDocument, WatchDreamSubscription,
+  StartDreamDocument, StartDreamMutation, StartDreamMutationVariables,
+  StoppedDreamReason, WatchDreamDocument, WatchDreamSubscription,
 } from "../../generated/graphql";
 import { unreachable } from "../../utils";
 
-interface DreamOptions {
-  prompt: string,
-}
+type DreamOptions = StartDreamMutationVariables;
 
 interface UseCreateDream {
   createDream: (_opts: DreamOptions) => Promise<void>,
@@ -42,9 +40,7 @@ export function useCreateDream(): UseCreateDream {
   const [startDream, startDreamResult] = useMutation(StartDreamDocument);
   const createDream = useCallback(async (opts: DreamOptions) => {
     await startDream({
-      variables: {
-        prompt: opts.prompt,
-      },
+      variables: opts,
     });
   }, [startDream]);
 

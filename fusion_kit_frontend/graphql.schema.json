@@ -340,6 +340,22 @@
             "description": null,
             "args": [
               {
+                "name": "numImages",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "1",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "prompt",
                 "description": null,
                 "type": {

@@ -3,7 +3,7 @@ type Query {
 }
 
 type Mutation {
-  startDream(prompt: String!): Dream!
+  startDream(prompt: String!, numImages: Int! = 1): Dream!
 }
 
 type Subscription {
