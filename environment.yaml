@@ -27,7 +27,7 @@ dependencies:
     - transformers==4.19.2
     - torchmetrics==0.6.0
     - kornia==0.6
-    - ariadne==0.16.0
+    - ariadne==0.16.1b1
     - starlette==0.20.4
     - uvicorn==0.18.3
     - websockets==10.3
