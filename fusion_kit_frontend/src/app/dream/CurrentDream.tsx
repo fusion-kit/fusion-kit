@@ -15,7 +15,7 @@ export const CurrentDream: React.FC<CurrentDreamProps> = (props) => {
   const { dream } = dreamState;
 
   const images = dream?.images
-    ?? Array(numImages).fill(null).map(() => pendingImage());
+    ?? Array(numImages).fill(null);
 
   return (
     <>
@@ -92,14 +92,8 @@ const DreamStatus: React.FC<DreamStatusProps> = (props) => {
 
 type DreamImage = Dream["images"][0];
 
-function pendingImage(): DreamImage {
-  return {
-    __typename: "PendingDreamImage",
-  };
-}
-
 interface ShowDreamImagesProps {
-  images: DreamImage[],
+  images: (DreamImage | null)[],
 }
 
 const ShowDreamImages: React.FC<ShowDreamImagesProps> = (props) => {
@@ -133,7 +127,11 @@ const ShowDreamImages: React.FC<ShowDreamImagesProps> = (props) => {
   );
 };
 
-function getDreamImageUri(dreamImage: DreamImage): string | null {
+function getDreamImageUri(dreamImage: DreamImage | null): string | null {
+  if (dreamImage == null) {
+    return null;
+  }
+
   switch (dreamImage.__typename) {
     case "PendingDreamImage":
       return null;
@@ -148,7 +146,11 @@ function getDreamImageUri(dreamImage: DreamImage): string | null {
   }
 }
 
-function isDreamImageLoading(dreamImage: DreamImage): boolean {
+function isDreamImageLoading(dreamImage: DreamImage | null): boolean {
+  if (dreamImage == null) {
+    return true;
+  }
+
   switch (dreamImage.__typename) {
     case "PendingDreamImage":
     case "RunningDreamImage":

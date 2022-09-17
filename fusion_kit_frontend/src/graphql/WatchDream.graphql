@@ -1,8 +1,10 @@
 subscription WatchDream($dreamId: ID!) {
   watchDream(dreamId: $dreamId) {
     __typename
+    id
     images {
       __typename
+      id
       ...on RunningDreamImage {
         numFinishedSteps
         numTotalSteps
