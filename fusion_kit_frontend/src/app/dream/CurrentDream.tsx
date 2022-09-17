@@ -19,19 +19,75 @@ export const CurrentDream: React.FC<CurrentDreamProps> = (props) => {
 
   return (
     <>
-      {dreamState.type === "error" ? (
-        <ErrorBox>
-          <h3 className="text-sm font-medium text-red-800">Got error while creating dream</h3>
-          <div className="mt-2 text-sm text-red-700">
-            <p>
-              {dreamState.message}
-            </p>
-          </div>
-        </ErrorBox>
-      ) : null}
+      <DreamStatus dreamState={dreamState} />
       <ShowDreamImages images={images} />
     </>
   );
+};
+
+interface DreamStatusProps {
+  dreamState: DreamState,
+}
+
+const DreamStatus: React.FC<DreamStatusProps> = (props) => {
+  const { dreamState } = props;
+  const { dream } = dreamState;
+
+  if (dreamState.type === "error") {
+    return (
+      <ErrorBox>
+        <h3 className="text-sm font-medium text-red-800">Got error while creating dream</h3>
+        <div className="mt-2 text-sm text-red-700">
+          <p>
+            {dreamState.message}
+          </p>
+        </div>
+      </ErrorBox>
+    );
+  }
+
+  if (dream == null || dream.__typename === "PendingDream") {
+    return (
+      <div className="h-8 mt-6">
+        <ProgressBar status="indeterminate" progress={1} label="Starting dream..." />
+      </div>
+    );
+  }
+
+  if (dream.__typename === "StoppedDream") {
+    return (
+      <ErrorBox>
+        <h3 className="text-sm font-medium text-red-800">Dream stopped unexpectedly</h3>
+        <div className="mt-2 text-sm text-red-700">
+          <p>
+            {dream.reason}
+            :
+            {" "}
+            {dream.message}
+          </p>
+        </div>
+      </ErrorBox>
+    );
+  }
+
+  switch (dream.__typename) {
+    case "RunningDream": {
+      const progress = dream.numFinishedSteps / dream.numTotalSteps;
+      const percentage = `${Math.round(progress * 100)}%`;
+      const numImages = dream.images.length;
+      const plural = numImages !== 1;
+      const label = `Generating ${numImages} image${plural ? "s" : ""} (${percentage})`;
+      return (
+        <div className="h-8 mt-6">
+          <ProgressBar status="loading" progress={progress} label={label} />
+        </div>
+      );
+    }
+    case "FinishedDream":
+      return null;
+    default:
+      return unreachable(dream);
+  }
 };
 
 type DreamImage = Dream["images"][0];
@@ -46,7 +102,7 @@ interface ShowDreamImagesProps {
   images: DreamImage[],
 }
 
-export const ShowDreamImages: React.FC<ShowDreamImagesProps> = (props) => {
+const ShowDreamImages: React.FC<ShowDreamImagesProps> = (props) => {
   const { images } = props;
 
   return (
@@ -104,3 +160,36 @@ function isDreamImageLoading(dreamImage: DreamImage): boolean {
       return unreachable(dreamImage);
   }
 }
+
+interface ProgressBarProps {
+  status: "loading" | "indeterminate",
+  progress: number,
+  label?: string,
+}
+
+const ProgressBar: React.FC<ProgressBarProps> = (props) => {
+  const percent = Math.min(Math.max(props.progress * 100, 0), 100);
+
+  return (
+    <div className="h-full relative bg-gray-100 rounded-lg text-black overflow-hidden shadow-sm border border-gray-300 box-content">
+      {props.label != null ? (
+        <div className="absolute z-10 flex items-center justify-center inset-0">
+          <span className="text-shadow-sm shadow-black/50">{props.label}</span>
+        </div>
+      ) : null}
+      <span
+        // We set a key so that changing statuses doesn't trigger a CSS
+        // transition (since this causes the element to be replaced)
+        key={props.status}
+        className={clsx(
+          "block h-full bg-50 animate-slide-background-xy-50 relative overflow-hidden transition-width duration-250",
+          props.status === "loading"
+            ? "bg-candystripes from-blue-200 to-blue-300"
+            : "bg-candystripes from-gray-200 to-gray-300",
+        )}
+        style={{ width: `${percent}%` }}
+      >
+      </span>
+    </div>
+  );
+};
