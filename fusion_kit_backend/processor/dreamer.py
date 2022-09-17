@@ -123,7 +123,7 @@ class Dreamer():
         num_steps_per_image,
         num_images_per_batch,
         steps_per_image_preview,
-        image_preview_callback=None,
+        image_progress_callback=None,
     ):
         """
         Generate a set of images with Stable Diffusion.
@@ -183,10 +183,27 @@ class Dreamer():
         else:
             precision_scope = nullcontext
 
-        images = []
+        images = [
+            {
+                'index': i,
+                'state': 'pending',
+                'seed': initial_seed + i,
+                'image': None,
+                'completed_steps': 0,
+                'total_steps': num_steps_per_image,
+            }
+            for i in range(num_images)
+        ]
+
         with torch.no_grad():
-            for batch in batches:
-                batch_size = len(batch)
+            for batch_image_indices in batches:
+                batch_size = len(batch_image_indices)
+                batch_intiial_seed = images[batch_image_indices[0]]['seed']
+
+                for i in batch_image_indices:
+                    images[i]['state'] = 'running'
+                    images[i]['completed_steps'] = 0
+
                 with precision_scope("cuda"):
                     modelCS.to(opt_device)
                     uc = None
@@ -214,23 +231,19 @@ class Dreamer():
                         while torch.cuda.memory_allocated() / 1e6 >= mem:
                             time.sleep(1)
 
-
-                    if image_preview_callback is not None:
-                        modelFS.to(opt_device)
-                        img_callback = make_img_callback(
-                            image_preview_callback=image_preview_callback,
-                            total_steps=num_steps_per_image,
-                            steps_per_preview=steps_per_image_preview,
-                            modelFS=modelFS,
-                            batch_size=batch_size,
-                        )
-                    else:
-                        img_callback = None
+                    img_callback = make_img_callback(
+                        image_progress_callback=image_progress_callback,
+                        images=images,
+                        batch_image_indices=batch_image_indices,
+                        steps_per_image_preview=steps_per_image_preview,
+                        modelFS=modelFS,
+                        preview_device=opt_device,
+                    )
 
                     samples_ddim = model.sample(
                         S=num_steps_per_image,
                         conditioning=c,
-                        seed=current_seed,
+                        seed=batch_intiial_seed,
                         shape=shape,
                         verbose=False,
                         unconditional_guidance_scale=opt_scale,
@@ -238,21 +251,21 @@ class Dreamer():
                         eta=opt_ddim_eta,
                         x_T=start_code,
                         sampler = opt_sampler,
-                        img_callback=img_callback
+                        img_callback=img_callback,
                     )
 
                     modelFS.to(opt_device)
 
-                    for i in range(batch_size):
-                        x_samples_ddim = modelFS.decode_first_stage(samples_ddim[i].unsqueeze(0))
+                    for batch_index, image_index in enumerate(batch_image_indices):
+                        x_samples_ddim = modelFS.decode_first_stage(samples_ddim[batch_index].unsqueeze(0))
                         x_sample = torch.clamp((x_samples_ddim + 1.0) / 2.0, min=0.0, max=1.0)
                         x_sample = 255.0 * rearrange(x_sample[0].cpu().numpy(), "c h w -> h w c")
                         image = Image.fromarray(x_sample.astype(np.uint8))
-                        images.append({
-                            'image': image,
-                            'seed': current_seed,
-                        })
-                        current_seed += 1
+                        images[image_index]['image'] = image
+                        images[image_index]['state'] = 'complete'
+                        images[image_index]['completed_steps'] = num_steps_per_image
+
+                    image_progress_callback(image_progress=images)
 
                     if opt_device != "cpu":
                         mem = torch.cuda.memory_allocated() / 1e6
@@ -282,18 +295,38 @@ def image_samples_to_images(image_samples, modelFS, batch_size):
         images.append(image)
     return images
 
-def make_img_callback(image_preview_callback, total_steps, steps_per_preview, modelFS, batch_size):
-    if image_preview_callback is None or steps_per_preview <= 0:
+def make_img_callback(
+    image_progress_callback,
+    images,
+    batch_image_indices,
+    steps_per_image_preview,
+    modelFS,
+    preview_device,
+):
+    if image_progress_callback is None:
         return None
 
+    previews_enabled = steps_per_image_preview > 0
+
+    if previews_enabled:
+        # The model must be moved before generating previews
+        modelFS.to(preview_device)
+
     def img_callback(image_samples, step_index):
-        should_generate_preview = step_index % steps_per_preview == 0
+        should_generate_preview = previews_enabled and step_index % steps_per_image_preview == 0
         if should_generate_preview:
-            images = image_samples_to_images(
+            batch_preview_images = image_samples_to_images(
                 image_samples=image_samples,
                 modelFS=modelFS,
-                batch_size=batch_size,
+                batch_size=len(batch_image_indices),
             )
-            image_preview_callback(images, step_index)
+
+            for batch_index, image_index in enumerate(batch_image_indices):
+                images[image_index]['image'] = batch_preview_images[batch_index]
+
+        for image_index in batch_image_indices:
+            images[image_index]['completed_steps'] = step_index
+
+        image_progress_callback(image_progress=images)
 
     return img_callback

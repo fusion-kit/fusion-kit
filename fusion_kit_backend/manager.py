@@ -126,16 +126,29 @@ async def dream_watcher(manager, dream, responses):
             await broadcast.publish(channel='dream', message=dream)
         elif response.get('state') == 'running':
             dream.state = 'RunningDream'
-            for i, image in enumerate(response['preview_images']):
-                dream.images[i].state = 'RunningDreamImage'
-                dream.images[i].image = image
+            for i, image in enumerate(response['image_progress']):
+                if image['state'] == 'pending':
+                    dream.images[i].state = 'PendingDreamImage'
+                elif image['state'] == 'running':
+                    dream.images[i].state = 'RunningDreamImage'
+                elif image['state'] == 'complete':
+                    dream.images[i].state = 'FinishedDreamImage'
+                else:
+                    print(f"warning: unexpected image state: {image['state']}")
+
+                dream.images[i].image = image.get('image')
+                dream.images[i].seed = image.get('seed')
+                dream.images[i].num_finished_steps = image.get('completed_steps', 0)
             await broadcast.publish(channel='dream', message=dream)
         elif response.get('state') == 'complete':
             dream.state = 'FinishedDream'
             dream.seed = response['seed']
             for i, image in enumerate(response['images']):
+                if image['state'] != 'complete':
+                    raise Exception(f"Unexpected final image state: {image['state']}")
                 dream.images[i].state = 'FinishedDreamImage'
                 dream.images[i].image = image['image']
                 dream.images[i].seed = image['seed']
+                dream.images[i].num_finished_steps = image.get('completed_steps', 0)
             manager.persist_dream(dream)
             await broadcast.publish(channel='dream', message=dream)
