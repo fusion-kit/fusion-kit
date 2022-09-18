@@ -1,4 +1,3 @@
-from functools import partial
 from .dreamer import Dreamer
 
 def processor_runner(req_queue, res_queue):

@@ -1,13 +1,11 @@
 import asyncio
-from functools import partial
 from broadcaster import Broadcast
+from copy import copy
 import blurhash_numba
 import json
-import multiprocessing
 import numpy
 import os
-from PIL import Image
-from processor import Processor, ProcessorError
+from processor import Processor
 from ulid import ULID
 import db
 from domain.dream import Dream
@@ -123,7 +121,6 @@ async def dream_watcher(manager, dream, responses):
             dream.message = f"Error running dream: {response['error']}"
             for image in dream.images:
                 image.state = 'StoppedDreamImage'
-            await broadcast.publish(channel='dream', message=dream)
         elif response.get('state') == 'running':
             dream.state = 'RunningDream'
             for i, image in enumerate(response['image_progress']):
@@ -139,7 +136,6 @@ async def dream_watcher(manager, dream, responses):
                 dream.images[i].image = image.get('image')
                 dream.images[i].seed = image.get('seed')
                 dream.images[i].num_finished_steps = image.get('completed_steps', 0)
-            await broadcast.publish(channel='dream', message=dream)
         elif response.get('state') == 'complete':
             dream.state = 'FinishedDream'
             dream.seed = response['seed']
@@ -151,4 +147,7 @@ async def dream_watcher(manager, dream, responses):
                 dream.images[i].seed = image['seed']
                 dream.images[i].num_finished_steps = image.get('completed_steps', 0)
             manager.persist_dream(dream)
-            await broadcast.publish(channel='dream', message=dream)
+        else:
+            raise Exception(f"Unknown dream state: {response.get('state')}")
+
+        await broadcast.publish(channel='dream', message=copy(dream))
