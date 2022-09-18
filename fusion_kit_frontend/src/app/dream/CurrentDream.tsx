@@ -146,9 +146,9 @@ function getDreamImagePath(dreamImage: DreamImage | null): string | null {
     case "PendingDreamImage":
       return null;
     case "RunningDreamImage":
-      return dreamImage.previewImageUri ?? null;
+      return dreamImage.previewImagePath ?? null;
     case "FinishedDreamImage":
-      return dreamImage.imageUri;
+      return dreamImage.imagePath;
     case "StoppedDreamImage":
       return null;
     default:

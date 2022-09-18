@@ -59,7 +59,7 @@ type PendingDreamImage implements DreamImage {
 type RunningDreamImage implements DreamImage {
   id: ID!
   dreamId: ID!
-  previewImageUri: String
+  previewImagePath: String
   numFinishedSteps: Int!
   numTotalSteps: Int!
 }
@@ -68,7 +68,7 @@ type FinishedDreamImage implements DreamImage {
   id: ID!
   seed: Int!
   dreamId: ID!
-  imageUri: String!
+  imagePath: String!
 }
 
 type StoppedDreamImage implements DreamImage {

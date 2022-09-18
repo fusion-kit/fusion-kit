@@ -25,10 +25,10 @@ class DreamImage():
 
     ### GraphQL resolvers ###
 
-    def image_uri(self, info):
+    def image_path(self, info):
         manager = info.context['manager']
         return manager.get_image_uri(self.image_key)
 
-    def preview_image_uri(self, info):
+    def preview_image_path(self, info):
         manager = info.context['manager']
         return manager.get_image_uri(self.image_key)
