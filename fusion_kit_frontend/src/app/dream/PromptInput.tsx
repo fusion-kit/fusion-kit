@@ -5,6 +5,8 @@ import { AdjustmentsVerticalIcon } from "@heroicons/react/24/outline";
 import { PaintBrushIcon } from "@heroicons/react/24/solid";
 import Textarea from "react-expanding-textarea";
 import { Disclosure } from "@headlessui/react";
+import { ChevronRightIcon } from "@heroicons/react/20/solid";
+import { clsx } from "clsx";
 import { clamp } from "../../utils";
 import { DreamOptions, UpdateDreamOptions } from "./hooks";
 
@@ -37,31 +39,34 @@ export const PromptInput: React.FC<PromptInputProps> = (props) => {
 
   return (
     <Disclosure>
-      <form onSubmit={onSubmit} className="flex flex-col border border-gray-300 shadow-sm rounded-lg">
-        <div className="overflow-hidden rounded-t-lg z-10 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500">
-          <label htmlFor={promptInputId} className="sr-only">
-            Prompt
-          </label>
-          <Textarea
-            rows={1}
-            name="prompt"
-            id={promptInputId}
-            onKeyDown={onPromptKeyDown}
-            className="block w-full resize-none border-0 py-4 placeholder-gray-500 focus:ring-0 sm:text-sm"
-            placeholder="Enter a prompt..."
-            onChange={(e) => { updateOptions({ prompt: e.target.value }); }}
-            value={options.prompt}
-          />
-        </div>
+      {({ open }) => (
+        <form onSubmit={onSubmit} className="flex flex-col border border-gray-300 shadow-sm rounded-lg">
+          <div className="overflow-hidden rounded-t-lg z-10 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500">
+            <label htmlFor={promptInputId} className="sr-only">
+              Prompt
+            </label>
+            <Textarea
+              rows={1}
+              name="prompt"
+              id={promptInputId}
+              onKeyDown={onPromptKeyDown}
+              className="block w-full resize-none border-0 py-4 placeholder-gray-500 focus:ring-0 sm:text-sm"
+              placeholder="Enter a prompt..."
+              onChange={(e) => { updateOptions({ prompt: e.target.value }); }}
+              value={options.prompt}
+            />
+          </div>
 
-        <div className="">
           <div className="flex items-center justify-between space-x-3 border-t border-gray-200 px-2 py-2 sm:px-3">
             <div className="flex space-x-1">
               <Disclosure.Button
                 className="group -my-2 inline-flex items-center rounded-full px-4 py-2 text-left text-sm bg-slate-200 text-gray-500 hover:bg-slate-100"
               >
                 <AdjustmentsVerticalIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
-                <span>Options</span>
+                <span>
+                  Options
+                  <ChevronRightIcon className={clsx("h-4 w-4 inline-block transition-transform", open ? "rotate-90 transform" : "")} aria-hidden="true" />
+                </span>
               </Disclosure.Button>
             </div>
             <div className="flex-shrink-0">
@@ -74,12 +79,12 @@ export const PromptInput: React.FC<PromptInputProps> = (props) => {
               </button>
             </div>
           </div>
-        </div>
 
-        <Disclosure.Panel className="border-t border-gray-300 p-3">
-          <OptionsForm options={options} updateOptions={updateOptions} />
-        </Disclosure.Panel>
-      </form>
+          <Disclosure.Panel className="border-t border-gray-300 p-3">
+            <OptionsForm options={options} updateOptions={updateOptions} />
+          </Disclosure.Panel>
+        </form>
+      )}
     </Disclosure>
   );
 };
