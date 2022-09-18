@@ -3,7 +3,7 @@ import React from "react";
 import { unreachable } from "../../utils";
 import { ErrorBox } from "../ErrorBox";
 import { DreamState, Dream } from "./hooks";
-import { BACKEND_URL, joinUrlPath } from "../../graphql-client";
+import { BACKEND_URL, joinUrlPath } from "../../client";
 
 interface CurrentDreamProps {
   dreamState: DreamState,

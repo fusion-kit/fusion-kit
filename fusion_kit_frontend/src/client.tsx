@@ -33,7 +33,7 @@ const splitLink = split(
   httpLink,
 );
 
-export const client = new ApolloClient({
+export const graphqlClient = new ApolloClient({
   link: splitLink,
   cache: new InMemoryCache(),
 });
