@@ -1,5 +1,5 @@
 import React, {
-  useCallback, useEffect, useId, useRef, useState,
+  useCallback, useEffect, useId, useState,
 } from "react";
 import { AdjustmentsVerticalIcon } from "@heroicons/react/24/outline";
 import { PaintBrushIcon } from "@heroicons/react/24/solid";
@@ -17,7 +17,6 @@ export const PromptInput: React.FC<PromptInputProps> = (props) => {
   const { onStartDream, options, updateOptions } = props;
 
   const promptInputId = useId();
-  const formRef = useRef<HTMLFormElement>(null);
   const [showOptions, setShowOptions] = useState(false);
 
   const onSubmit = useCallback((e?: React.FormEvent) => {
@@ -44,7 +43,7 @@ export const PromptInput: React.FC<PromptInputProps> = (props) => {
   }, []);
 
   return (
-    <form onSubmit={onSubmit} ref={formRef} className="flex flex-col border border-gray-300 shadow-sm rounded-lg">
+    <form onSubmit={onSubmit} className="flex flex-col border border-gray-300 shadow-sm rounded-lg">
       <div className="overflow-hidden rounded-t-lg z-10 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500">
         <label htmlFor={promptInputId} className="sr-only">
           Prompt
@@ -66,7 +65,7 @@ export const PromptInput: React.FC<PromptInputProps> = (props) => {
           <div className="flex space-x-1">
             <button
               type="button"
-              className="group -my-2 inline-flex items-center rounded-full px-4 py-2 text-left text-sm bg-slate-200 text-gray-500 hover:text-black"
+              className="group -my-2 inline-flex items-center rounded-full px-4 py-2 text-left text-sm bg-slate-200 text-gray-500 hover:bg-slate-100"
               onClick={onToggleOptions}
             >
               <AdjustmentsVerticalIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
