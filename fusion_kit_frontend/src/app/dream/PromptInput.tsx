@@ -7,6 +7,7 @@ import Textarea from "react-expanding-textarea";
 import { Disclosure } from "@headlessui/react";
 import { ChevronRightIcon } from "@heroicons/react/20/solid";
 import { clsx } from "clsx";
+import { motion, AnimatePresence } from "framer-motion";
 import { clamp } from "../../utils";
 import { DreamOptions, UpdateDreamOptions } from "./hooks";
 
@@ -80,8 +81,25 @@ export const PromptInput: React.FC<PromptInputProps> = (props) => {
             </div>
           </div>
 
-          <Disclosure.Panel className="border-t border-gray-300 p-3">
-            <OptionsForm options={options} updateOptions={updateOptions} />
+          <Disclosure.Panel static>
+            <AnimatePresence>
+              {open ? (
+                <motion.div
+                  className="border-t border-gray-300"
+                  key="dream-options"
+                  initial="collapsed"
+                  animate="open"
+                  exit="collapsed"
+                  variants={{
+                    open: { height: "auto" },
+                    collapsed: { height: 0, overflow: "hidden" },
+                  }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                >
+                  <OptionsForm options={options} updateOptions={updateOptions} />
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
           </Disclosure.Panel>
         </form>
       )}
@@ -98,7 +116,7 @@ const OptionsForm: React.FC<OptionsFormProps> = (props) => {
   const { options, updateOptions } = props;
 
   return (
-    <div className="flex justify-center">
+    <div className="m-3 flex justify-center">
       <div className="w-64 max-w-full">
         <NumberSliderInput
           label="Number of images"
