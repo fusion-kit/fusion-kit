@@ -4,6 +4,7 @@ import { unreachable } from "../../utils";
 import { ErrorBox } from "../ErrorBox";
 import { DreamState, Dream } from "./hooks";
 import { BACKEND_URL, joinUrlPath } from "../../client";
+import { useStableKeys } from "../../hooks";
 
 interface CurrentDreamProps {
   dreamState: DreamState,
@@ -99,6 +100,7 @@ interface ShowDreamImagesProps {
 
 const ShowDreamImages: React.FC<ShowDreamImagesProps> = (props) => {
   const { images } = props;
+  const { getKey } = useStableKeys();
 
   return (
     <ul className="py-6 gap-2 md:gap-4 grid justify-center grid-cols-repeat-fit-20">
@@ -106,8 +108,7 @@ const ShowDreamImages: React.FC<ShowDreamImagesProps> = (props) => {
         const imageUri = getDreamImageUri(image);
         const isLoading = isDreamImageLoading(image);
         return (
-          // eslint-disable-next-line react/no-array-index-key
-          <li key={index.toString()}>
+          <li key={getKey(index, image?.id)}>
             <div
               className={clsx(
                 "relative group max-w-20 block w-full overflow-hidden rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-100",
