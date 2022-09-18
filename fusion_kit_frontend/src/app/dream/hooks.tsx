@@ -1,14 +1,16 @@
 import {
   MutationResult, SubscriptionResult, useMutation, useSubscription,
 } from "@apollo/client";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
-  StartDreamDocument, StartDreamMutation, StartDreamMutationVariables,
-  StoppedDreamReason, WatchDreamDocument, WatchDreamSubscription,
+  StartDreamDocument, StartDreamMutation, StoppedDreamReason,
+  WatchDreamDocument, WatchDreamSubscription,
 } from "../../generated/graphql";
 import { unreachable } from "../../utils";
 
-type DreamOptions = StartDreamMutationVariables;
+export interface DreamOptions {
+  prompt: string,
+}
 
 interface UseCreateDream {
   createDream: (_opts: DreamOptions) => Promise<void>,
@@ -126,4 +128,25 @@ function getDreamState(context: CreateDreamContext): DreamState | undefined {
     default:
       return unreachable(dream);
   }
+}
+
+interface UseDreamOptions {
+  options: DreamOptions,
+  updateOptions: UpdateDreamOptions,
+  defaultOptions: DreamOptions,
+}
+
+export type UpdateDreamOptions = (_newOptions: Partial<DreamOptions>) => void;
+
+export function useDreamOptions(defaultOptions: DreamOptions): UseDreamOptions {
+  const [options, setOptions] = useState(defaultOptions);
+  const updateOptions = useCallback((newOptions: Partial<DreamOptions>) => {
+    setOptions((currentOptions) => ({ ...currentOptions, ...newOptions }));
+  }, []);
+
+  return {
+    options,
+    updateOptions,
+    defaultOptions,
+  };
 }

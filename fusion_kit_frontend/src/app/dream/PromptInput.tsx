@@ -1,27 +1,27 @@
-import React, {
-  useCallback, useId, useRef, useState,
-} from "react";
+import React, { useCallback, useId, useRef } from "react";
 import { PhotoIcon } from "@heroicons/react/24/outline";
 import { PaintBrushIcon } from "@heroicons/react/24/solid";
 import Textarea from "react-expanding-textarea";
+import { DreamOptions, UpdateDreamOptions } from "./hooks";
 
 interface PromptInputProps {
-  onStartDream: (_prompt: string) => void,
+  options: DreamOptions,
+  updateOptions: UpdateDreamOptions,
+  onStartDream: () => void,
 }
 
 export const PromptInput: React.FC<PromptInputProps> = (props) => {
-  const { onStartDream } = props;
+  const { onStartDream, options, updateOptions } = props;
 
   const promptInputId = useId();
   const formRef = useRef<HTMLFormElement>(null);
-  const [prompt, setPrompt] = useState("");
 
   const onSubmit = useCallback((e?: React.FormEvent) => {
     e?.stopPropagation();
     e?.preventDefault();
 
-    onStartDream(prompt);
-  }, [prompt, onStartDream]);
+    onStartDream();
+  }, [onStartDream]);
 
   const onPromptKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = useCallback((e) => {
     if (!e.shiftKey && e.key === "Enter") {
@@ -45,8 +45,8 @@ export const PromptInput: React.FC<PromptInputProps> = (props) => {
           onKeyDown={onPromptKeyDown}
           className="block w-full resize-none border-0 py-4 placeholder-gray-500 focus:ring-0 sm:text-sm"
           placeholder="Enter a prompt..."
-          onChange={(e) => { setPrompt(e.target.value); }}
-          value={prompt}
+          onChange={(e) => { updateOptions({ prompt: e.target.value }); }}
+          value={options.prompt}
         />
 
         {/* Spacer element to match the height of the toolbar */}
