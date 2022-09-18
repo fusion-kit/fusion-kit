@@ -10,6 +10,7 @@ import { unreachable } from "../../utils";
 
 export interface DreamOptions {
   prompt: string,
+  numImages: number,
 }
 
 interface UseCreateDream {
@@ -42,7 +43,10 @@ export function useCreateDream(): UseCreateDream {
   const [startDream, startDreamResult] = useMutation(StartDreamDocument);
   const createDream = useCallback(async (opts: DreamOptions) => {
     await startDream({
-      variables: opts,
+      variables: {
+        prompt: opts.prompt,
+        numImages: opts.numImages,
+      },
     });
   }, [startDream]);
 

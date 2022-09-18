@@ -6,6 +6,7 @@ import { useCreateDream, useDreamOptions } from "./hooks";
 export const DreamPage: React.FC = () => {
   const { options, updateOptions } = useDreamOptions({
     prompt: "",
+    numImages: 1,
   });
   const { createDream, dreamState } = useCreateDream();
 
@@ -23,7 +24,9 @@ export const DreamPage: React.FC = () => {
             updateOptions={updateOptions}
             onStartDream={onStartDream}
           />
-          {dreamState != null ? (<CurrentDream dreamState={dreamState} numImages={1} />) : null}
+          {dreamState != null ? (
+            <CurrentDream dreamState={dreamState} numImages={options.numImages} />
+          ) : null}
         </div>
       </main>
       <aside className="hidden xl:block h-80 max-h-full w-auto lg:h-auto lg:w-80 border-l-0 lg:border-l p-6">Recent</aside>
