@@ -1,7 +1,10 @@
-import React, { useCallback, useId, useRef } from "react";
-import { PhotoIcon } from "@heroicons/react/24/outline";
+import React, {
+  useCallback, useEffect, useId, useRef, useState,
+} from "react";
+import { AdjustmentsVerticalIcon } from "@heroicons/react/24/outline";
 import { PaintBrushIcon } from "@heroicons/react/24/solid";
 import Textarea from "react-expanding-textarea";
+import { clamp } from "../../utils";
 import { DreamOptions, UpdateDreamOptions } from "./hooks";
 
 interface PromptInputProps {
@@ -15,6 +18,7 @@ export const PromptInput: React.FC<PromptInputProps> = (props) => {
 
   const promptInputId = useId();
   const formRef = useRef<HTMLFormElement>(null);
+  const [showOptions, setShowOptions] = useState(false);
 
   const onSubmit = useCallback((e?: React.FormEvent) => {
     e?.stopPropagation();
@@ -32,9 +36,16 @@ export const PromptInput: React.FC<PromptInputProps> = (props) => {
     }
   }, [onSubmit]);
 
+  const onToggleOptions: React.MouseEventHandler<HTMLButtonElement> = useCallback((e) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    setShowOptions((showOptions) => !showOptions);
+  }, []);
+
   return (
-    <form onSubmit={onSubmit} ref={formRef} className="relative">
-      <div className="overflow-hidden rounded-lg border border-gray-300 shadow-sm focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
+    <form onSubmit={onSubmit} ref={formRef} className="flex flex-col border border-gray-300 shadow-sm rounded-lg">
+      <div className="overflow-hidden rounded-t-lg z-10 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500">
         <label htmlFor={promptInputId} className="sr-only">
           Prompt
         </label>
@@ -48,27 +59,18 @@ export const PromptInput: React.FC<PromptInputProps> = (props) => {
           onChange={(e) => { updateOptions({ prompt: e.target.value }); }}
           value={options.prompt}
         />
-
-        {/* Spacer element to match the height of the toolbar */}
-        <div aria-hidden="true">
-          <div className="h-px" />
-          <div className="py-2">
-            <div className="py-px">
-              <div className="h-9" />
-            </div>
-          </div>
-        </div>
       </div>
 
-      <div className="absolute inset-x-px bottom-0">
+      <div className="">
         <div className="flex items-center justify-between space-x-3 border-t border-gray-200 px-2 py-2 sm:px-3">
-          <div className="flex">
+          <div className="flex space-x-1">
             <button
               type="button"
-              className="group -my-2 -ml-2 inline-flex items-center rounded-full px-3 py-2 text-left text-gray-400"
+              className="group -my-2 inline-flex items-center rounded-full px-4 py-2 text-left text-sm bg-slate-200 text-gray-500 hover:text-black"
+              onClick={onToggleOptions}
             >
-              <PhotoIcon className="-ml-1 mr-2 h-5 w-5 group-hover:text-gray-500" aria-hidden="true" />
-              <span className="text-sm italic text-gray-400 group-hover:text-gray-700">Add base image</span>
+              <AdjustmentsVerticalIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+              <span>Options</span>
             </button>
           </div>
           <div className="flex-shrink-0">
@@ -82,6 +84,133 @@ export const PromptInput: React.FC<PromptInputProps> = (props) => {
           </div>
         </div>
       </div>
+
+      {showOptions ? (
+        <div className="border-t border-gray-300 p-3">
+          <OptionsForm options={options} updateOptions={updateOptions} />
+        </div>
+      ) : null}
     </form>
+  );
+};
+
+interface OptionsFormProps {
+  options: DreamOptions,
+  updateOptions: (_newOptions: Partial<DreamOptions>) => void,
+}
+
+const OptionsForm: React.FC<OptionsFormProps> = (props) => {
+  const { options, updateOptions } = props;
+
+  return (
+    <div className="flex justify-center">
+      <div className="w-64 max-w-full">
+        <NumberSliderInput
+          label="Number of images"
+          value={options.numImages}
+          onChange={(newValue) => updateOptions({ numImages: clamp(newValue, 1, 99) })}
+          lowValue={1}
+          highValue={10}
+        />
+      </div>
+    </div>
+  );
+};
+
+interface NumberSliderInputProps {
+  label: string,
+  value: number,
+  onChange: (_newValue: number) => void,
+  lowValue: number,
+  highValue: number,
+}
+
+const NumberSliderInput: React.FC<NumberSliderInputProps> = (props) => {
+  const {
+    label, value, onChange, lowValue, highValue,
+  } = props;
+
+  const textInputId = useId();
+
+  const [textValue, setTextValue] = useState(value.toString());
+
+  const onTextInputChange: React.ChangeEventHandler<HTMLInputElement> = useCallback((e) => {
+    const newStringValue = e.target.value;
+
+    setTextValue(newStringValue);
+
+    const newValue = Number(newStringValue);
+    if (newStringValue !== "" && Number.isSafeInteger(newValue)) {
+      onChange(newValue);
+    }
+  }, [onChange]);
+  const onTextInputBlur: React.FocusEventHandler<HTMLInputElement> = useCallback(() => {
+    setTextValue(value.toString());
+  }, [value]);
+  const onTextInputKeyDown: React.KeyboardEventHandler<HTMLInputElement> = useCallback((e) => {
+    const currentValue = Number(textValue);
+    const isValidValue = textValue !== "" && Number.isSafeInteger(currentValue);
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isValidValue) {
+        const newValue = currentValue + 1;
+
+        onChange(newValue);
+      }
+
+      return false;
+    } if (e.key === "ArrowDown") {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isValidValue) {
+        const newValue = currentValue - 1;
+
+        onChange(newValue);
+      }
+
+      return false;
+    }
+
+    return undefined;
+  }, [textValue, onChange]);
+  const onRangeChange: React.ChangeEventHandler<HTMLInputElement> = useCallback((e) => {
+    const newValue = e.target.valueAsNumber;
+    onChange(newValue);
+    setTextValue(newValue.toString());
+  }, [onChange]);
+
+  useEffect(() => {
+    setTextValue(value.toString());
+  }, [value]);
+
+  return (
+    <>
+      <div className="flex justify-between">
+        <label htmlFor={textInputId}>{label}</label>
+        <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          className="w-16 px-2 py-1 mx-2 border border-gray-300 rounded-full"
+          id={textInputId}
+          value={textValue}
+          onChange={onTextInputChange}
+          onBlur={onTextInputBlur}
+          onKeyDown={onTextInputKeyDown}
+        />
+      </div>
+      <input
+        type="range"
+        className="appearance-none w-full h-2 bg-gray-200 shadow-sm rounded-full"
+        min={lowValue}
+        max={highValue}
+        value={value}
+        onChange={onRangeChange}
+      />
+    </>
   );
 };
