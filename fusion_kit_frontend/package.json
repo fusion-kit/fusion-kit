@@ -16,6 +16,7 @@
     "@headlessui/react": "^1.7.0",
     "@heroicons/react": "^2.0.10",
     "clsx": "^1.2.1",
+    "framer-motion": "^7.3.5",
     "graphql": "^16.6.0",
     "graphql-ws": "^5.11.1",
     "react": "^18.2.0",
