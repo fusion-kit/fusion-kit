@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { PromptInput } from "./PromptInput";
+import { DreamInputForm } from "./DreamInputForm";
 import { CurrentDream } from "./CurrentDream";
 import { useCreateDream, useDreamOptions } from "./hooks";
 
@@ -19,7 +19,7 @@ export const DreamPage: React.FC = () => {
     <>
       <main className="h-full flex-grow p-6 overflow-auto absolute lg:static inset-0">
         <div className="w-full max-w-2xl mx-auto">
-          <PromptInput
+          <DreamInputForm
             options={options}
             updateOptions={updateOptions}
             onStartDream={onStartDream}

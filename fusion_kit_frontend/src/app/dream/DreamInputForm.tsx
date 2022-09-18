@@ -11,13 +11,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { clamp } from "../../utils";
 import { DreamOptions, UpdateDreamOptions } from "./hooks";
 
-interface PromptInputProps {
+interface DreamInputFormProps {
   options: DreamOptions,
   updateOptions: UpdateDreamOptions,
   onStartDream: () => void,
 }
 
-export const PromptInput: React.FC<PromptInputProps> = (props) => {
+export const DreamInputForm: React.FC<DreamInputFormProps> = (props) => {
   const { onStartDream, options, updateOptions } = props;
 
   const promptInputId = useId();
