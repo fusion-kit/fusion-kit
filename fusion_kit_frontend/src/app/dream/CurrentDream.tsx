@@ -107,6 +107,7 @@ const ShowDreamImages: React.FC<ShowDreamImagesProps> = (props) => {
       {images.map((image, index) => {
         const imageUri = getDreamImageUri(image);
         const isLoading = isDreamImageLoading(image);
+        const progress = getDreamImageProgress(image);
         return (
           <li key={getKey(index, image?.id)}>
             <div
@@ -117,6 +118,12 @@ const ShowDreamImages: React.FC<ShowDreamImagesProps> = (props) => {
               {imageUri != null ? (
                 <img src={imageUri} alt="" className="pointer-events-none object-cover group-hover:opacity-75" />
               ) : <div className={clsx("w-20 h-20 bg-gray-300", isLoading ? "animate-pulse" : null)}></div>}
+
+              {progress != null ? (
+                <div className="h-3 absolute inset-x-0 bottom-0">
+                  <MiniProgressBar progress={progress} />
+                </div>
+              ) : null}
 
               <button type="button" className="absolute inset-0 focus:outline-none">
                 <span className="sr-only">Expand image</span>
@@ -174,6 +181,25 @@ function isDreamImageLoading(dreamImage: DreamImage | null): boolean {
   }
 }
 
+function getDreamImageProgress(dreamImage: DreamImage | null): number | null {
+  if (dreamImage == null) {
+    return null;
+  }
+
+  switch (dreamImage.__typename) {
+    case "PendingDreamImage":
+      return null;
+    case "RunningDreamImage":
+      return dreamImage.numFinishedSteps / dreamImage.numTotalSteps;
+    case "FinishedDreamImage":
+      return null;
+    case "StoppedDreamImage":
+      return null;
+    default:
+      return unreachable(dreamImage);
+  }
+}
+
 interface ProgressBarProps {
   status: "loading" | "indeterminate",
   progress: number,
@@ -200,6 +226,24 @@ const ProgressBar: React.FC<ProgressBarProps> = (props) => {
             ? "bg-candystripes from-blue-200 to-blue-300"
             : "bg-candystripes from-gray-200 to-gray-300",
         )}
+        style={{ width: `${percent}%` }}
+      >
+      </span>
+    </div>
+  );
+};
+
+interface MiniProgressBarProps {
+  progress: number,
+}
+
+const MiniProgressBar: React.FC<MiniProgressBarProps> = (props) => {
+  const percent = Math.min(Math.max(props.progress * 100, 0), 100);
+
+  return (
+    <div className="h-full bg-gray-100 text-black opacity-90">
+      <span
+        className="block h-full relative overflow-hidden bg-blue-500"
         style={{ width: `${percent}%` }}
       >
       </span>
