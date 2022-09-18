@@ -1,144 +1,144 @@
 {
-    "env": {
-      "browser": true,
-      "es2021": true
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": [
+    "plugin:react/recommended",
+    "airbnb"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
     },
-    "extends": [
-      "plugin:react/recommended",
-      "airbnb"
+    "ecmaVersion": "latest",
+    "sourceType": "module",
+    "project": "./**/tsconfig.json"
+  },
+  "plugins": [
+    "react",
+    "react-hooks",
+    "@typescript-eslint"
+  ],
+  "ignorePatterns": [
+    "*.config.cjs",
+    "src/generated/graphql.tsx",
+    "vite.config.ts"
+  ],
+  "rules": {
+    "arrow-body-style": "off",
+    "eqeqeq": [
+      "warn",
+      "always",
+      {
+        "null": "ignore"
+      }
     ],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-      "ecmaFeatures": {
-        "jsx": true
-      },
-      "ecmaVersion": "latest",
-      "sourceType": "module",
-      "project": "./**/tsconfig.json"
-    },
-    "plugins": [
-      "react",
-      "react-hooks",
-      "@typescript-eslint"
+    "no-console": [
+      "warn",
+      {
+        "allow": [
+          "info",
+          "warn",
+          "error"
+        ]
+      }
     ],
-    "ignorePatterns": [
-      "*.config.cjs",
-      "src/generated/graphql.tsx",
-      "vite.config.ts"
+    "no-underscore-dangle": "off",
+    "no-unreachable": "warn",
+    "no-unused-vars": [
+      "warn",
+      {
+        "varsIgnorePattern": "^_",
+        "argsIgnorePattern": "^_",
+        "destructuredArrayIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
     ],
-    "rules": {
-      "arrow-body-style": "off",
-      "eqeqeq": [
-        "warn",
-        "always",
-        {
-          "null": "ignore"
+    "no-use-before-define": "off",
+    "quotes": [
+      "warn",
+      "double"
+    ],
+    "import/prefer-default-export": "off",
+    "import/no-default-export": "warn",
+    "import/extensions": [
+      "warn",
+      "always",
+      {
+        "js": "never",
+        "jsx": "never",
+        "ts": "never",
+        "tsx": "never"
+      }
+    ],
+    "jsx-a11y/anchor-is-valid": "off",
+    "jsx-a11y/label-has-associated-control": [
+      "warn",
+      {
+        "depth": 4
+      }
+    ],
+    "max-len": [
+      "warn"
+    ],
+    "no-shadow": "off",
+    "react/destructuring-assignment": "off",
+    "react/function-component-definition": [
+      "warn",
+      {
+        "namedComponents": "arrow-function",
+        "unnamedComponents": "arrow-function"
+      }
+    ],
+    "react/jsx-filename-extension": [
+      2,
+      {
+        "extensions": [
+          ".jsx",
+          ".tsx"
+        ]
+      }
+    ],
+    "react/jsx-props-no-spreading": "off",
+    "react/require-default-props": "off",
+    "react/self-closing-comp": "off",
+    "react/no-unused-prop-types": [
+      "warn"
+    ],
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "@typescript-eslint/member-delimiter-style": [
+      "warn",
+      {
+        "multiline": {
+          "delimiter": "comma",
+          "requireLast": true
+        },
+        "singleline": {
+          "delimiter": "comma",
+          "requireLast": false
         }
-      ],
-      "no-console": [
-        "warn",
-        {
-          "allow": [
-            "info",
-            "warn",
-            "error"
-          ]
-        }
-      ],
-      "no-underscore-dangle": "off",
-      "no-unreachable": "warn",
-      "no-unused-vars": [
-        "warn",
-        {
-          "varsIgnorePattern": "^_",
-          "argsIgnorePattern": "^_",
-          "destructuredArrayIgnorePattern": "^_",
-          "caughtErrorsIgnorePattern": "^_"
-        }
-      ],
-      "no-use-before-define": "off",
-      "quotes": [
-        "warn",
-        "double"
-      ],
-      "import/prefer-default-export": "off",
-      "import/no-default-export": "warn",
-      "import/extensions": [
-        "warn",
-        "always",
-        {
-          "js": "never",
-          "jsx": "never",
-          "ts": "never",
-          "tsx": "never"
-        }
-      ],
-      "jsx-a11y/anchor-is-valid": "off",
-      "jsx-a11y/label-has-associated-control": [
-        "warn",
-        {
-          "depth": 4
-        }
-      ],
-      "max-len": [
-        "warn"
-      ],
-      "no-shadow": "off",
-      "react/destructuring-assignment": "off",
-      "react/function-component-definition": [
-        "warn",
-        {
-          "namedComponents": "arrow-function",
-          "unnamedComponents": "arrow-function"
-        }
-      ],
-      "react/jsx-filename-extension": [
-        2,
-        {
-          "extensions": [
-            ".jsx",
-            ".tsx"
-          ]
-        }
-      ],
-      "react/jsx-props-no-spreading": "off",
-      "react/require-default-props": "off",
-      "react/self-closing-comp": "off",
-      "react/no-unused-prop-types": [
-        "warn"
-      ],
-      "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "warn",
-      "@typescript-eslint/member-delimiter-style": [
-        "warn",
-        {
-          "multiline": {
-            "delimiter": "comma",
-            "requireLast": true
-          },
-          "singleline": {
-            "delimiter": "comma",
-            "requireLast": false
-          }
-        }
-      ],
-      "@typescript-eslint/strict-boolean-expressions": [
-        "warn"
-      ],
-      "@typescript-eslint/no-unnecessary-condition": [
-        "warn"
-      ]
-    },
-    "settings": {
-      "import/resolver": {
-        "node": {
-          "extensions": [
-            ".js",
-            ".jsx",
-            ".ts",
-            ".tsx"
-          ]
-        }
+      }
+    ],
+    "@typescript-eslint/strict-boolean-expressions": [
+      "warn"
+    ],
+    "@typescript-eslint/no-unnecessary-condition": [
+      "warn"
+    ]
+  },
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "extensions": [
+          ".js",
+          ".jsx",
+          ".ts",
+          ".tsx"
+        ]
       }
     }
   }
+}
