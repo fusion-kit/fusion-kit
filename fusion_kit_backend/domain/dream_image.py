@@ -1,7 +1,4 @@
-import asyncio
 from ariadne import InterfaceType
-import base64
-from io import BytesIO
 
 gql_dream_image = InterfaceType("DreamImage")
 
@@ -15,7 +12,7 @@ class DreamImage():
         self.seed = seed
         self.dream_id = dream_id
         self.state = 'PendingDreamImage'
-        self.image = None
+        self.image_key = None
         self.num_finished_steps = 0
         self.num_total_steps = num_steps
 
@@ -28,18 +25,10 @@ class DreamImage():
 
     ### GraphQL resolvers ###
 
-    def image_uri(self, *_):
-        return image_to_data_uri(self.image)
+    def image_uri(self, info):
+        manager = info.context['manager']
+        return manager.get_image_uri(self.image_key)
 
-    def preview_image_uri(self, *_):
-        return image_to_data_uri(self.image)
-
-def image_to_data_uri(image):
-    if image is None:
-        return
-
-    data = BytesIO()
-    image.save(data, format="png")
-    b64_data = str(base64.b64encode(data.getvalue()), "utf-8")
-    b64_uri = f"data:image/png;base64,{b64_data}"
-    return b64_uri
+    def preview_image_uri(self, info):
+        manager = info.context['manager']
+        return manager.get_image_uri(self.image_key)

@@ -6,6 +6,7 @@ import json
 import numpy
 import os
 from processor import Processor
+import re
 from ulid import ULID
 import db
 from domain.dream import Dream
@@ -18,6 +19,7 @@ class FusionKitManager():
         self.broadcast = Broadcast("memory://")
         self.processor = Processor(broadcast=self.broadcast)
         self.active_dreams = {}
+        self.registered_images = {}
 
     async def __aenter__(self):
         self.db_conn = self.db_engine.connect()
@@ -87,29 +89,55 @@ class FusionKitManager():
             )
             session.add(db_dream)
 
-            for index, image in enumerate(dream.images):
-                image_dir = os.path.join(self.images_dir, image.id)
+            for index, dream_image in enumerate(dream.images):
+                image_dir = os.path.join(self.images_dir, dream_image.id)
                 os.mkdir(image_dir)
 
-                image_path = os.path.join(image_dir, "image.png")
-                image.image.save(image_path, format="png")
+                image_path = os.path.join(image_dir, 'image.png')
+                image = self.get_image(dream_image.image_key)
+                image.save(image_path, format='png')
 
-                image_array = numpy.array(image.image.convert("RGB"), dtype=numpy.float)
+                image_array = numpy.array(image.convert('RGB'), dtype=numpy.float)
                 image_blurhash = blurhash_numba.encode(image_array)
 
                 db_image = db.DreamImage(
-                    id=image.id,
-                    dream_id=image.dream_id,
-                    seed=image.seed,
+                    id=dream_image.id,
+                    dream_id=dream_image.dream_id,
+                    seed=dream_image.seed,
                     index=index,
                     image_path=os.path.relpath(image_path, start=self.images_dir),
-                    width=image.image.width,
-                    height=image.image.height,
+                    width=image.width,
+                    height=image.height,
                     blurhash=image_blurhash
                 )
                 session.add(db_image)
 
             session.commit()
+
+    def register_image(self, image, key):
+        if key not in self.registered_images:
+            self.registered_images[key] = image
+
+    def get_image(self, key):
+        if key not in self.registered_images:
+            raise Exception(f"Image not found: {key}")
+
+        return self.registered_images[key]
+
+    def get_image_by_path(self, path):
+        result = re.search(r'^/images/(.*)\.png$', path)
+        if result is None:
+            raise Exception(f"Image not found at path: '{path}'")
+
+        image_key = tuple(result.group(1).split('/'))
+        return self.get_image(key=image_key)
+
+    def get_image_uri(self, key):
+        if key not in self.registered_images:
+            raise Exception(f"Image not found: {key}")
+
+        segments = '/'.join(key)
+        return f"/images/{segments}.png"
 
 async def dream_watcher(manager, dream, responses):
     broadcast = manager.broadcast
@@ -133,7 +161,11 @@ async def dream_watcher(manager, dream, responses):
                 else:
                     print(f"warning: unexpected image state: {image['state']}")
 
-                dream.images[i].image = image.get('image')
+                if 'image' in image:
+                    image_key = (dream.images[i].id, image['image_key'])
+                    manager.register_image(image=image['image'], key=image_key)
+                    dream.images[i].image_key = image_key
+
                 dream.images[i].seed = image.get('seed')
                 dream.images[i].num_finished_steps = image.get('completed_steps', 0)
         elif response.get('state') == 'complete':
@@ -142,8 +174,12 @@ async def dream_watcher(manager, dream, responses):
             for i, image in enumerate(response['images']):
                 if image['state'] != 'complete':
                     raise Exception(f"Unexpected final image state: {image['state']}")
+
+                image_key = (dream.images[i].id, image['image_key'])
+                manager.register_image(image=image['image'], key=image_key)
+
                 dream.images[i].state = 'FinishedDreamImage'
-                dream.images[i].image = image['image']
+                dream.images[i].image_key = image_key
                 dream.images[i].seed = image['seed']
                 dream.images[i].num_finished_steps = image.get('completed_steps', 0)
             manager.persist_dream(dream)

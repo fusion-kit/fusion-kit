@@ -3,6 +3,7 @@ import React from "react";
 import { unreachable } from "../../utils";
 import { ErrorBox } from "../ErrorBox";
 import { DreamState, Dream } from "./hooks";
+import { BACKEND_URL, joinUrlPath } from "../../graphql-client";
 
 interface CurrentDreamProps {
   dreamState: DreamState,
@@ -128,6 +129,15 @@ const ShowDreamImages: React.FC<ShowDreamImagesProps> = (props) => {
 };
 
 function getDreamImageUri(dreamImage: DreamImage | null): string | null {
+  const path = getDreamImagePath(dreamImage);
+  if (path == null) {
+    return null;
+  }
+
+  return joinUrlPath(BACKEND_URL, path);
+}
+
+function getDreamImagePath(dreamImage: DreamImage | null): string | null {
   if (dreamImage == null) {
     return null;
   }

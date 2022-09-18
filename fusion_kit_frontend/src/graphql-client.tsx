@@ -6,7 +6,7 @@ import { getMainDefinition } from "@apollo/client/utilities";
 import { createClient } from "graphql-ws";
 import { nonEmptyString } from "./utils";
 
-const BACKEND_URL = nonEmptyString(import.meta.env.VITE_BACKEND_URL) ?? window.location.href;
+export const BACKEND_URL = nonEmptyString(import.meta.env.VITE_BACKEND_URL) ?? window.location.href;
 const GRAPHQL_URL = joinUrlPath(BACKEND_URL, "/graphql");
 const GRAPHQL_WS_URL = httpUrlToWsUrl(joinUrlPath(BACKEND_URL, "/graphql"));
 
@@ -47,7 +47,7 @@ function httpUrlToWsUrl(url: string): string {
   return anchor.href;
 }
 
-function joinUrlPath(url: string, path: string): string {
+export function joinUrlPath(url: string, path: string): string {
   const anchor = document.createElement("a");
   anchor.href = url;
 

@@ -1,25 +1,20 @@
 # Based on `optimized_txt2img.py` from optimizedSD
 
-import argparse, os, re
 import torch
 import numpy as np
-import copy
 from random import randint
 from omegaconf import OmegaConf
 from PIL import Image
-from tqdm import tqdm, trange
 from itertools import islice
 from einops import rearrange
-from torchvision.utils import make_grid
 import time
 from pytorch_lightning import seed_everything
 from torch import autocast
-from contextlib import contextmanager, nullcontext
+from contextlib import nullcontext
 from ldm.util import instantiate_from_config
-from optimizedSD.optimUtils import split_weighted_subprompts, logger
+from optimizedSD.optimUtils import split_weighted_subprompts
 from transformers import logging
-# from samplers import CompVisDenoiser
-# set logging for stable diffusion
+from ulid import ULID
 
 logging.set_verbosity_error()
 
@@ -189,6 +184,7 @@ class Dreamer():
                 'state': 'pending',
                 'seed': initial_seed + i,
                 'image': None,
+                'image_key': None,
                 'completed_steps': 0,
                 'total_steps': num_steps_per_image,
             }
@@ -262,6 +258,7 @@ class Dreamer():
                         x_sample = 255.0 * rearrange(x_sample[0].cpu().numpy(), "c h w -> h w c")
                         image = Image.fromarray(x_sample.astype(np.uint8))
                         images[image_index]['image'] = image
+                        images[image_index]['image_key'] = 'image'
                         images[image_index]['state'] = 'complete'
                         images[image_index]['completed_steps'] = num_steps_per_image
 
@@ -323,6 +320,7 @@ def make_img_callback(
 
             for batch_index, image_index in enumerate(batch_image_indices):
                 images[image_index]['image'] = batch_preview_images[batch_index]
+                images[image_index]['image_key'] = f'preview_{ULID()}'
 
         for image_index in batch_image_indices:
             images[image_index]['completed_steps'] = step_index

@@ -1,3 +1,4 @@
+from io import BytesIO
 import sys
 sys.path.append('./stable_diffusion')
 
@@ -10,9 +11,10 @@ from ariadne.asgi.handlers import GraphQLTransportWSHandler
 import db
 import logging
 from starlette.applications import Starlette
-from starlette.routing import Route, WebSocketRoute
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import StreamingResponse
+from starlette.routing import Route, WebSocketRoute
 import uvicorn
 import domain.graphql
 from manager import FusionKitManager
@@ -38,6 +40,15 @@ db_config = db.DbConfig(
     db_path=db_path
 )
 
+def get_image(request):
+    manager = request.app.state.manager
+    image = manager.get_image_by_path(f"/images/{request.path_params['image_path']}")
+
+    data = BytesIO()
+    image.save(data, format='png')
+    data.seek(0)
+    return StreamingResponse(data, media_type='image/png')
+
 async def main():
     async with FusionKitManager(db_config=db_config, images_dir=images_dir) as manager:
         # Run datababase migrations
@@ -57,6 +68,7 @@ async def main():
         routes = [
             Route("/graphql", graphql_app, methods=["GET", "POST"]),
             WebSocketRoute("/graphql", endpoint=graphql_app),
+            Route("/images/{image_path:path}", get_image, methods=["GET"]),
         ]
 
         middleware = [
@@ -64,6 +76,7 @@ async def main():
         ]
 
         app = Starlette(debug=True, routes=routes, middleware=middleware)
+        app.state.manager = manager
 
         logging.getLogger("uvicorn").propagate = False
 

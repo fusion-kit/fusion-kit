@@ -1,8 +1,4 @@
-from ariadne import ObjectType, SubscriptionType, UnionType, make_executable_schema, convert_kwargs_to_snake_case, snake_case_fallback_resolvers
-import base64
-from io import BytesIO
-import multiprocessing
-from PIL import Image
+from ariadne import ObjectType, SubscriptionType, make_executable_schema, convert_kwargs_to_snake_case, snake_case_fallback_resolvers
 from domain.dream import gql_dream
 from domain.dream_image import gql_dream_image
 
