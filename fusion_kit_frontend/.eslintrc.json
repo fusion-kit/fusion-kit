@@ -45,6 +45,7 @@
         ]
       }
     ],
+    "no-else-return": "off",
     "no-underscore-dangle": "off",
     "no-unreachable": "warn",
     "no-unused-vars": [
