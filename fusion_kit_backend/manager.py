@@ -80,7 +80,7 @@ class FusionKitManager():
                 prompt=dream.prompt,
                 seed=dream.seed,
                 num_images=dream.num_images,
-                settings_json=json.dumps({}),
+                settings_json=json.dumps(dream.settings),
             )
             session.add(db_dream)
 
