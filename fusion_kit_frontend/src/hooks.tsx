@@ -39,7 +39,7 @@ export function useStableKeys(): UseStableKeys {
         return indexKey;
       } else {
         // No key was set for this ID or index, so generate a new ID key
-        const newKey = ulid();
+        const newKey = generateNewStableKey();
         setIdMap((map) => ({ ...map, [id]: newKey }));
         return newKey;
       }
@@ -50,7 +50,7 @@ export function useStableKeys(): UseStableKeys {
         return indexKey;
       } else {
         // No key for this index, so generate a new index key
-        const newKey = ulid();
+        const newKey = generateNewStableKey();
         setIndexMap((map) => ({ ...map, [index.toString()]: newKey }));
         return newKey;
       }
@@ -58,4 +58,8 @@ export function useStableKeys(): UseStableKeys {
   }, [idMap, indexMap]);
 
   return { getKey };
+}
+
+function generateNewStableKey(): string {
+  return `key_${ulid()}`;
 }

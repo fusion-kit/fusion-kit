@@ -18,7 +18,7 @@ class Dream():
         self.images = []
 
         for _ in range(self.num_images):
-            dream_image_id = str(ULID())
+            dream_image_id = f'di_{ULID()}'
             dream_image = DreamImage(
                 id=dream_image_id,
                 dream_id=id,

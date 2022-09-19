@@ -31,7 +31,7 @@ class FusionKitManager():
         self.db_conn.close()
 
     async def start_dream(self, options):
-        dream_id = str(ULID())
+        dream_id = f'd_{ULID()}'
         dream_settings = {
             'options': options,
             'num_images_per_batch': 2,
