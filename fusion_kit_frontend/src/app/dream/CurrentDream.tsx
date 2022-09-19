@@ -1,5 +1,6 @@
 import { clsx } from "clsx";
 import React from "react";
+import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { unreachable } from "../../utils";
 import { ErrorBox } from "../ErrorBox";
 import { DreamState, Dream } from "./hooks";
@@ -50,7 +51,7 @@ const DreamStatus: React.FC<DreamStatusProps> = (props) => {
 
   if (dream == null || dream.__typename === "PendingDream") {
     return (
-      <div className="h-8 mt-6">
+      <div className="h-8 mt-6 rounded-lg overflow-hidden shadow-sm border border-gray-300">
         <ProgressBar status="indeterminate" progress={1} label="Starting dream..." />
       </div>
     );
@@ -80,13 +81,20 @@ const DreamStatus: React.FC<DreamStatusProps> = (props) => {
       const plural = numImages !== 1;
       const label = `Generating ${numImages} image${plural ? "s" : ""} (${percentage})`;
       return (
-        <div className="h-8 mt-6">
+        <div className="h-8 mt-6 rounded-lg overflow-hidden shadow-sm border border-gray-300">
           <ProgressBar status="loading" progress={progress} label={label} />
         </div>
       );
     }
     case "FinishedDream":
-      return null;
+      return (
+        <div className="h-8 mt-6 rounded-lg shadow-sm border border-green-300 bg-green-50 text-green-700 px-2 flex justify-between items-center">
+          <div className="flex items-center">
+            <CheckCircleIcon className="h-4 w-4 text-green-400" aria-hidden="true" />
+            <span className="ml-1">Dream finished</span>
+          </div>
+        </div>
+      );
     default:
       return unreachable(dream);
   }
@@ -103,7 +111,7 @@ const ShowDreamImages: React.FC<ShowDreamImagesProps> = (props) => {
   const { getKey } = useStableKeys();
 
   return (
-    <ul className="py-6 gap-2 md:gap-4 grid justify-center grid-cols-repeat-fit-20">
+    <ul className="mt-6 gap-2 md:gap-4 grid justify-center grid-cols-repeat-fit-20">
       {images.map((image, index) => {
         const imageUri = getDreamImageUri(image);
         const isLoading = isDreamImageLoading(image);
@@ -210,7 +218,7 @@ const ProgressBar: React.FC<ProgressBarProps> = (props) => {
   const percent = Math.min(Math.max(props.progress * 100, 0), 100);
 
   return (
-    <div className="h-full relative bg-gray-100 rounded-lg text-black overflow-hidden shadow-sm border border-gray-300 box-content">
+    <div className="h-full relative bg-gray-100 text-black">
       {props.label != null ? (
         <div className="absolute z-10 flex items-center justify-center inset-0">
           <span className="text-shadow-sm shadow-black/50">{props.label}</span>
