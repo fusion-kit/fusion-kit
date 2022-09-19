@@ -44,8 +44,10 @@ export function useCreateDream(): UseCreateDream {
   const createDream = useCallback(async (opts: DreamOptions) => {
     await startDream({
       variables: {
-        prompt: opts.prompt,
-        numImages: opts.numImages,
+        options: {
+          prompt: opts.prompt,
+          numImages: opts.numImages,
+        },
       },
     });
   }, [startDream]);

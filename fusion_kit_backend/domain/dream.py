@@ -10,33 +10,36 @@ def resolve_dream_type(dream, *_):
     return dream.state
 
 class Dream():
-    def __init__(
-        self,
-        id,
-        prompt,
-        num_images,
-        num_steps_per_image,
-        seed=None
-    ):
+    def __init__(self, id, settings):
         self.id = id
-        self.seed = seed
-        self.prompt = prompt
-        self.images = []
+        self.settings = settings
+        self.seed = None
         self.state = 'PendingDream'
-        self.num_images = num_images
-        self.num_steps_per_image = num_steps_per_image
+        self.images = []
 
-        for _ in range(num_images):
+        for _ in range(self.num_images):
             dream_image_id = str(ULID())
             dream_image = DreamImage(
                 id=dream_image_id,
                 dream_id=id,
-                num_steps=num_steps_per_image,
+                num_steps=self.num_steps_per_image,
             )
             self.images.append(dream_image)
 
     def is_complete(self):
         return self.state == 'FinishedDream' or self.state == 'StoppedDream'
+
+    @property
+    def prompt(self):
+        return self.settings['options']['prompt']
+
+    @property
+    def num_images(self):
+        return self.settings['options']['num_images']
+
+    @property
+    def num_steps_per_image(self):
+        return self.settings['num_steps_per_image']
 
     ### GraphQL resolvers ###
 

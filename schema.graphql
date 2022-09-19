@@ -3,11 +3,16 @@ type Query {
 }
 
 type Mutation {
-  startDream(prompt: String!, numImages: Int! = 1): Dream!
+  startDream(options: DreamOptionsInput!): Dream!
 }
 
 type Subscription {
   watchDream(dreamId: ID!): Dream!
+}
+
+input DreamOptionsInput {
+  prompt: String!
+  numImages: Int!
 }
 
 interface Dream {

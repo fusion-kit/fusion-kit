@@ -12,13 +12,10 @@ mutation = ObjectType("Mutation")
 
 @mutation.field("startDream")
 @convert_kwargs_to_snake_case
-async def resolve_dream(_, info, prompt, num_images):
+async def resolve_start_dream(_, info, options):
     manager = info.context['manager']
 
-    dream = await manager.start_dream(
-        prompt=prompt,
-        num_images=num_images
-    )
+    dream = await manager.start_dream(options)
     return dream
 
 subscription = SubscriptionType()

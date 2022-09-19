@@ -1,5 +1,5 @@
-mutation StartDream($prompt: String!, $numImages: Int) {
-  startDream(prompt: $prompt, numImages: $numImages) {
+mutation StartDream($options: DreamOptionsInput!) {
+  startDream(options: $options) {
     id
   }
 }
