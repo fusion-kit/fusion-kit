@@ -126,9 +126,9 @@ const ShowDreamImages: React.FC<ShowDreamImagesProps> = (props) => {
           <li key={getKey(index, image?.id)}>
             <div
               className={clsx(
-                "relative group max-w-20 block w-full overflow-hidden rounded-lg bg-gray-100 focus-within:ring-indigo-500",
+                "relative group max-w-20 block w-full overflow-hidden rounded-lg bg-gray-100 focus-within:ring-indigo-700",
                 selectedImageIndex === index
-                  ? "ring-2 ring-offset-0 ring-indigo-500 focus-within:ring-4"
+                  ? "ring-4 ring-offset-0 ring-indigo-500 focus-within:ring-indigo-700"
                   : "focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100",
               )}
             >
