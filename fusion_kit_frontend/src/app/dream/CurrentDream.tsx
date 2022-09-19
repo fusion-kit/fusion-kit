@@ -3,17 +3,20 @@ import React from "react";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { unreachable } from "../../utils";
 import { ErrorBox } from "../ErrorBox";
-import { DreamState, Dream, useDreamImageSelection } from "./hooks";
+import {
+  DreamState, Dream, UseDreamImageSelection,
+} from "./hooks";
 import { BACKEND_URL, joinUrlPath } from "../../client";
 import { useStableKeys } from "../../hooks";
 
 interface CurrentDreamProps {
   dreamState: DreamState,
   numImages: number,
+  dreamImageSelection: UseDreamImageSelection,
 }
 
 export const CurrentDream: React.FC<CurrentDreamProps> = (props) => {
-  const { dreamState, numImages } = props;
+  const { dreamState, numImages, dreamImageSelection } = props;
 
   const { dream } = dreamState;
 
@@ -23,7 +26,7 @@ export const CurrentDream: React.FC<CurrentDreamProps> = (props) => {
   return (
     <>
       <DreamStatus dreamState={dreamState} />
-      <ShowDreamImages images={images} />
+      <ShowDreamImages images={images} dreamImageSelection={dreamImageSelection} />
     </>
   );
 };
@@ -104,74 +107,53 @@ type DreamImage = Dream["images"][0];
 
 interface ShowDreamImagesProps {
   images: (DreamImage | null)[],
+  dreamImageSelection: UseDreamImageSelection,
 }
 
 const ShowDreamImages: React.FC<ShowDreamImagesProps> = (props) => {
-  const { images } = props;
-  const { getKey } = useStableKeys();
-  const { selectedImage, selectedImageIndex, selectImageIndex } = useDreamImageSelection(images);
+  const { images, dreamImageSelection } = props;
+  const { selectImageIndex, selectedImageIndex } = dreamImageSelection;
 
-  const selectedImageUri = getDreamImageUri(selectedImage);
-  const selectedImageIsLoading = isDreamImageLoading(selectedImage);
+  const { getKey } = useStableKeys();
 
   return (
-    <>
-      <ul className="mt-6 gap-2 md:gap-4 grid justify-center grid-cols-repeat-fit-20">
-        {images.map((image, index) => {
-          const imageUri = getDreamImageUri(image);
-          const isLoading = isDreamImageLoading(image);
-          const progress = getDreamImageProgress(image);
-          return (
-            <li key={getKey(index, image?.id)}>
-              <div
-                className={clsx(
-                  "relative group max-w-20 block w-full overflow-hidden rounded-lg bg-gray-100 focus-within:ring-indigo-500",
-                  selectedImageIndex === index
-                    ? "ring-2 ring-offset-0 ring-indigo-500 focus-within:ring-4"
-                    : "focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100",
-                )}
-              >
-                {imageUri != null ? (
-                  <img src={imageUri} alt="" className="pointer-events-none object-cover group-hover:opacity-75" />
-                ) : <div className={clsx("w-20 h-20 bg-gray-300", isLoading ? "animate-pulse" : null)}></div>}
+    <ul className="mt-6 gap-2 md:gap-4 grid justify-center grid-cols-repeat-fit-20">
+      {images.map((image, index) => {
+        const imageUri = getDreamImageUri(image);
+        const isLoading = isDreamImageLoading(image);
+        const progress = getDreamImageProgress(image);
+        return (
+          <li key={getKey(index, image?.id)}>
+            <div
+              className={clsx(
+                "relative group max-w-20 block w-full overflow-hidden rounded-lg bg-gray-100 focus-within:ring-indigo-500",
+                selectedImageIndex === index
+                  ? "ring-2 ring-offset-0 ring-indigo-500 focus-within:ring-4"
+                  : "focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100",
+              )}
+            >
+              {imageUri != null ? (
+                <img src={imageUri} alt="" className="pointer-events-none object-cover group-hover:opacity-75" />
+              ) : <div className={clsx("w-20 h-20 bg-gray-300", isLoading ? "animate-pulse" : null)}></div>}
 
-                {progress != null ? (
-                  <div className="h-3 absolute inset-x-0 bottom-0">
-                    <MiniProgressBar progress={progress} />
-                  </div>
-                ) : null}
+              {progress != null ? (
+                <div className="h-3 absolute inset-x-0 bottom-0">
+                  <MiniProgressBar progress={progress} />
+                </div>
+              ) : null}
 
-                <button
-                  type="button"
-                  className="absolute inset-0 focus:outline-none"
-                  onClick={() => { selectImageIndex(index); }}
-                >
-                  <span className="sr-only">Expand image</span>
-                </button>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-      {selectedImage != null ? (
-        <div className="mt-3 m-auto">
-          {selectedImageUri != null
-            ? (
-              <img src={selectedImageUri} alt="" className="m-auto rounded-md max-h-[75vw] max-w-[75vh]" />
-            )
-            : (
-              <div
-                className={clsx(
-                  "bg-gray-300 rounded-md m-auto max-h-[75vw] max-w-[75vh]",
-                  selectedImageIsLoading ? "animate-pulse" : "",
-                )}
-                style={{ aspectRatio: "512 / 512" }}
+              <button
+                type="button"
+                className="absolute inset-0 focus:outline-none"
+                onClick={() => { selectImageIndex(index); }}
               >
-              </div>
-            )}
-        </div>
-      ) : null}
-    </>
+                <span className="sr-only">Expand image</span>
+              </button>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
   );
 };
 

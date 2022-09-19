@@ -39,6 +39,8 @@ export type DreamState =
 
 export type Dream = WatchDreamSubscription["watchDream"];
 
+export type DreamImage = Dream["images"][0];
+
 export function useCreateDream(): UseCreateDream {
   const [startDream, startDreamResult] = useMutation(StartDreamDocument);
   const createDream = useCallback(async (opts: DreamOptions) => {
@@ -157,13 +159,13 @@ export function useDreamOptions(defaultOptions: DreamOptions): UseDreamOptions {
   };
 }
 
-interface UseImageSelection<T> {
-  selectedImage: T | null,
+export interface UseDreamImageSelection {
+  selectedImage: DreamImage | null,
   selectedImageIndex: number | null,
   selectImageIndex: (_index: number | null) => void,
 }
 
-export function useDreamImageSelection<T>(images: T[]): UseImageSelection<T> {
+export function useDreamImageSelection(images: (DreamImage | null)[]): UseDreamImageSelection {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const selectImageIndex = useCallback((newIndex: number | null) => {
     setSelectedIndex((currentIndex) => {
