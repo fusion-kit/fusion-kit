@@ -202,8 +202,8 @@ const NumberSliderInput: React.FC<NumberSliderInputProps> = (props) => {
 
   return (
     <>
-      <div className="flex justify-between">
-        <label htmlFor={textInputId}>{label}</label>
+      <div className="flex justify-between items-baseline">
+        <label htmlFor={textInputId} className="font-bold">{label}</label>
         <input
           type="text"
           inputMode="numeric"
