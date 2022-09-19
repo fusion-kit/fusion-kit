@@ -6,7 +6,7 @@ import {
   StartDreamDocument, StartDreamMutation, StoppedDreamReason,
   WatchDreamDocument, WatchDreamSubscription,
 } from "../../generated/graphql";
-import { unreachable } from "../../utils";
+import { clamp, unreachable } from "../../utils";
 
 export interface DreamOptions {
   prompt: string,
@@ -155,4 +155,43 @@ export function useDreamOptions(defaultOptions: DreamOptions): UseDreamOptions {
     updateOptions,
     defaultOptions,
   };
+}
+
+interface UseImageSelection<T> {
+  selectedImage: T | null,
+  selectedImageIndex: number | null,
+  selectImageIndex: (_index: number | null) => void,
+}
+
+export function useDreamImageSelection<T>(images: T[]): UseImageSelection<T> {
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const selectImageIndex = useCallback((newIndex: number | null) => {
+    setSelectedIndex((currentIndex) => {
+      if (newIndex != null && newIndex === currentIndex) {
+        return null;
+      } else {
+        return getEffectiveImageSelectionIndex(newIndex, images);
+      }
+    });
+  }, [images]);
+
+  const effectiveIndex = getEffectiveImageSelectionIndex(selectedIndex, images);
+  const selectedImage = effectiveIndex != null ? images[effectiveIndex] : null;
+
+  return {
+    selectedImage,
+    selectedImageIndex: effectiveIndex,
+    selectImageIndex,
+  };
+}
+
+function getEffectiveImageSelectionIndex(
+  selectedIndex: number | null,
+  images: unknown[],
+): number | null {
+  if (images.length === 0 || selectedIndex == null) {
+    return null;
+  }
+
+  return clamp(selectedIndex, 0, images.length - 1);
 }
