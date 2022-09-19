@@ -7,7 +7,7 @@ def resolve_dream_image_type(dream_image, *_):
     return dream_image.state
 
 class DreamImage():
-    def __init__(self, id, dream_id, num_steps, seed=None):
+    def __init__(self, id, dream_id, num_steps, seed):
         self.id = id
         self.seed = seed
         self.dream_id = dream_id

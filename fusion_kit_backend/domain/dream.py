@@ -13,15 +13,15 @@ class Dream():
     def __init__(self, id, settings):
         self.id = id
         self.settings = settings
-        self.seed = None
         self.state = 'PendingDream'
         self.images = []
 
-        for _ in range(self.num_images):
+        for image_index in range(self.num_images):
             dream_image_id = f'di_{ULID()}'
             dream_image = DreamImage(
                 id=dream_image_id,
                 dream_id=id,
+                seed=self.seed + image_index,
                 num_steps=self.num_steps_per_image,
             )
             self.images.append(dream_image)
@@ -32,6 +32,10 @@ class Dream():
     @property
     def prompt(self):
         return self.settings['options']['prompt']
+
+    @property
+    def seed(self):
+        return self.settings['options']['seed']
 
     @property
     def num_images(self):

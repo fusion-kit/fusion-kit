@@ -22,6 +22,7 @@ def processor_runner(req_queue, res_queue):
             options = request_body['options']
             result = dreamer.txt2img(
                 prompt=options['prompt'],
+                seed=options['seed'],
                 num_images=options['num_images'],
                 num_steps_per_image=request_body['num_steps_per_image'],
                 num_images_per_batch=request_body['num_images_per_batch'],

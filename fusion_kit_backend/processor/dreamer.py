@@ -114,6 +114,7 @@ class Dreamer():
     def txt2img(
         self,
         prompt,
+        seed,
         num_images,
         num_steps_per_image,
         num_images_per_batch,
@@ -127,6 +128,9 @@ class Dreamer():
         ----------
         prompt
             A text description of an image to generate.
+        seed
+            The RNG seed value to use to generate images. Using the same
+            seed value with the same inputs will produce the same result.
         num_images
             The total number of images to generate.
         num_steps_per_image
@@ -151,16 +155,10 @@ class Dreamer():
         opt_f = 8 # downsampling factor
         opt_scale = 7.5 # unconditional guidance scale: eps = eps(x, empty) + scale * (eps(x, cond) - eps(x, empty))
         opt_device = self.device # specify GPU (cuda/cuda:0/cuda:1/...)
-        opt_seed = None # the seed (for reproducible sampling)
         opt_precision = self.precision # evaluate at this precision [full, autocast]
         opt_sampler = "ddim" # sampler [ddim, plms]
 
-        initial_seed = opt_seed
-        if initial_seed == None:
-            initial_seed = randint(0, 1000000)
-        seed_everything(initial_seed)
-
-        current_seed = initial_seed
+        seed_everything(seed)
 
         models = self.load()
         model = models['model']
@@ -182,7 +180,7 @@ class Dreamer():
             {
                 'index': i,
                 'state': 'pending',
-                'seed': initial_seed + i,
+                'seed': seed + i,
                 'image': None,
                 'image_key': None,
                 'completed_steps': 0,
@@ -194,7 +192,7 @@ class Dreamer():
         with torch.no_grad():
             for batch_image_indices in batches:
                 batch_size = len(batch_image_indices)
-                batch_intiial_seed = images[batch_image_indices[0]]['seed']
+                batch_seed = images[batch_image_indices[0]]['seed']
 
                 for i in batch_image_indices:
                     images[i]['state'] = 'running'
@@ -239,7 +237,7 @@ class Dreamer():
                     samples_ddim = model.sample(
                         S=num_steps_per_image,
                         conditioning=c,
-                        seed=batch_intiial_seed,
+                        seed=batch_seed,
                         shape=shape,
                         verbose=False,
                         unconditional_guidance_scale=opt_scale,
@@ -274,7 +272,7 @@ class Dreamer():
 
         return {
             'images': images,
-            'seed': initial_seed,
+            'seed': seed,
         }
 
 # Based on `sample_iteration_callback` from this PR:

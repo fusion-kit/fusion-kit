@@ -1,4 +1,5 @@
 import asyncio
+from random import randint
 from broadcaster import Broadcast
 from copy import copy
 import blurhash_numba
@@ -30,8 +31,13 @@ class FusionKitManager():
         await self.broadcast.disconnect()
         self.db_conn.close()
 
-    async def start_dream(self, options):
+    async def start_dream(self, input_options):
         dream_id = f'd_{ULID()}'
+
+        options = copy(input_options)
+        if options.get('seed') is None:
+            options['seed'] = randint(0, 1000000)
+
         dream_settings = {
             'options': options,
             'num_images_per_batch': 2,
@@ -161,11 +167,9 @@ async def dream_watcher(manager, dream, responses):
                     manager.register_image(image=image['image'], key=image_key)
                     dream.images[i].image_key = image_key
 
-                dream.images[i].seed = image.get('seed')
                 dream.images[i].num_finished_steps = image.get('completed_steps', 0)
         elif response.get('state') == 'complete':
             dream.state = 'FinishedDream'
-            dream.seed = response['seed']
             for i, image in enumerate(response['images']):
                 if image['state'] != 'complete':
                     raise Exception(f"Unexpected final image state: {image['state']}")
@@ -175,7 +179,6 @@ async def dream_watcher(manager, dream, responses):
 
                 dream.images[i].state = 'FinishedDreamImage'
                 dream.images[i].image_key = image_key
-                dream.images[i].seed = image['seed']
                 dream.images[i].num_finished_steps = image.get('completed_steps', 0)
             manager.persist_dream(dream)
         else:
