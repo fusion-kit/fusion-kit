@@ -26,6 +26,7 @@ export type DreamImage = {
 export type DreamOptionsInput = {
   numImages: Scalars['Int'];
   prompt: Scalars['String'];
+  seed?: InputMaybe<Scalars['Int']>;
 };
 
 export type FinishedDream = Dream & {
