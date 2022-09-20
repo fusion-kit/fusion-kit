@@ -156,7 +156,7 @@ const ShowDreamImages: React.FC<ShowDreamImagesProps> = (props) => {
 const DreamProgressBar: React.FC<ProgressBarProps> = (props) => {
   return (
     <motion.div
-      className="h-8 mt-6 rounded-lg overflow-hidden shadow-sm border border-gray-300"
+      className="h-8 mt-6 rounded-lg overflow-hidden box-border shadow-sm ring-1 ring-gray-300"
       key="dream-progress-bar"
       initial="collapsed"
       animate="open"
