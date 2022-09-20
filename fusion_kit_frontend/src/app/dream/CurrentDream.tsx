@@ -1,11 +1,11 @@
 import { clsx } from "clsx";
 import React from "react";
-import { CheckCircleIcon } from "@heroicons/react/24/solid";
+import { AnimatePresence, motion } from "framer-motion";
 import { unreachable } from "../../utils";
 import { ErrorBox } from "../ErrorBox";
 import {
-  DreamState, Dream, UseDreamImageSelection, isDreamImageLoading,
-  getDreamImageUri, getDreamImageProgress,
+  DreamState, UseDreamImageSelection, isDreamImageLoading,
+  getDreamImageUri, getDreamImageProgress, DreamImage,
 } from "./hooks";
 import { useStableKeys } from "../../hooks";
 import { MiniProgressBar } from "./components";
@@ -42,38 +42,42 @@ const DreamStatus: React.FC<DreamStatusProps> = (props) => {
 
   if (dreamState.type === "error") {
     return (
-      <ErrorBox>
-        <h3 className="text-sm font-medium text-red-800">Got error while creating dream</h3>
-        <div className="mt-2 text-sm text-red-700">
-          <p>
-            {dreamState.message}
-          </p>
-        </div>
-      </ErrorBox>
+      <AnimatePresence>
+        <ErrorBox>
+          <h3 className="text-sm font-medium text-red-800">Got error while creating dream</h3>
+          <div className="mt-2 text-sm text-red-700">
+            <p>
+              {dreamState.message}
+            </p>
+          </div>
+        </ErrorBox>
+      </AnimatePresence>
     );
   }
 
   if (dream == null || dream.__typename === "PendingDream") {
     return (
-      <div className="h-8 mt-6 rounded-lg overflow-hidden shadow-sm border border-gray-300">
-        <ProgressBar status="indeterminate" progress={1} label="Starting dream..." />
-      </div>
+      <AnimatePresence>
+        <DreamProgressBar status="indeterminate" progress={1} label="Starting dream..." />
+      </AnimatePresence>
     );
   }
 
   if (dream.__typename === "StoppedDream") {
     return (
-      <ErrorBox>
-        <h3 className="text-sm font-medium text-red-800">Dream stopped unexpectedly</h3>
-        <div className="mt-2 text-sm text-red-700">
-          <p>
-            {dream.reason}
-            :
-            {" "}
-            {dream.message}
-          </p>
-        </div>
-      </ErrorBox>
+      <AnimatePresence>
+        <ErrorBox>
+          <h3 className="text-sm font-medium text-red-800">Dream stopped unexpectedly</h3>
+          <div className="mt-2 text-sm text-red-700">
+            <p>
+              {dream.reason}
+              :
+              {" "}
+              {dream.message}
+            </p>
+          </div>
+        </ErrorBox>
+      </AnimatePresence>
     );
   }
 
@@ -85,26 +89,17 @@ const DreamStatus: React.FC<DreamStatusProps> = (props) => {
       const plural = numImages !== 1;
       const label = `Generating ${numImages} image${plural ? "s" : ""} (${percentage})`;
       return (
-        <div className="h-8 mt-6 rounded-lg overflow-hidden shadow-sm border border-gray-300">
-          <ProgressBar status="loading" progress={progress} label={label} />
-        </div>
+        <AnimatePresence>
+          <DreamProgressBar status="loading" progress={progress} label={label} />
+        </AnimatePresence>
       );
     }
     case "FinishedDream":
-      return (
-        <div className="h-8 mt-6 rounded-lg shadow-sm border border-green-300 bg-green-50 text-green-700 px-2 flex justify-between items-center">
-          <div className="flex items-center">
-            <CheckCircleIcon className="h-4 w-4 text-green-400" aria-hidden="true" />
-            <span className="ml-1">Dream finished</span>
-          </div>
-        </div>
-      );
+      return <AnimatePresence></AnimatePresence>;
     default:
       return unreachable(dream);
   }
 };
-
-type DreamImage = Dream["images"][0];
 
 interface ShowDreamImagesProps {
   images: (DreamImage | null)[],
@@ -155,6 +150,25 @@ const ShowDreamImages: React.FC<ShowDreamImagesProps> = (props) => {
         );
       })}
     </ul>
+  );
+};
+
+const DreamProgressBar: React.FC<ProgressBarProps> = (props) => {
+  return (
+    <motion.div
+      className="h-8 mt-6 rounded-lg overflow-hidden shadow-sm border border-gray-300"
+      key="dream-progress-bar"
+      initial="collapsed"
+      animate="open"
+      exit="collapsed"
+      variants={{
+        open: { height: "2rem", marginTop: "1.5rem" },
+        collapsed: { height: 0, marginTop: 0 },
+      }}
+      transition={{ duration: 0.1, ease: "easeInOut" }}
+    >
+      <ProgressBar {...props} />
+    </motion.div>
   );
 };
 
