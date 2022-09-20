@@ -8,6 +8,7 @@ import {
 } from "./hooks";
 import { BACKEND_URL, joinUrlPath } from "../../client";
 import { useStableKeys } from "../../hooks";
+import { MiniProgressBar } from "./components";
 
 interface CurrentDreamProps {
   dreamState: DreamState,
@@ -247,24 +248,6 @@ const ProgressBar: React.FC<ProgressBarProps> = (props) => {
             ? "bg-candystripes from-blue-200 to-blue-300"
             : "bg-candystripes from-gray-200 to-gray-300",
         )}
-        style={{ width: `${percent}%` }}
-      >
-      </span>
-    </div>
-  );
-};
-
-interface MiniProgressBarProps {
-  progress: number,
-}
-
-const MiniProgressBar: React.FC<MiniProgressBarProps> = (props) => {
-  const percent = Math.min(Math.max(props.progress * 100, 0), 100);
-
-  return (
-    <div className="h-full bg-gray-100 text-black opacity-90">
-      <span
-        className="block h-full relative overflow-hidden bg-blue-500"
         style={{ width: `${percent}%` }}
       >
       </span>
