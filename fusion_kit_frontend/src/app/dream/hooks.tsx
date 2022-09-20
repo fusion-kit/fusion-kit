@@ -2,6 +2,7 @@ import {
   MutationResult, SubscriptionResult, useMutation, useSubscription,
 } from "@apollo/client";
 import { useCallback, useState } from "react";
+import { BACKEND_URL, joinUrlPath } from "../../client";
 import {
   StartDreamDocument, StartDreamMutation, StoppedDreamReason,
   WatchDreamDocument, WatchDreamSubscription,
@@ -196,4 +197,68 @@ function getEffectiveImageSelectionIndex(
   }
 
   return clamp(selectedIndex, 0, images.length - 1);
+}
+
+export function getDreamImageUri(dreamImage: DreamImage | null): string | null {
+  const path = getDreamImagePath(dreamImage);
+  if (path == null) {
+    return null;
+  }
+
+  return joinUrlPath(BACKEND_URL, path);
+}
+
+function getDreamImagePath(dreamImage: DreamImage | null): string | null {
+  if (dreamImage == null) {
+    return null;
+  }
+
+  switch (dreamImage.__typename) {
+    case "PendingDreamImage":
+      return null;
+    case "RunningDreamImage":
+      return dreamImage.previewImagePath ?? null;
+    case "FinishedDreamImage":
+      return dreamImage.imagePath;
+    case "StoppedDreamImage":
+      return null;
+    default:
+      return unreachable(dreamImage);
+  }
+}
+
+export function isDreamImageLoading(dreamImage: DreamImage | null): boolean {
+  if (dreamImage == null) {
+    return true;
+  }
+
+  switch (dreamImage.__typename) {
+    case "PendingDreamImage":
+    case "RunningDreamImage":
+      return true;
+    case "FinishedDreamImage":
+    case "StoppedDreamImage":
+      return false;
+    default:
+      return unreachable(dreamImage);
+  }
+}
+
+export function getDreamImageProgress(dreamImage: DreamImage | null): number | null {
+  if (dreamImage == null) {
+    return null;
+  }
+
+  switch (dreamImage.__typename) {
+    case "PendingDreamImage":
+      return null;
+    case "RunningDreamImage":
+      return dreamImage.numFinishedSteps / dreamImage.numTotalSteps;
+    case "FinishedDreamImage":
+      return null;
+    case "StoppedDreamImage":
+      return null;
+    default:
+      return unreachable(dreamImage);
+  }
 }
