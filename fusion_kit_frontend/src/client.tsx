@@ -1,8 +1,9 @@
 import {
-  ApolloClient, HttpLink, InMemoryCache, split,
+  ApolloClient, InMemoryCache, split,
 } from "@apollo/client";
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { getMainDefinition } from "@apollo/client/utilities";
+import { createUploadLink } from "apollo-upload-client";
 import { createClient } from "graphql-ws";
 import { nonEmptyString } from "./utils";
 
@@ -10,7 +11,7 @@ export const BACKEND_URL = nonEmptyString(import.meta.env.VITE_BACKEND_URL) ?? w
 const GRAPHQL_URL = joinUrlPath(BACKEND_URL, "/graphql");
 const GRAPHQL_WS_URL = httpUrlToWsUrl(joinUrlPath(BACKEND_URL, "/graphql"));
 
-const httpLink = new HttpLink({
+const httpLink = createUploadLink({
   uri: GRAPHQL_URL,
 });
 

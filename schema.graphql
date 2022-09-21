@@ -10,6 +10,8 @@ type Subscription {
   watchDream(dreamId: ID!): Dream!
 }
 
+scalar Upload
+
 input DreamOptionsInput {
   prompt: String!
   numImages: Int!

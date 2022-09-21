@@ -1,4 +1,4 @@
-from ariadne import ObjectType, SubscriptionType, make_executable_schema, convert_kwargs_to_snake_case, snake_case_fallback_resolvers
+from ariadne import ObjectType, SubscriptionType, make_executable_schema, convert_kwargs_to_snake_case, snake_case_fallback_resolvers, upload_scalar
 from domain.dream import gql_dream
 from domain.dream_image import gql_dream_image
 
@@ -39,6 +39,7 @@ def make_schema(type_defs):
         mutation,
         subscription,
         snake_case_fallback_resolvers,
+        upload_scalar,
         gql_dream,
         gql_dream_image
     )
