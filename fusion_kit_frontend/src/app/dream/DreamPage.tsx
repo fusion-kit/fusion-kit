@@ -10,6 +10,7 @@ export const DreamPage: React.FC = () => {
     prompt: "",
     numImages: 1,
     seed: null,
+    baseImage: null,
   });
   const { createDream, dreamState } = useCreateDream();
 

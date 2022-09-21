@@ -13,6 +13,12 @@ export interface DreamOptions {
   prompt: string,
   numImages: number,
   seed: number | null,
+  baseImage: File | null,
+}
+
+export interface SelectedFile {
+  file: File,
+  url: string,
 }
 
 interface UseCreateDream {
@@ -52,6 +58,7 @@ export function useCreateDream(): UseCreateDream {
           prompt: opts.prompt,
           numImages: opts.numImages,
           seed: opts.seed ?? undefined,
+          baseImage: opts.baseImage ?? undefined,
         },
       },
     });

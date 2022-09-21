@@ -138,7 +138,10 @@ const OptionsForm: React.FC<OptionsFormProps> = (props) => {
         />
       </div>
       <div className="m-3 w-full">
-        <ImageInput />
+        <ImageInput
+          file={options.baseImage}
+          onChange={(newFile) => updateOptions({ baseImage: newFile })}
+        />
       </div>
     </div>
   );
@@ -292,31 +295,25 @@ const OptionalNumberInput: React.FC<OptionalNumberInputProps> = (props) => {
   );
 };
 
-interface SelectedFile {
-  file: File,
-  url: string,
+interface ImageInputProps {
+  file: File | null,
+  onChange: (_newFile: File | null) => void,
 }
 
-const ImageInput: React.FC = () => {
-  const [selectedFile, setSelectedFile] = useState<SelectedFile | null>(null);
+const ImageInput: React.FC<ImageInputProps> = (props) => {
+  const { file, onChange } = props;
+  const [objectUrl, setObjectUrl] = useState<string | null>(null);
 
-  const updateSelectedFile = useCallback((newFile: File | null) => {
-    setSelectedFile((currentFile) => {
-      // Clean up the existing object URL before getting a new URL
-      if (currentFile != null) {
-        URL.revokeObjectURL(currentFile.url);
-      }
+  useEffect(() => {
+    const newObjectUrl = file != null ? URL.createObjectURL(file) : null;
+    setObjectUrl(newObjectUrl);
 
-      if (newFile != null) {
-        return {
-          file: newFile,
-          url: URL.createObjectURL(newFile),
-        };
-      } else {
-        return null;
+    return () => {
+      if (newObjectUrl != null) {
+        URL.revokeObjectURL(newObjectUrl);
       }
-    });
-  }, []);
+    };
+  }, [file]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length !== 1) {
@@ -325,15 +322,15 @@ const ImageInput: React.FC = () => {
     }
 
     const [acceptedFile] = acceptedFiles;
-    updateSelectedFile(acceptedFile);
-  }, [updateSelectedFile]);
+    onChange(acceptedFile);
+  }, [onChange]);
 
   const onRemove: React.MouseEventHandler<HTMLButtonElement> = useCallback((e) => {
     e.stopPropagation();
     e.preventDefault();
 
-    updateSelectedFile(null);
-  }, [updateSelectedFile]);
+    onChange(null);
+  }, [onChange]);
 
   return (
     <div>
@@ -341,18 +338,18 @@ const ImageInput: React.FC = () => {
         Base image
       </span>
       <div className="mt-2">
-        <Dropzone onDrop={onDrop} multiple={false} noClick={selectedFile != null}>
+        <Dropzone onDrop={onDrop} multiple={false} noClick={file != null}>
           {({ getRootProps, getInputProps, isDragAccept }) => (
             <div
               className={clsx(
                 "h-32 flex max-w-lg rounded-md px-6 pt-5 pb-6 box-content border-2 border-dashed transition-colors duration-300 justify-center",
-                selectedFile != null ? "" : "items-center",
-                selectedFile == null || isDragAccept ? "border-gray-300" : "border-transparent",
+                file != null ? "" : "items-center",
+                file == null || isDragAccept ? "border-gray-300" : "border-transparent",
               )}
               {...getRootProps()}
             >
               <input id="file-upload" type="file" {...getInputProps()} />
-              {selectedFile != null
+              {file != null
                 ? (
                   <div className="bg-gray-200 p-2 rounded-lg shadow-sm relative">
                     <div className="absolute -top-3 -right-6 rounded-full overflow-hidden shadow-xl divide-x divide-slate-400 text-slate-600">
@@ -364,7 +361,7 @@ const ImageInput: React.FC = () => {
                       </button>
                     </div>
                     <img
-                      src={selectedFile.url}
+                      src={objectUrl ?? undefined}
                       alt="Uploaded file"
                       className="h-full"
                     />
