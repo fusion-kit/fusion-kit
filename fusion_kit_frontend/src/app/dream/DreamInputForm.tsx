@@ -1,13 +1,14 @@
 import React, {
   useCallback, useEffect, useId, useState,
 } from "react";
-import { AdjustmentsVerticalIcon } from "@heroicons/react/24/outline";
+import { AdjustmentsVerticalIcon, PencilSquareIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { PaintBrushIcon } from "@heroicons/react/24/solid";
 import Textarea from "react-expanding-textarea";
 import { Disclosure } from "@headlessui/react";
 import { ChevronRightIcon } from "@heroicons/react/20/solid";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
+import Dropzone from "react-dropzone";
 import { clamp } from "../../utils";
 import { DreamOptions, UpdateDreamOptions } from "./hooks";
 
@@ -116,8 +117,8 @@ const OptionsForm: React.FC<OptionsFormProps> = (props) => {
   const { options, updateOptions } = props;
 
   return (
-    <div className="m-3 flex justify-center space-x-6">
-      <div className="w-36 max-w-full">
+    <div className="flex justify-center items-start space flex-wrap">
+      <div className="m-3 w-36 max-w-full">
         <NumberSliderInput
           label="Images"
           value={options.numImages}
@@ -126,7 +127,7 @@ const OptionsForm: React.FC<OptionsFormProps> = (props) => {
           highValue={10}
         />
       </div>
-      <div className="w-48 max-w-full">
+      <div className="m-3 w-48 max-w-full">
         <OptionalNumberInput
           label="Seed"
           placeholder="Random seed"
@@ -135,6 +136,9 @@ const OptionsForm: React.FC<OptionsFormProps> = (props) => {
             seed: newValue != null ? clamp(newValue, 0, Number.MAX_SAFE_INTEGER) : null,
           })}
         />
+      </div>
+      <div className="m-3 w-full">
+        <ImageInput />
       </div>
     </div>
   );
@@ -284,6 +288,118 @@ const OptionalNumberInput: React.FC<OptionalNumberInputProps> = (props) => {
         onChange={onTextInputChange}
         onBlur={onTextInputBlur}
       />
+    </div>
+  );
+};
+
+interface SelectedFile {
+  file: File,
+  url: string,
+}
+
+const ImageInput: React.FC = () => {
+  const [selectedFile, setSelectedFile] = useState<SelectedFile | null>(null);
+
+  const updateSelectedFile = useCallback((newFile: File | null) => {
+    setSelectedFile((currentFile) => {
+      // Clean up the existing object URL before getting a new URL
+      if (currentFile != null) {
+        URL.revokeObjectURL(currentFile.url);
+      }
+
+      if (newFile != null) {
+        return {
+          file: newFile,
+          url: URL.createObjectURL(newFile),
+        };
+      } else {
+        return null;
+      }
+    });
+  }, []);
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length !== 1) {
+      console.warn("multiple files selected in dropzone");
+      return;
+    }
+
+    const [acceptedFile] = acceptedFiles;
+    updateSelectedFile(acceptedFile);
+  }, [updateSelectedFile]);
+
+  const onRemove: React.MouseEventHandler<HTMLButtonElement> = useCallback((e) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    updateSelectedFile(null);
+  }, [updateSelectedFile]);
+
+  return (
+    <div>
+      <span className="font-bold">
+        Base image
+      </span>
+      <div className="mt-2">
+        <Dropzone onDrop={onDrop} multiple={false} noClick={selectedFile != null}>
+          {({ getRootProps, getInputProps, isDragAccept }) => (
+            <div
+              className={clsx(
+                "h-32 flex max-w-lg rounded-md px-6 pt-5 pb-6 box-content border-2 border-dashed transition-colors duration-300 justify-center",
+                selectedFile != null ? "" : "items-center",
+                selectedFile == null || isDragAccept ? "border-gray-300" : "border-transparent",
+              )}
+              {...getRootProps()}
+            >
+              <input id="file-upload" type="file" {...getInputProps()} />
+              {selectedFile != null
+                ? (
+                  <div className="bg-gray-200 p-2 rounded-lg shadow-sm relative">
+                    <div className="absolute -top-3 -right-6 rounded-full overflow-hidden shadow-xl divide-x divide-slate-400 text-slate-600">
+                      <button type="button" className="h-12 w-12 p-3 bg-slate-200 hover:bg-slate-100">
+                        <PencilSquareIcon className="h-full w-full" />
+                      </button>
+                      <button type="button" className="h-12 w-12 p-3 bg-slate-200 hover:bg-slate-100" onClick={onRemove}>
+                        <XMarkIcon className="h-full w-full" />
+                      </button>
+                    </div>
+                    <img
+                      src={selectedFile.url}
+                      alt="Uploaded file"
+                      className="h-full"
+                    />
+                  </div>
+                )
+                : (
+                  <div className="space-y-1 text-center">
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      stroke="currentColor"
+                      fill="none"
+                      viewBox="0 0 48 48"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <div className="flex text-sm text-gray-600">
+                      <span
+                        className="relative cursor-pointer rounded-md bg-white font-medium text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-400 focus-within:ring-offset-2 hover:text-indigo-400 transition-none"
+                      >
+                        Upload a file
+                      </span>
+                      <p className="pl-1">or drag and drop</p>
+                    </div>
+                  </div>
+                )}
+            </div>
+          )}
+        </Dropzone>
+      </div>
     </div>
   );
 };
