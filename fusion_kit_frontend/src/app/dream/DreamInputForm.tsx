@@ -116,14 +116,24 @@ const OptionsForm: React.FC<OptionsFormProps> = (props) => {
   const { options, updateOptions } = props;
 
   return (
-    <div className="m-3 flex justify-center">
-      <div className="w-64 max-w-full">
+    <div className="m-3 flex justify-center space-x-6">
+      <div className="w-36 max-w-full">
         <NumberSliderInput
-          label="Number of images"
+          label="Images"
           value={options.numImages}
           onChange={(newValue) => updateOptions({ numImages: clamp(newValue, 1, 99) })}
           lowValue={1}
           highValue={10}
+        />
+      </div>
+      <div className="w-48 max-w-full">
+        <OptionalNumberInput
+          label="Seed"
+          placeholder="Random seed"
+          value={options.seed}
+          onChange={(newValue) => updateOptions({
+            seed: newValue != null ? clamp(newValue, 0, Number.MAX_SAFE_INTEGER) : null,
+          })}
         />
       </div>
     </div>
@@ -202,13 +212,13 @@ const NumberSliderInput: React.FC<NumberSliderInputProps> = (props) => {
 
   return (
     <>
-      <div className="flex justify-between items-baseline">
+      <div className="flex justify-between items-baseline space-x-6">
         <label htmlFor={textInputId} className="font-bold">{label}</label>
         <input
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
-          className="w-16 px-2 py-1 mx-2 border border-gray-300 rounded-full"
+          className="flex-1 w-full py-1 mx-2 border border-gray-300 rounded-full text-center"
           id={textInputId}
           value={textValue}
           onChange={onTextInputChange}
@@ -225,5 +235,55 @@ const NumberSliderInput: React.FC<NumberSliderInputProps> = (props) => {
         onChange={onRangeChange}
       />
     </>
+  );
+};
+
+interface OptionalNumberInputProps {
+  label: string,
+  placeholder: string,
+  value: number | null,
+  onChange: (_newValue: number | null) => void,
+}
+
+const OptionalNumberInput: React.FC<OptionalNumberInputProps> = (props) => {
+  const {
+    label, placeholder, value, onChange,
+  } = props;
+
+  const textInputId = useId();
+
+  const [textValue, setTextValue] = useState(value != null ? value.toString() : "");
+
+  const onTextInputChange: React.ChangeEventHandler<HTMLInputElement> = useCallback((e) => {
+    const newStringValue = e.target.value;
+
+    setTextValue(newStringValue);
+
+    const newValue = Number(newStringValue);
+    if (newStringValue !== "" && Number.isSafeInteger(newValue)) {
+      onChange(newValue);
+    } else {
+      onChange(null);
+    }
+  }, [onChange]);
+  const onTextInputBlur: React.FocusEventHandler<HTMLInputElement> = useCallback(() => {
+    setTextValue(value != null ? value.toString() : "");
+  }, [value]);
+
+  return (
+    <div className="">
+      <label htmlFor={textInputId} className="font-bold">{label}</label>
+      <input
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        className="flex-1 w-full px-2 py-1 border border-gray-300 rounded-full"
+        id={textInputId}
+        value={textValue}
+        placeholder={placeholder}
+        onChange={onTextInputChange}
+        onBlur={onTextInputBlur}
+      />
+    </div>
   );
 };

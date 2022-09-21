@@ -12,6 +12,7 @@ import { clamp, unreachable } from "../../utils";
 export interface DreamOptions {
   prompt: string,
   numImages: number,
+  seed: number | null,
 }
 
 interface UseCreateDream {
@@ -50,6 +51,7 @@ export function useCreateDream(): UseCreateDream {
         options: {
           prompt: opts.prompt,
           numImages: opts.numImages,
+          seed: opts.seed ?? undefined,
         },
       },
     });
