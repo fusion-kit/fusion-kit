@@ -49,7 +49,7 @@ class FusionKitManager():
 
         responses = self.processor.send_request_and_watch(
             request_id=dream_id,
-            request='txt2img',
+            request='dream',
             body=dream_settings
         )
 

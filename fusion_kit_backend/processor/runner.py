@@ -8,7 +8,7 @@ def processor_runner(req_queue, res_queue):
         request_id = request['request_id']
         request_type = request['request']
         request_body = request['body']
-        if request_type == 'txt2img':
+        if request_type == 'dream':
             def image_progress_callback(image_progress):
                 res_queue.put({
                     'request_id': request_id,
@@ -20,7 +20,7 @@ def processor_runner(req_queue, res_queue):
                 })
 
             options = request_body['options']
-            result = dreamer.txt2img(
+            result = dreamer.dream(
                 prompt=options['prompt'],
                 seed=options['seed'],
                 num_images=options['num_images'],

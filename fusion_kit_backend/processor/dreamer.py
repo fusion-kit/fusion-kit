@@ -111,7 +111,7 @@ class Dreamer():
         print("Finished loading Stable Diffusion model")
         return self.models
 
-    def txt2img(
+    def dream(
         self,
         prompt,
         seed,
