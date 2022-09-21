@@ -117,8 +117,8 @@ const OptionsForm: React.FC<OptionsFormProps> = (props) => {
   const { options, updateOptions } = props;
 
   return (
-    <div className="flex justify-center items-start space flex-wrap">
-      <div className="m-3 w-36 max-w-full">
+    <div className="m-6 grid grid-cols-1 gap-y-6 gap-x-8 sm:grid-cols-6">
+      <div className="sm:col-span-4">
         <NumberSliderInput
           label="Images"
           value={options.numImages}
@@ -127,7 +127,7 @@ const OptionsForm: React.FC<OptionsFormProps> = (props) => {
           highValue={10}
         />
       </div>
-      <div className="m-3 w-48 max-w-full">
+      <div className="sm:col-span-2">
         <OptionalNumberInput
           label="Seed"
           placeholder="Random seed"
@@ -137,8 +137,9 @@ const OptionsForm: React.FC<OptionsFormProps> = (props) => {
           })}
         />
       </div>
-      <div className="m-3 w-full">
+      <div className="sm:col-span-6">
         <ImageInput
+          label="Base image"
           file={options.baseImage}
           onChange={(newFile) => updateOptions({ baseImage: newFile })}
         />
@@ -219,13 +220,21 @@ const NumberSliderInput: React.FC<NumberSliderInputProps> = (props) => {
 
   return (
     <>
-      <div className="flex justify-between items-baseline space-x-6">
-        <label htmlFor={textInputId} className="font-bold">{label}</label>
+      <label htmlFor={textInputId} className="block text-sm font-medium text-gray-700">{label}</label>
+      <div className="flex justify-between items-baseline space-x-2">
+        <input
+          type="range"
+          className="appearance-none flex-1 w-full h-2 bg-gray-200 shadow-sm rounded-full"
+          min={lowValue}
+          max={highValue}
+          value={value}
+          onChange={onRangeChange}
+        />
         <input
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
-          className="flex-1 w-full py-1 mx-2 border border-gray-300 rounded-full text-center"
+          className="block w-12 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-center"
           id={textInputId}
           value={textValue}
           onChange={onTextInputChange}
@@ -233,14 +242,6 @@ const NumberSliderInput: React.FC<NumberSliderInputProps> = (props) => {
           onKeyDown={onTextInputKeyDown}
         />
       </div>
-      <input
-        type="range"
-        className="appearance-none w-full h-2 bg-gray-200 shadow-sm rounded-full"
-        min={lowValue}
-        max={highValue}
-        value={value}
-        onChange={onRangeChange}
-      />
     </>
   );
 };
@@ -278,30 +279,31 @@ const OptionalNumberInput: React.FC<OptionalNumberInputProps> = (props) => {
   }, [value]);
 
   return (
-    <div className="">
-      <label htmlFor={textInputId} className="font-bold">{label}</label>
+    <>
+      <label htmlFor={textInputId} className="block text-sm font-medium text-gray-700">{label}</label>
       <input
         type="text"
         inputMode="numeric"
         pattern="[0-9]*"
-        className="flex-1 w-full px-2 py-1 border border-gray-300 rounded-full"
+        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
         id={textInputId}
         value={textValue}
         placeholder={placeholder}
         onChange={onTextInputChange}
         onBlur={onTextInputBlur}
       />
-    </div>
+    </>
   );
 };
 
 interface ImageInputProps {
+  label: string,
   file: File | null,
   onChange: (_newFile: File | null) => void,
 }
 
 const ImageInput: React.FC<ImageInputProps> = (props) => {
-  const { file, onChange } = props;
+  const { label, file, onChange } = props;
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -334,15 +336,15 @@ const ImageInput: React.FC<ImageInputProps> = (props) => {
 
   return (
     <div>
-      <span className="font-bold">
-        Base image
+      <span className="block text-sm font-medium text-gray-700">
+        {label}
       </span>
       <div className="mt-2">
         <Dropzone onDrop={onDrop} multiple={false} noClick={file != null}>
           {({ getRootProps, getInputProps, isDragAccept }) => (
             <div
               className={clsx(
-                "h-32 flex max-w-lg rounded-md px-6 pt-5 pb-6 box-content border-2 border-dashed transition-colors duration-300 justify-center",
+                "h-32 flex max-w-lg rounded-md pt-5 pb-6 box-content border-2 border-dashed transition-colors duration-300 justify-center",
                 file != null ? "" : "items-center",
                 file == null || isDragAccept ? "border-gray-300" : "border-transparent",
               )}
@@ -363,7 +365,7 @@ const ImageInput: React.FC<ImageInputProps> = (props) => {
                     <img
                       src={objectUrl ?? undefined}
                       alt="Uploaded file"
-                      className="h-full"
+                      className="h-full object-contain"
                     />
                   </div>
                 )
