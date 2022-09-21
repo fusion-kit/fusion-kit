@@ -3,9 +3,9 @@ from random import randint
 from broadcaster import Broadcast
 from copy import copy
 import blurhash_numba
-import json
 import numpy
 import os
+from PIL import Image
 from processor import Processor
 import re
 from ulid import ULID
@@ -37,6 +37,17 @@ class FusionKitManager():
         options = copy(input_options)
         if options.get('seed') is None:
             options['seed'] = randint(0, 1000000)
+
+        if options.get('base_image') is not None:
+            base_image_upload = options['base_image']
+            options['base_image'] = Image.open(base_image_upload.file)
+            options['base_image_details'] = {
+                'filename': base_image_upload.filename,
+                'content_type': base_image_upload.content_type,
+            }
+
+            if options.get('base_image_strength') is None:
+                options['base_image_strength'] = 0.75
 
         dream_settings = {
             'options': options,
@@ -86,7 +97,7 @@ class FusionKitManager():
                 prompt=dream.prompt,
                 seed=dream.seed,
                 num_images=dream.num_images,
-                settings_json=json.dumps(dream.settings),
+                settings_json=dream.settings_json(),
             )
             session.add(db_dream)
 

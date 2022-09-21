@@ -23,6 +23,8 @@ def processor_runner(req_queue, res_queue):
             result = dreamer.dream(
                 prompt=options['prompt'],
                 seed=options['seed'],
+                base_image=options.get('base_image'),
+                base_image_strength=options.get('base_image_strength'),
                 num_images=options['num_images'],
                 num_steps_per_image=request_body['num_steps_per_image'],
                 num_images_per_batch=request_body['num_images_per_batch'],

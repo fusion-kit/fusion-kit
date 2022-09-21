@@ -16,6 +16,8 @@ input DreamOptionsInput {
   prompt: String!
   numImages: Int!
   seed: Int
+  baseImage: Upload
+  baseImageStrength: Int
 }
 
 interface Dream {

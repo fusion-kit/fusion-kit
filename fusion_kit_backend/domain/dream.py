@@ -1,5 +1,6 @@
-import asyncio
 from ariadne import InterfaceType
+from copy import copy
+import json
 from ulid import ULID
 from domain.dream_image import DreamImage
 
@@ -28,6 +29,13 @@ class Dream():
 
     def is_complete(self):
         return self.state == 'FinishedDream' or self.state == 'StoppedDream'
+
+    def settings_json(self):
+        settings_json = copy(self.settings)
+        settings_json['options'] = copy(settings_json['options'])
+        settings_json['options'].pop('base_image', None)
+
+        return json.dumps(settings_json)
 
     @property
     def prompt(self):
