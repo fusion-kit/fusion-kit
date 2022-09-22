@@ -45,6 +45,16 @@ export const DreamInputForm: React.FC<DreamInputFormProps> = (props) => {
     }
   }, [onSubmit]);
 
+  const onPromptDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length !== 1) {
+      console.warn("multiple files selected in dropzone");
+      return;
+    }
+
+    const [acceptedFile] = acceptedFiles;
+    updateOptions({ baseImage: acceptedFile });
+  }, [updateOptions]);
+
   const onPromptPaste: React.ClipboardEventHandler = useCallback((e) => {
     for (const pastedFile of Array.from(e.clipboardData.files)) {
       if (PASTEABLE_MIME_TYPES.includes(pastedFile.type)) {
@@ -69,41 +79,54 @@ export const DreamInputForm: React.FC<DreamInputFormProps> = (props) => {
     <Disclosure>
       {({ open, close }) => (
         <form onSubmit={(e) => onSubmit(close, e)} className="flex flex-col border border-gray-300 shadow-sm rounded-lg">
-          <div className="flex items-center overflow-hidden rounded-t-lg z-10 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500">
-            <label htmlFor={promptInputId} className="sr-only">
-              Prompt
-            </label>
-            {options.baseImage != null
-              ? (
-                <div className="bg-gray-200 p-1.5 m-4 rounded-md shadow-sm relative h-min">
-                  <div className="absolute -top-3 -right-3 rounded-full overflow-hidden shadow-xl divide-x divide-slate-400 text-slate-600">
-                    <button
-                      type="button"
-                      className="h-8 w-8 p-2 bg-slate-200 hover:bg-slate-100"
-                      onClick={onRemoveBaseImage}
-                    >
-                      <XMarkIcon className="h-full w-full" />
-                    </button>
-                  </div>
-                  <img
-                    src={baseImageObjectUrl ?? undefined}
-                    alt="Uploaded file"
-                    className="max-h-full w-16 object-contain"
-                  />
-                </div>
-              ) : null}
-            <Textarea
-              rows={1}
-              name="prompt"
-              id={promptInputId}
-              onKeyDown={(e) => onPromptKeyDown(close, e)}
-              onPaste={onPromptPaste}
-              className="flex-1 block w-full resize-none border-0 py-4 placeholder-gray-500 focus:ring-0 sm:text-sm"
-              placeholder="Enter a prompt..."
-              onChange={(e) => { updateOptions({ prompt: e.target.value }); }}
-              value={options.prompt}
-            />
-          </div>
+          <Dropzone onDrop={onPromptDrop} multiple={false} noClick noKeyboard>
+            {({ getRootProps, getInputProps, isDragAccept }) => (
+              <div
+                className={clsx(
+                  "flex items-center overflow-hidden rounded-t-lg z-10 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500 transition-colors duration-300",
+                  isDragAccept ? "bg-green-100" : "",
+                )}
+                {...getRootProps()}
+              >
+                <input id="prompt-file-upload" type="file" {...getInputProps()} />
+                <label htmlFor={promptInputId} className="sr-only">
+                  Prompt
+                </label>
+                {options.baseImage != null
+                  ? (
+                    <div className="bg-gray-200 p-1.5 m-4 rounded-md shadow-sm relative h-min">
+                      <div className="absolute -top-3 -right-3 rounded-full overflow-hidden shadow-xl divide-x divide-slate-400 text-slate-600">
+                        <button
+                          type="button"
+                          className="h-8 w-8 p-2 bg-slate-200 hover:bg-slate-100"
+                          onClick={onRemoveBaseImage}
+                        >
+                          <XMarkIcon className="h-full w-full" />
+                        </button>
+                      </div>
+                      <img
+                        src={baseImageObjectUrl ?? undefined}
+                        alt="Uploaded file"
+                        className="max-h-full w-16 object-contain"
+                      />
+                    </div>
+                  ) : null}
+                <Textarea
+                  rows={1}
+                  name="prompt"
+                  id={promptInputId}
+                  onKeyDown={(e) => onPromptKeyDown(close, e)}
+                  onPaste={onPromptPaste}
+                  className={clsx(
+                    "flex-1 block w-full resize-none border-0 py-4 placeholder-gray-500 focus:ring-0 sm:text-sm bg-transparent",
+                  )}
+                  placeholder="Enter a prompt..."
+                  onChange={(e) => { updateOptions({ prompt: e.target.value }); }}
+                  value={options.prompt}
+                />
+              </div>
+            )}
+          </Dropzone>
 
           <div className="flex items-center justify-between space-x-3 border-t border-gray-200 px-2 py-2 sm:px-3">
             <div className="flex space-x-1">
