@@ -83,7 +83,7 @@ export const DreamInputForm: React.FC<DreamInputFormProps> = (props) => {
             {({ getRootProps, getInputProps, isDragAccept }) => (
               <div
                 className={clsx(
-                  "flex items-center overflow-hidden rounded-t-lg z-10 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500 transition-colors duration-300",
+                  "flex overflow-hidden rounded-t-lg z-10 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500 transition-colors duration-300",
                   isDragAccept ? "bg-green-100" : "",
                 )}
                 {...getRootProps()}
@@ -94,7 +94,7 @@ export const DreamInputForm: React.FC<DreamInputFormProps> = (props) => {
                 </label>
                 {options.baseImage != null
                   ? (
-                    <div className="bg-gray-200 p-1.5 m-4 rounded-md shadow-sm relative h-min">
+                    <div className="self-center bg-gray-200 p-1.5 m-4 rounded-md shadow-sm relative h-min">
                       <div className="absolute -top-3 -right-3 rounded-full overflow-hidden shadow-xl divide-x divide-slate-400 text-slate-600">
                         <button
                           type="button"
