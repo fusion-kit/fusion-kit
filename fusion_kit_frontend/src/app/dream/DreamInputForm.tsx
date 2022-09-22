@@ -13,6 +13,8 @@ import { clamp } from "../../utils";
 import { DreamOptions, UpdateDreamOptions, useFileObjectUrl } from "./hooks";
 import { DreamSampler } from "../../generated/graphql";
 
+const PASTEABLE_MIME_TYPES = ["image/avif", "image/bmp", "image/png", "image/jpeg", "image/webp"];
+
 interface DreamInputFormProps {
   options: DreamOptions,
   updateOptions: UpdateDreamOptions,
@@ -42,6 +44,19 @@ export const DreamInputForm: React.FC<DreamInputFormProps> = (props) => {
       onSubmit(close);
     }
   }, [onSubmit]);
+
+  const onPromptPaste: React.ClipboardEventHandler = useCallback((e) => {
+    for (const pastedFile of Array.from(e.clipboardData.files)) {
+      if (PASTEABLE_MIME_TYPES.includes(pastedFile.type)) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        updateOptions({ baseImage: pastedFile });
+
+        return;
+      }
+    }
+  }, [updateOptions]);
 
   const onRemoveBaseImage: React.MouseEventHandler<HTMLButtonElement> = useCallback((e) => {
     e.stopPropagation();
@@ -82,6 +97,7 @@ export const DreamInputForm: React.FC<DreamInputFormProps> = (props) => {
               name="prompt"
               id={promptInputId}
               onKeyDown={(e) => onPromptKeyDown(close, e)}
+              onPaste={onPromptPaste}
               className="flex-1 block w-full resize-none border-0 py-4 placeholder-gray-500 focus:ring-0 sm:text-sm"
               placeholder="Enter a prompt..."
               onChange={(e) => { updateOptions({ prompt: e.target.value }); }}
