@@ -51,7 +51,7 @@ class Dream():
 
     @property
     def sampler_steps(self):
-        return self.settings['sampler_steps']
+        return self.settings['options']['sampler_steps']
 
     ### GraphQL resolvers ###
 

@@ -151,7 +151,12 @@ class Dreamer():
         prompt,
         seed,
         num_images,
+        sampler,
         sampler_steps,
+        sampler_eta,
+        guidance_scale,
+        downsampling_factor,
+        latent_channels,
         num_images_per_batch,
         steps_per_image_preview,
         base_image=None,
@@ -170,8 +175,19 @@ class Dreamer():
             seed value with the same inputs will produce the same result.
         num_images
             The total number of images to generate.
+        sampler
+            Sampler to use ('DDIM', 'PLMS').
         sampler_steps
             Number of sampler (DDIM/PLMS) sampling steps to use per image.
+        sampler_eta
+            Sampler eta (a value of 0.0 corresponds to deterministic
+            sampling).
+        guidance_scale
+            Unconditional guidance scale (how closely to follow the prompt).
+        downsampling_factor
+            Downsampling factor.
+        latent_channels
+            Latent channels.
         num_images_per_batch
             Number of images to submit to the model in a single batch.
         image_progress_callback
@@ -193,17 +209,21 @@ class Dreamer():
             noising/denoising the base image. Must be set when `base_image`
             is set.
         """
-        # opt_ddim_steps = 50 # number of ddim sampling steps
         # opt_fixed_code = False # if enabled, uses the same starting code across samples
-        opt_ddim_eta = 0.0 # ddim eta (eta=0.0 corresponds to deterministic sampling)
+        opt_ddim_eta = sampler_eta
         opt_H = 512 # image height, in pixel space
         opt_W = 512 # image width, in pixel space
-        opt_C = 4 # latent channels
-        opt_f = 8 # downsampling factor
-        opt_scale = 7.5 # unconditional guidance scale: eps = eps(x, empty) + scale * (eps(x, cond) - eps(x, empty))
-        opt_device = self.device # specify GPU (cuda/cuda:0/cuda:1/...)
-        opt_precision = self.precision # evaluate at this precision [full, autocast]
-        opt_sampler = "ddim" # sampler [ddim, plms]
+        opt_C = latent_channels
+        opt_f = downsampling_factor
+        opt_scale = guidance_scale
+        opt_device = self.device
+        opt_precision = self.precision
+        if sampler == "DDIM":
+            opt_sampler = "ddim"
+        elif sampler == "PLMS":
+            opt_sampler = "plms"
+        else:
+            raise Exception(f'Unknown sampler: {sampler}')
 
         model_fs_precision = "full"
 

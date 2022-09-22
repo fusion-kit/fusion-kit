@@ -45,14 +45,12 @@ class FusionKitManager():
                 'filename': base_image_upload.filename,
                 'content_type': base_image_upload.content_type,
             }
-
-            if options.get('base_image_strength') is None:
-                options['base_image_strength'] = 0.75
+        else:
+            options.pop('base_image_strength', None)
 
         dream_settings = {
             'options': options,
             'num_images_per_batch': 2,
-            'sampler_steps': 50,
             'steps_per_image_preview': 10,
         }
 
