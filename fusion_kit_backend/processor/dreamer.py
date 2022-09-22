@@ -1,150 +1,31 @@
-# Based on `optimized_txt2img.py` and `optimized_img2img.py` from optimizedSD
-
-import torch
-import numpy as np
-from omegaconf import OmegaConf
-from PIL import Image
 from itertools import islice
-from einops import rearrange, repeat
-import time
-from pytorch_lightning import seed_everything
-from torch import autocast
-from contextlib import nullcontext
-from ldm.util import instantiate_from_config
-from optimizedSD.optimUtils import split_weighted_subprompts
-from transformers import logging
+from ldm.generate import Generate
+import numpy
+import os
+import tempfile
 from ulid import ULID
 
-logging.set_verbosity_error()
+def chunk(iterator, size):
+    iterator = iter(iterator)
+    return iter(lambda: tuple(islice(iterator, size)), ())
 
-
-def chunk(it, size):
-    it = iter(it)
-    return iter(lambda: tuple(islice(it, size)), ())
-
-
-def load_model_from_config(ckpt, verbose=False):
-    print(f"Loading model from {ckpt}")
-    pl_sd = torch.load(ckpt, map_location="cpu")
-    if "global_step" in pl_sd:
-        print(f"Global Step: {pl_sd['global_step']}")
-    sd = pl_sd["state_dict"]
-    return sd
-
-def transform_image(image, target_width=None, target_height=None):
-    image = image.convert("RGB")
-    width, height = image.size
-
-    if target_width is not None and target_height is not None:
-        width, height = target_width, target_height
-
-    width, height = map(lambda x: x - x % 64, (width, height))  # resize to integer multiple of 32
-
-    image = image.resize((width, height), resample=Image.Resampling.LANCZOS)
-    image = np.array(image).astype(np.float32) / 255.0
-    image = image[None].transpose(0, 3, 1, 2)
-    image = torch.from_numpy(image)
-    return 2.0 * image - 1.0
-
-CONFIG_FILE = "stable_diffusion/optimizedSD/v1-inference.yaml"
-CKPT_FILE = "stable_diffusion/models/ldm/stable-diffusion-v1/model.ckpt"
+CONFIG_FILE = 'invoke_ai/configs/stable-diffusion/v1-inference.yaml'
+CKPT_FILE = 'invoke_ai/models/ldm/stable-diffusion-v1/model.ckpt'
 
 class Dreamer():
     def __init__(
         self,
-        device="cuda",
-        unet_bs=1,
-        turbo=True,
-        precision="autocast",
+        device_type='cuda',
+        full_precision=False,
         config=CONFIG_FILE,
-        ckpt=CKPT_FILE,
+        weights=CKPT_FILE,
     ):
-        self.device = device
-        self.unet_bs = unet_bs
-        self.turbo = turbo
-        self.precision = precision
-        self.config = OmegaConf.load(config)
-        self.ckpt = ckpt
-        self.sd = None
-        self.model = None
-        self.model_cs = None
-        self.model_fs = None
-        self.model_fs_precision = None
-
-        self.load()
-
-    def load_sd(self):
-        print("Loading Stable Diffusion model")
-        sd = load_model_from_config(self.ckpt)
-        li, lo = [], []
-        for key, value in sd.items():
-            sp = key.split(".")
-            if (sp[0]) == "model":
-                if "input_blocks" in sp:
-                    li.append(key)
-                elif "middle_block" in sp:
-                    li.append(key)
-                elif "time_embed" in sp:
-                    li.append(key)
-                else:
-                    lo.append(key)
-        for key in li:
-            sd["model1." + key[6:]] = sd.pop(key)
-        for key in lo:
-            sd["model2." + key[6:]] = sd.pop(key)
-
-        return sd
-
-    def load(self, model_fs_precision="full"):
-        sd = None
-
-        if self.model is None:
-            if sd is None:
-                sd = self.load_sd()
-
-            model = instantiate_from_config(self.config.modelUNet)
-            _, _ = model.load_state_dict(sd, strict=False)
-            model.eval()
-            model.unet_bs = self.unet_bs
-            model.cdevice = self.device
-            model.turbo = self.turbo
-
-            if self.device != "cpu" and self.precision == "autocast":
-                model.half()
-
-            self.model = model
-
-        if self.model_cs is None:
-            if sd is None:
-                sd = self.load_sd()
-
-            modelCS = instantiate_from_config(self.config.modelCondStage)
-            _, _ = modelCS.load_state_dict(sd, strict=False)
-            modelCS.eval()
-            modelCS.cond_stage_model.device = self.device
-
-            if self.device != "cpu" and self.precision == "autocast":
-                modelCS.half()
-
-            self.model_cs = modelCS
-
-        if self.model_fs is None or self.model_fs_precision != model_fs_precision:
-            if sd is None:
-                sd = self.load_sd()
-
-            modelFS = instantiate_from_config(self.config.modelFirstStage)
-            _, _ = modelFS.load_state_dict(sd, strict=False)
-            modelFS.eval()
-
-            if self.device != "cpu" and self.precision == "autocast" and model_fs_precision != "full":
-                modelFS.half()
-
-            self.model_fs = modelFS
-            self.model_fs_precision = model_fs_precision
-
-        del sd
-
-        print("Finished loading Stable Diffusion model")
+        self.generator = Generate(
+            weights=weights,
+            config=config,
+            device_type=device_type,
+            full_precision=full_precision,
+        )
 
     def dream(
         self,
@@ -210,75 +91,27 @@ class Dreamer():
             is set. A value of 1.0 completely decimates the input image,
             discarding most details.
         """
-        # opt_fixed_code = False # if enabled, uses the same starting code across samples
-        opt_ddim_eta = sampler_eta
-        opt_H = 512 # image height, in pixel space
-        opt_W = 512 # image width, in pixel space
-        opt_C = latent_channels
-        opt_f = downsampling_factor
-        opt_scale = guidance_scale
-        opt_device = self.device
-        opt_precision = self.precision
-        if sampler == "DDIM":
-            opt_sampler = "ddim"
-        elif sampler == "PLMS":
-            opt_sampler = "plms"
+        if sampler == 'DDIM':
+            sampler_name = 'ddim'
+        elif sampler == 'PLMS':
+            sampler_name = 'plms'
         else:
             raise Exception(f'Unknown sampler: {sampler}')
 
-        model_fs_precision = "full"
-
-        # Reduce the sampler steps when using a base image
         actual_sampler_steps = sampler_steps
 
+        init_image_path = None
         if base_image is not None:
-            assert base_image_decimation is not None, "base_image_decimation is required if base_image is set"
-            base_image_decimation = np.clip(base_image_decimation, 0.0, 1.0)
-
-            # load the first-stage model with the same precision as the other models
-            model_fs_precision = "autocast"
+            assert base_image_decimation is not None, 'base_image_decimation is required if base_image is set'
+            base_image_decimation = numpy.clip(base_image_decimation, 0.0, 1.0)
 
             # Reduce the sampler steps when using a base image
             actual_sampler_steps = int(base_image_decimation * sampler_steps)
 
-        seed_everything(seed)
-
-        self.load(model_fs_precision=model_fs_precision)
-        model = self.model
-        modelCS = self.model_cs
-        modelFS = self.model_fs
-
-        start_code = None
-        # if opt_fixed_code:
-        #     start_code = torch.randn([opt_n_samples, opt_C, opt_H // opt_f, opt_W // opt_f], device=opt_device)
-
-        batches = chunk(range(num_images), num_images_per_batch)
-
-        init_image_batch_size = np.minimum(num_images_per_batch, num_images)
-        init_latent = None
-
-        if base_image is not None:
-            init_image = transform_image(base_image).to(opt_device)
-            if opt_precision == "autocast" and opt_device != "cpu":
-                init_image = init_image.half()
-
-            init_image_batch = repeat(init_image, "1 ... -> b ...", b=init_image_batch_size)
-
-            modelFS.to(opt_device)
-
-            init_image_encoded = modelFS.encode_first_stage(init_image_batch)
-            init_latent = modelFS.get_first_stage_encoding(init_image_encoded)
-
-            if opt_device != "cpu":
-                mem = torch.cuda.memory_allocated() / 1e6
-                modelFS.to("cpu")
-                while torch.cuda.memory_allocated() / 1e6 >= mem:
-                    time.sleep(1)
-
-        if opt_precision == "autocast" and opt_device != "cpu":
-            precision_scope = autocast
-        else:
-            precision_scope = nullcontext
+            base_image_file = tempfile.NamedTemporaryFile(delete=False)
+            init_image_path = base_image_file.name
+            base_image.save(init_image_path, format='PNG')
+            print(f'Saved base image file to {init_image_path}')
 
         images = [
             {
@@ -293,169 +126,84 @@ class Dreamer():
             for i in range(num_images)
         ]
 
-        with torch.no_grad():
-            for batch_image_indices in batches:
-                batch_size = len(batch_image_indices)
-                batch_seed = images[batch_image_indices[0]]['seed']
+        results = []
+        for image in images:
+            step_callback = make_img_callback(
+                image_progress_callback=image_progress_callback,
+                generator=self.generator,
+                images=images,
+                image_index=image['index'],
+                steps_per_image_preview=steps_per_image_preview,
+            )
 
-                for i in batch_image_indices:
-                    images[i]['state'] = 'running'
-                    images[i]['completed_steps'] = 0
+            result = self.generator.prompt2image(
+                prompt=prompt,
+                iterations=1,
+                steps=sampler_steps,
+                seed=image['seed'],
+                cfg_scale=guidance_scale,
+                ddim_eta=sampler_eta,
+                skip_normalize=False,
+                image_callback=None,
+                step_callback=step_callback,
+                width=None,
+                height=None,
+                sampler_name=sampler_name,
+                seamless=False,
+                log_tokenization=False,
+                with_variations=None,
+                variation_amount=0.0,
+                init_img=init_image_path,
+                init_mask=None,
+                fit=False,
+                strength=base_image_decimation,
+                gfpgan_strength=0,
+                save_original=False,
+                upscale=None,
+            )
+            results += result
 
-                with precision_scope("cuda"):
-                    modelCS.to(opt_device)
-                    uc = None
-                    if opt_scale != 1.0:
-                        uc = modelCS.get_learned_conditioning(batch_size * [""])
+            image['state'] = 'complete'
+            image_progress_callback(image_progress=images)
 
-                    subprompts, weights = split_weighted_subprompts(prompt)
-                    if len(subprompts) > 1:
-                        c = torch.zeros_like(uc)
-                        totalWeight = sum(weights)
-                        # normalize each "sub prompt" and add it
-                        for i in range(len(subprompts)):
-                            weight = weights[i]
-                            # if not skip_normalize:
-                            weight = weight / totalWeight
-                            c = torch.add(c, modelCS.get_learned_conditioning(subprompts[i]), alpha=weight)
-                    else:
-                        c = modelCS.get_learned_conditioning([prompt] * batch_size)
+        for index, result in enumerate(results):
+            image, seed = result
+            images[index]['image'] = image
+            images[index]['seed'] = seed
+            images[index]['image_key'] = 'image'
+            images[index]['state'] = 'complete'
+            images[index]['completed_steps'] = actual_sampler_steps
 
-                    shape = [batch_size, opt_C, opt_H // opt_f, opt_W // opt_f]
-
-                    if opt_device != "cpu":
-                        mem = torch.cuda.memory_allocated() / 1e6
-                        modelCS.to("cpu")
-                        while torch.cuda.memory_allocated() / 1e6 >= mem:
-                            time.sleep(1)
-
-                    x0 = None
-                    if base_image is not None:
-                        if init_image_batch_size != batch_size:
-                            # TODO: Refactor this
-                            init_image_batch_size = batch_size
-                            init_image_batch = repeat(init_image, "1 ... -> b ...", b=init_image_batch_size)
-
-                            modelFS.to(opt_device)
-
-                            init_image_encoded = modelFS.encode_first_stage(init_image_batch)
-                            init_latent = modelFS.get_first_stage_encoding(init_image_encoded)
-
-                            # TODO: Skip this when previews are used (modelFS
-                            # gets moved to the target device anyway)
-                            if opt_device != "cpu":
-                                mem = torch.cuda.memory_allocated() / 1e6
-                                modelFS.to("cpu")
-                                while torch.cuda.memory_allocated() / 1e6 >= mem:
-                                    time.sleep(1)
-
-                        # Start the model with the base image instead of noise
-                        x0 = model.stochastic_encode(
-                            init_latent,
-                            torch.tensor([actual_sampler_steps] * batch_size).to(opt_device),
-                            batch_seed,
-                            opt_ddim_eta,
-                            sampler_steps,
-                        )
-
-                    img_callback = make_img_callback(
-                        image_progress_callback=image_progress_callback,
-                        images=images,
-                        batch_image_indices=batch_image_indices,
-                        steps_per_image_preview=steps_per_image_preview,
-                        modelFS=modelFS,
-                        preview_device=opt_device,
-                    )
-
-                    samples_ddim = model.sample(
-                        S=actual_sampler_steps,
-                        conditioning=c,
-                        x0=x0,
-                        seed=batch_seed,
-                        shape=shape,
-                        verbose=False,
-                        unconditional_guidance_scale=opt_scale,
-                        unconditional_conditioning=uc,
-                        eta=opt_ddim_eta,
-                        x_T=start_code,
-                        sampler = opt_sampler,
-                        img_callback=img_callback,
-                    )
-
-                    modelFS.to(opt_device)
-
-                    for batch_index, image_index in enumerate(batch_image_indices):
-                        x_samples_ddim = modelFS.decode_first_stage(samples_ddim[batch_index].unsqueeze(0))
-                        x_sample = torch.clamp((x_samples_ddim + 1.0) / 2.0, min=0.0, max=1.0)
-                        x_sample = 255.0 * rearrange(x_sample[0].cpu().numpy(), "c h w -> h w c")
-                        image = Image.fromarray(x_sample.astype(np.uint8))
-                        images[image_index]['image'] = image
-                        images[image_index]['image_key'] = 'image'
-                        images[image_index]['state'] = 'complete'
-                        images[image_index]['completed_steps'] = actual_sampler_steps
-
-                    image_progress_callback(image_progress=images)
-
-                    if opt_device != "cpu":
-                        mem = torch.cuda.memory_allocated() / 1e6
-                        modelFS.to("cpu")
-                        while torch.cuda.memory_allocated() / 1e6 >= mem:
-                            time.sleep(1)
-                    del samples_ddim
-                    print("memory_final = ", torch.cuda.memory_allocated() / 1e6)
+        if init_image_path is not None:
+            os.unlink(init_image_path)
 
         return {
             'images': images,
             'seed': seed,
         }
 
-# Based on `sample_iteration_callback` from this PR:
-# https://github.com/sd-webui/stable-diffusion-webui/pull/611
-#
-# Full file here:
-# https://github.com/cobryan05/stable-diffusion-webui/blob/19dc3779f603a736f3f15dbf78ea402640bff3af/webui.py
-def image_samples_to_images(image_samples, modelFS, batch_size):
-    images = []
-    for i in range(batch_size):
-        x_samples_ddim = modelFS.decode_first_stage(image_samples[i].unsqueeze(0))
-        x_sample = torch.clamp((x_samples_ddim + 1.0) / 2.0, min=0.0, max=1.0)
-        x_sample = 255.0 * rearrange(x_sample[0].cpu().numpy(), "c h w -> h w c")
-        image = Image.fromarray(x_sample.astype(np.uint8))
-        images.append(image)
-    return images
-
 def make_img_callback(
     image_progress_callback,
+    generator,
     images,
-    batch_image_indices,
+    image_index,
     steps_per_image_preview,
-    modelFS,
-    preview_device,
 ):
     if image_progress_callback is None:
         return None
 
     previews_enabled = steps_per_image_preview > 0
 
-    if previews_enabled:
-        # The model must be moved before generating previews
-        modelFS.to(preview_device)
-
     def img_callback(image_samples, step_index):
+        images[image_index]['state'] = 'running'
+        images[image_index]['completed_steps'] = step_index
+
         should_generate_preview = previews_enabled and step_index % steps_per_image_preview == 0
         if should_generate_preview:
-            batch_preview_images = image_samples_to_images(
-                image_samples=image_samples,
-                modelFS=modelFS,
-                batch_size=len(batch_image_indices),
-            )
+            preview_image = generator.sample_to_image(image_samples)
 
-            for batch_index, image_index in enumerate(batch_image_indices):
-                images[image_index]['image'] = batch_preview_images[batch_index]
-                images[image_index]['image_key'] = f'preview_{ULID()}'
-
-        for image_index in batch_image_indices:
-            images[image_index]['completed_steps'] = step_index
+            images[image_index]['image'] = preview_image
+            images[image_index]['image_key'] = f'preview_{ULID()}'
 
         image_progress_callback(image_progress=images)
 

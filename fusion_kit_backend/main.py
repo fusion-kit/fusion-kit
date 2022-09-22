@@ -1,7 +1,4 @@
 from io import BytesIO
-import sys
-sys.path.append('./stable_diffusion')
-
 import os
 import asyncio
 import appdirs

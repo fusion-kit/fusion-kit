@@ -1,7 +1,11 @@
-from .dreamer import Dreamer
+import sys
 
 def processor_runner(req_queue, res_queue):
+    sys.path.append('./invoke_ai')
+    from .dreamer import Dreamer
+
     print("started processor")
+
     dreamer = Dreamer()
     while True:
         request = req_queue.get()

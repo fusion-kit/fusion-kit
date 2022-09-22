@@ -1,6 +1,8 @@
 # Anaconda dependencies
 src/clip
+src/gfpgan
 src/taming-transformers
+src/k-diffusion
 condaenv.*.requirements.txt
 
 # Alembic migration DB
