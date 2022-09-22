@@ -117,48 +117,119 @@ const OptionsForm: React.FC<OptionsFormProps> = (props) => {
   const { options, updateOptions } = props;
 
   return (
-    <div className="m-6 grid grid-cols-1 gap-y-6 gap-x-8 sm:grid-cols-6">
-      <div className="sm:col-span-4">
-        <NumberSliderInput
-          label="Images"
-          value={options.numImages}
-          onChange={(newValue) => updateOptions({ numImages: clamp(newValue, 1, 99) })}
-          lowValue={1}
-          highValue={10}
-        />
+    <>
+      <div className="m-6 grid grid-cols-1 gap-y-6 gap-x-8 sm:grid-cols-6">
+        <div className="sm:col-span-4">
+          <NumberSliderInput
+            label="Images"
+            value={options.numImages}
+            onChange={(newValue) => updateOptions({ numImages: clamp(newValue, 1, 99) })}
+            lowValue={1}
+            highValue={10}
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <OptionalNumberInput
+            label="Seed"
+            placeholder="Random seed"
+            value={options.seed}
+            onChange={(newValue) => updateOptions({
+              seed: newValue != null ? clamp(newValue, 0, Number.MAX_SAFE_INTEGER) : null,
+            })}
+          />
+        </div>
+        <div className="sm:col-span-6">
+          <ImageInput
+            label="Base image"
+            file={options.baseImage}
+            onChange={(newFile) => updateOptions({ baseImage: newFile })}
+          />
+        </div>
+        <div className="sm:col-span-6">
+          <NumberSliderInput
+            label="Base image strength"
+            value={0.75}
+            disabled={options.baseImage == null}
+            onChange={() => {}}
+            lowValue={0}
+            highValue={1}
+            step={0.01}
+            allowDecimal
+          />
+        </div>
       </div>
-      <div className="sm:col-span-2">
-        <OptionalNumberInput
-          label="Seed"
-          placeholder="Random seed"
-          value={options.seed}
-          onChange={(newValue) => updateOptions({
-            seed: newValue != null ? clamp(newValue, 0, Number.MAX_SAFE_INTEGER) : null,
-          })}
-        />
+      <div className="m-6 grid grid-cols-1 gap-y-6 gap-x-8 sm:grid-cols-6">
+        <div className="sm:col-span-2">
+          <DropdownInput
+            label="Sampler"
+            options={[
+              { label: "DDIM", value: "DDIM" },
+              { label: "PLMS", value: "PLMS" },
+            ]}
+            value="ddim"
+            onChange={() => {}}
+          />
+        </div>
+        <div className="sm:col-span-4">
+          <NumberSliderInput
+            label="Steps"
+            value={50}
+            onChange={() => {}}
+            lowValue={1}
+            highValue={100}
+          />
+        </div>
+        <div className="sm:col-span-3">
+          <NumberInput
+            label="Sampler eta"
+            value={0.0}
+            onChange={() => {}}
+            allowDecimal
+          />
+        </div>
+        <div className="sm:col-span-3">
+          <NumberInput
+            label="Guidance scale"
+            value={7.5}
+            onChange={() => {}}
+            allowDecimal
+          />
+        </div>
+        <div className="sm:col-span-3">
+          <NumberInput
+            label="Downsampling factor"
+            value={8}
+            onChange={() => {}}
+          />
+        </div>
+        <div className="sm:col-span-3">
+          <NumberInput
+            label="Latent channels"
+            value={4}
+            onChange={() => {}}
+          />
+        </div>
       </div>
-      <div className="sm:col-span-6">
-        <ImageInput
-          label="Base image"
-          file={options.baseImage}
-          onChange={(newFile) => updateOptions({ baseImage: newFile })}
-        />
-      </div>
-    </div>
+    </>
   );
 };
 
 interface NumberSliderInputProps {
   label: string,
   value: number,
+  disabled?: boolean,
   onChange: (_newValue: number) => void,
   lowValue: number,
   highValue: number,
+  step?: number,
+  allowDecimal?: boolean,
 }
 
 const NumberSliderInput: React.FC<NumberSliderInputProps> = (props) => {
   const {
-    label, value, onChange, lowValue, highValue,
+    label, value, onChange,
+    lowValue, highValue,
+    step = 1, allowDecimal = false, disabled = false,
   } = props;
 
   const textInputId = useId();
@@ -171,10 +242,10 @@ const NumberSliderInput: React.FC<NumberSliderInputProps> = (props) => {
     setTextValue(newStringValue);
 
     const newValue = Number(newStringValue);
-    if (newStringValue !== "" && Number.isSafeInteger(newValue)) {
+    if (newStringValue !== "" && Number.isSafeInteger(newValue) && !disabled) {
       onChange(newValue);
     }
-  }, [onChange]);
+  }, [onChange, disabled]);
   const onTextInputBlur: React.FocusEventHandler<HTMLInputElement> = useCallback(() => {
     setTextValue(value.toString());
   }, [value]);
@@ -186,8 +257,8 @@ const NumberSliderInput: React.FC<NumberSliderInputProps> = (props) => {
       e.preventDefault();
       e.stopPropagation();
 
-      if (isValidValue) {
-        const newValue = currentValue + 1;
+      if (isValidValue && !disabled) {
+        const newValue = currentValue + step;
 
         onChange(newValue);
       }
@@ -197,8 +268,8 @@ const NumberSliderInput: React.FC<NumberSliderInputProps> = (props) => {
       e.preventDefault();
       e.stopPropagation();
 
-      if (isValidValue) {
-        const newValue = currentValue - 1;
+      if (isValidValue && !disabled) {
+        const newValue = currentValue - step;
 
         onChange(newValue);
       }
@@ -207,12 +278,14 @@ const NumberSliderInput: React.FC<NumberSliderInputProps> = (props) => {
     }
 
     return undefined;
-  }, [textValue, onChange]);
+  }, [textValue, onChange, step, disabled]);
   const onRangeChange: React.ChangeEventHandler<HTMLInputElement> = useCallback((e) => {
     const newValue = e.target.valueAsNumber;
-    onChange(newValue);
-    setTextValue(newValue.toString());
-  }, [onChange]);
+    if (!disabled) {
+      onChange(newValue);
+      setTextValue(newValue.toString());
+    }
+  }, [onChange, disabled]);
 
   useEffect(() => {
     setTextValue(value.toString());
@@ -220,26 +293,40 @@ const NumberSliderInput: React.FC<NumberSliderInputProps> = (props) => {
 
   return (
     <>
-      <label htmlFor={textInputId} className="block text-sm font-medium text-gray-700">{label}</label>
+      <label
+        htmlFor={textInputId}
+        className={clsx(
+          "block text-sm font-medium transition-colors",
+          disabled ? "text-gray-400" : "text-gray-700",
+        )}
+      >
+        {label}
+
+      </label>
       <div className="flex justify-between items-baseline space-x-2">
         <input
           type="range"
-          className="appearance-none flex-1 w-full h-2 bg-gray-200 shadow-sm rounded-full"
+          className="appearance-none flex-1 w-full h-2 bg-gray-200 shadow-sm rounded-full disabled:cursor-not-allowed"
           min={lowValue}
           max={highValue}
           value={value}
+          disabled={disabled}
+          step={step}
           onChange={onRangeChange}
         />
         <input
           type="text"
           inputMode="numeric"
-          pattern="[0-9]*"
-          className="block w-12 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-center"
+          pattern={allowDecimal ? "[0-9\\.]*" : "[0-9]*"}
           id={textInputId}
           value={textValue}
+          disabled={disabled}
           onChange={onTextInputChange}
           onBlur={onTextInputBlur}
           onKeyDown={onTextInputKeyDown}
+          className={clsx(
+            "block w-16 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-center disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-500",
+          )}
         />
       </div>
     </>
@@ -248,14 +335,15 @@ const NumberSliderInput: React.FC<NumberSliderInputProps> = (props) => {
 
 interface OptionalNumberInputProps {
   label: string,
-  placeholder: string,
+  placeholder?: string,
   value: number | null,
   onChange: (_newValue: number | null) => void,
+  allowDecimal?: boolean,
 }
 
 const OptionalNumberInput: React.FC<OptionalNumberInputProps> = (props) => {
   const {
-    label, placeholder, value, onChange,
+    label, placeholder, value, onChange, allowDecimal = false,
   } = props;
 
   const textInputId = useId();
@@ -284,7 +372,7 @@ const OptionalNumberInput: React.FC<OptionalNumberInputProps> = (props) => {
       <input
         type="text"
         inputMode="numeric"
-        pattern="[0-9]*"
+        pattern={allowDecimal ? "[0-9\\.]*" : "[0-9]*"}
         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
         id={textInputId}
         value={textValue}
@@ -292,6 +380,80 @@ const OptionalNumberInput: React.FC<OptionalNumberInputProps> = (props) => {
         onChange={onTextInputChange}
         onBlur={onTextInputBlur}
       />
+    </>
+  );
+};
+
+interface NumberInputProps {
+  label: string,
+  placeholder?: string,
+  value: number | null,
+  onChange: (_newValue: number | null) => void,
+  allowDecimal?: boolean,
+}
+
+const NumberInput: React.FC<NumberInputProps> = (props) => {
+  const {
+    label, placeholder, value, onChange, allowDecimal,
+  } = props;
+
+  const onInputChange = useCallback((newValue: number | null) => {
+    if (newValue != null) {
+      onChange(newValue);
+    }
+  }, [onChange]);
+
+  return (
+    <OptionalNumberInput
+      label={label}
+      placeholder={placeholder}
+      value={value}
+      onChange={onInputChange}
+      allowDecimal={allowDecimal}
+    />
+  );
+};
+
+interface DropdownInputProps<V extends string> {
+  label: string,
+  options: DropdownOption<V>[],
+  value: V,
+  onChange: (_newValue: V) => void,
+}
+
+interface DropdownOption<V extends string> {
+  label: string,
+  value: V,
+}
+
+const DropdownInput = <V extends string = string>(
+  props: DropdownInputProps<V>,
+) => {
+  const {
+    label, options, value, onChange,
+  } = props;
+
+  const selectId = useId();
+
+  const onSelectChange: React.ChangeEventHandler<HTMLSelectElement> = useCallback((e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onChange(e.target.value as V);
+  }, [onChange]);
+
+  return (
+    <>
+      <label htmlFor={selectId} className="block text-sm font-medium text-gray-700">{label}</label>
+      <select
+        id={selectId}
+        value={value}
+        onChange={onSelectChange}
+        className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"
+      >
+        {options.map((option) => (
+          <option key={option.value}>{option.label}</option>
+        ))}
+      </select>
     </>
   );
 };
@@ -344,16 +506,17 @@ const ImageInput: React.FC<ImageInputProps> = (props) => {
           {({ getRootProps, getInputProps, isDragAccept }) => (
             <div
               className={clsx(
-                "h-32 flex max-w-lg rounded-md pt-5 pb-6 box-content border-2 border-dashed transition-colors duration-300 justify-center",
+                "h-36 flex max-w-lg rounded-md box-content border-2 border-dashed transition-all duration-300 justify-center",
                 file != null ? "" : "items-center",
                 file == null || isDragAccept ? "border-gray-300" : "border-transparent",
+                isDragAccept ? "bg-green-100" : "",
               )}
               {...getRootProps()}
             >
               <input id="file-upload" type="file" {...getInputProps()} />
               {file != null
                 ? (
-                  <div className="bg-gray-200 p-2 rounded-lg shadow-sm relative">
+                  <div className="bg-gray-200 p-2 m-4 rounded-lg shadow-sm relative">
                     <div className="absolute -top-3 -right-6 rounded-full overflow-hidden shadow-xl divide-x divide-slate-400 text-slate-600">
                       <button type="button" className="h-12 w-12 p-3 bg-slate-200 hover:bg-slate-100">
                         <PencilSquareIcon className="h-full w-full" />
@@ -387,7 +550,7 @@ const ImageInput: React.FC<ImageInputProps> = (props) => {
                     </svg>
                     <div className="flex text-sm text-gray-600">
                       <span
-                        className="relative cursor-pointer rounded-md bg-white font-medium text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-400 focus-within:ring-offset-2 hover:text-indigo-400 transition-none"
+                        className="relative cursor-pointer rounded-md font-medium text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-400 focus-within:ring-offset-2 hover:text-indigo-400 transition-none"
                       >
                         Upload a file
                       </span>
