@@ -36,9 +36,6 @@ class Dreamer():
         sampler_steps,
         sampler_eta,
         guidance_scale,
-        downsampling_factor,
-        latent_channels,
-        num_images_per_batch,
         steps_per_image_preview,
         base_image=None,
         base_image_decimation=None,
@@ -65,12 +62,6 @@ class Dreamer():
             sampling).
         guidance_scale
             Unconditional guidance scale (how closely to follow the prompt).
-        downsampling_factor
-            Downsampling factor.
-        latent_channels
-            Latent channels.
-        num_images_per_batch
-            Number of images to submit to the model in a single batch.
         image_progress_callback
             A callback function that gets invoked repeatedly with the total
             progress of each image. Image previews and the final image are

@@ -20,8 +20,6 @@ export interface DreamOptions {
   samplerSteps: number,
   samplerEta: number,
   guidanceScale: number,
-  downsamplingFactor: number,
-  latentChannels: number,
 }
 
 export interface SelectedFile {
@@ -73,8 +71,6 @@ export function useCreateDream(): UseCreateDream {
           samplerSteps: opts.samplerSteps,
           samplerEta: opts.samplerEta,
           guidanceScale: opts.guidanceScale,
-          downsamplingFactor: opts.downsamplingFactor,
-          latentChannels: opts.latentChannels,
         },
       },
     });

@@ -50,7 +50,6 @@ class FusionKitManager():
 
         dream_settings = {
             'options': options,
-            'num_images_per_batch': 2,
             'steps_per_image_preview': 10,
         }
 

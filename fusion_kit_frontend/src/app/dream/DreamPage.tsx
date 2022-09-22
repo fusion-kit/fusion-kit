@@ -17,8 +17,6 @@ export const DreamPage: React.FC = () => {
     samplerSteps: 50,
     samplerEta: 0.0,
     guidanceScale: 7.5,
-    downsamplingFactor: 8,
-    latentChannels: 4,
   });
   const { createDream, dreamState } = useCreateDream();
 

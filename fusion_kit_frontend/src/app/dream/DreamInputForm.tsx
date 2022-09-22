@@ -264,20 +264,6 @@ const OptionsForm: React.FC<OptionsFormProps> = (props) => {
             allowDecimal
           />
         </div>
-        <div className="sm:col-span-3">
-          <NumberInput
-            label="Downsampling factor"
-            value={options.downsamplingFactor}
-            onChange={(newFactor) => updateOptions({ downsamplingFactor: newFactor })}
-          />
-        </div>
-        <div className="sm:col-span-3">
-          <NumberInput
-            label="Latent channels"
-            value={options.latentChannels}
-            onChange={(newChannels) => updateOptions({ latentChannels: newChannels })}
-          />
-        </div>
       </div>
     </>
   );

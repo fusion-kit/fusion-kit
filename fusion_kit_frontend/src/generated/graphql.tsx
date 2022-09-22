@@ -27,9 +27,7 @@ export type DreamImage = {
 export type DreamOptionsInput = {
   baseImage?: InputMaybe<Scalars['Upload']>;
   baseImageDecimation?: InputMaybe<Scalars['Float']>;
-  downsamplingFactor: Scalars['Int'];
   guidanceScale: Scalars['Float'];
-  latentChannels: Scalars['Int'];
   numImages: Scalars['Int'];
   prompt: Scalars['String'];
   sampler: DreamSampler;

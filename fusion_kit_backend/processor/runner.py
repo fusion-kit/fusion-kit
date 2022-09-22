@@ -34,9 +34,6 @@ def processor_runner(req_queue, res_queue):
                 sampler_steps=options['sampler_steps'],
                 sampler_eta=options['sampler_eta'],
                 guidance_scale=options['guidance_scale'],
-                downsampling_factor=options['downsampling_factor'],
-                latent_channels=options['latent_channels'],
-                num_images_per_batch=request_body['num_images_per_batch'],
                 steps_per_image_preview=request_body['steps_per_image_preview'],
                 image_progress_callback=image_progress_callback,
             )

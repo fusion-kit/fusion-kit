@@ -22,8 +22,6 @@ input DreamOptionsInput {
   samplerSteps: Int!
   samplerEta: Float!
   guidanceScale: Float!
-  downsamplingFactor: Int!
-  latentChannels: Int!
 }
 
 enum DreamSampler {
