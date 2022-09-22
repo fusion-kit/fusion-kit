@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Dropzone from "react-dropzone";
 import { clamp } from "../../utils";
 import { DreamOptions, UpdateDreamOptions } from "./hooks";
+import { DreamSampler } from "../../generated/graphql";
 
 interface DreamInputFormProps {
   options: DreamOptions,
@@ -149,9 +150,9 @@ const OptionsForm: React.FC<OptionsFormProps> = (props) => {
         <div className="sm:col-span-6">
           <NumberSliderInput
             label="Base image strength"
-            value={0.75}
+            value={options.baseImageStrength}
             disabled={options.baseImage == null}
-            onChange={() => {}}
+            onChange={(newStrength) => updateOptions({ baseImageStrength: newStrength })}
             lowValue={0}
             highValue={1}
             step={0.01}
@@ -164,18 +165,18 @@ const OptionsForm: React.FC<OptionsFormProps> = (props) => {
           <DropdownInput
             label="Sampler"
             options={[
-              { label: "DDIM", value: "DDIM" },
-              { label: "PLMS", value: "PLMS" },
+              { label: "DDIM", value: DreamSampler.Ddim },
+              { label: "PLMS", value: DreamSampler.Plms },
             ]}
-            value="ddim"
-            onChange={() => {}}
+            value={options.sampler}
+            onChange={(newSampler) => updateOptions({ sampler: newSampler })}
           />
         </div>
         <div className="sm:col-span-4">
           <NumberSliderInput
             label="Steps"
-            value={50}
-            onChange={() => {}}
+            value={options.samplerSteps}
+            onChange={(newSteps) => updateOptions({ samplerSteps: newSteps })}
             lowValue={1}
             highValue={100}
           />
@@ -183,31 +184,31 @@ const OptionsForm: React.FC<OptionsFormProps> = (props) => {
         <div className="sm:col-span-3">
           <NumberInput
             label="Sampler eta"
-            value={0.0}
-            onChange={() => {}}
+            value={options.samplerEta}
+            onChange={(newEta) => updateOptions({ samplerEta: newEta })}
             allowDecimal
           />
         </div>
         <div className="sm:col-span-3">
           <NumberInput
             label="Guidance scale"
-            value={7.5}
-            onChange={() => {}}
+            value={options.guidanceScale}
+            onChange={(newScale) => updateOptions({ guidanceScale: newScale })}
             allowDecimal
           />
         </div>
         <div className="sm:col-span-3">
           <NumberInput
             label="Downsampling factor"
-            value={8}
-            onChange={() => {}}
+            value={options.downsamplingFactor}
+            onChange={(newFactor) => updateOptions({ downsamplingFactor: newFactor })}
           />
         </div>
         <div className="sm:col-span-3">
           <NumberInput
             label="Latent channels"
-            value={4}
-            onChange={() => {}}
+            value={options.latentChannels}
+            onChange={(newChannels) => updateOptions({ latentChannels: newChannels })}
           />
         </div>
       </div>
@@ -243,16 +244,16 @@ const NumberSliderInput: React.FC<NumberSliderInputProps> = (props) => {
     setTextValue(newStringValue);
 
     const newValue = Number(newStringValue);
-    if (newStringValue !== "" && Number.isSafeInteger(newValue) && !disabled) {
+    if (newStringValue !== "" && (allowDecimal || Number.isSafeInteger(newValue)) && !disabled) {
       onChange(newValue);
     }
-  }, [onChange, disabled]);
+  }, [onChange, allowDecimal, disabled]);
   const onTextInputBlur: React.FocusEventHandler<HTMLInputElement> = useCallback(() => {
     setTextValue(value.toString());
   }, [value]);
   const onTextInputKeyDown: React.KeyboardEventHandler<HTMLInputElement> = useCallback((e) => {
     const currentValue = Number(textValue);
-    const isValidValue = textValue !== "" && Number.isSafeInteger(currentValue);
+    const isValidValue = textValue !== "" && (allowDecimal || Number.isSafeInteger(currentValue));
 
     if (e.key === "ArrowUp") {
       e.preventDefault();
@@ -279,7 +280,7 @@ const NumberSliderInput: React.FC<NumberSliderInputProps> = (props) => {
     }
 
     return undefined;
-  }, [textValue, onChange, step, disabled]);
+  }, [textValue, allowDecimal, onChange, step, disabled]);
   const onRangeChange: React.ChangeEventHandler<HTMLInputElement> = useCallback((e) => {
     const newValue = e.target.valueAsNumber;
     if (!disabled) {
@@ -357,12 +358,12 @@ const OptionalNumberInput: React.FC<OptionalNumberInputProps> = (props) => {
     setTextValue(newStringValue);
 
     const newValue = Number(newStringValue);
-    if (newStringValue !== "" && Number.isSafeInteger(newValue)) {
+    if (newStringValue !== "" && (allowDecimal || Number.isSafeInteger(newValue))) {
       onChange(newValue);
     } else {
       onChange(null);
     }
-  }, [onChange]);
+  }, [onChange, allowDecimal]);
   const onTextInputBlur: React.FocusEventHandler<HTMLInputElement> = useCallback(() => {
     setTextValue(value != null ? value.toString() : "");
   }, [value]);
@@ -389,7 +390,7 @@ interface NumberInputProps {
   label: string,
   placeholder?: string,
   value: number | null,
-  onChange: (_newValue: number | null) => void,
+  onChange: (_newValue: number) => void,
   allowDecimal?: boolean,
 }
 
