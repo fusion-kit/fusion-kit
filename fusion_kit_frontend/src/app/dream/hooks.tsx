@@ -1,7 +1,7 @@
 import {
   MutationResult, SubscriptionResult, useMutation, useSubscription,
 } from "@apollo/client";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { BACKEND_URL, joinUrlPath } from "../../client";
 import {
   DreamSampler,
@@ -286,4 +286,21 @@ export function getDreamImageProgress(dreamImage: DreamImage | null): number | n
     default:
       return unreachable(dreamImage);
   }
+}
+
+export function useFileObjectUrl(file: File | null): string | null {
+  const [objectUrl, setObjectUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const newObjectUrl = file != null ? URL.createObjectURL(file) : null;
+    setObjectUrl(newObjectUrl);
+
+    return () => {
+      if (newObjectUrl != null) {
+        URL.revokeObjectURL(newObjectUrl);
+      }
+    };
+  }, [file]);
+
+  return objectUrl;
 }

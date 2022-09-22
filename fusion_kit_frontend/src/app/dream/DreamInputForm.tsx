@@ -10,7 +10,7 @@ import { clsx } from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
 import Dropzone from "react-dropzone";
 import { clamp } from "../../utils";
-import { DreamOptions, UpdateDreamOptions } from "./hooks";
+import { DreamOptions, UpdateDreamOptions, useFileObjectUrl } from "./hooks";
 import { DreamSampler } from "../../generated/graphql";
 
 interface DreamInputFormProps {
@@ -21,6 +21,8 @@ interface DreamInputFormProps {
 
 export const DreamInputForm: React.FC<DreamInputFormProps> = (props) => {
   const { onStartDream, options, updateOptions } = props;
+
+  const baseImageObjectUrl = useFileObjectUrl(options.baseImage);
 
   const promptInputId = useId();
 
@@ -41,20 +43,46 @@ export const DreamInputForm: React.FC<DreamInputFormProps> = (props) => {
     }
   }, [onSubmit]);
 
+  const onRemoveBaseImage: React.MouseEventHandler<HTMLButtonElement> = useCallback((e) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    updateOptions({ baseImage: null });
+  }, [updateOptions]);
+
   return (
     <Disclosure>
       {({ open, close }) => (
         <form onSubmit={(e) => onSubmit(close, e)} className="flex flex-col border border-gray-300 shadow-sm rounded-lg">
-          <div className="overflow-hidden rounded-t-lg z-10 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500">
+          <div className="flex items-center overflow-hidden rounded-t-lg z-10 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500">
             <label htmlFor={promptInputId} className="sr-only">
               Prompt
             </label>
+            {options.baseImage != null
+              ? (
+                <div className="bg-gray-200 p-1.5 m-4 rounded-md shadow-sm relative h-min">
+                  <div className="absolute -top-3 -right-3 rounded-full overflow-hidden shadow-xl divide-x divide-slate-400 text-slate-600">
+                    <button
+                      type="button"
+                      className="h-8 w-8 p-2 bg-slate-200 hover:bg-slate-100"
+                      onClick={onRemoveBaseImage}
+                    >
+                      <XMarkIcon className="h-full w-full" />
+                    </button>
+                  </div>
+                  <img
+                    src={baseImageObjectUrl ?? undefined}
+                    alt="Uploaded file"
+                    className="max-h-full w-16 object-contain"
+                  />
+                </div>
+              ) : null}
             <Textarea
               rows={1}
               name="prompt"
               id={promptInputId}
               onKeyDown={(e) => onPromptKeyDown(close, e)}
-              className="block w-full resize-none border-0 py-4 placeholder-gray-500 focus:ring-0 sm:text-sm"
+              className="flex-1 block w-full resize-none border-0 py-4 placeholder-gray-500 focus:ring-0 sm:text-sm"
               placeholder="Enter a prompt..."
               onChange={(e) => { updateOptions({ prompt: e.target.value }); }}
               value={options.prompt}
@@ -468,18 +496,8 @@ interface ImageInputProps {
 
 const ImageInput: React.FC<ImageInputProps> = (props) => {
   const { label, file, onChange } = props;
-  const [objectUrl, setObjectUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-    const newObjectUrl = file != null ? URL.createObjectURL(file) : null;
-    setObjectUrl(newObjectUrl);
-
-    return () => {
-      if (newObjectUrl != null) {
-        URL.revokeObjectURL(newObjectUrl);
-      }
-    };
-  }, [file]);
+  const objectUrl = useFileObjectUrl(file);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length !== 1) {
