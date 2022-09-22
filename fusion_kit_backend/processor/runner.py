@@ -25,7 +25,7 @@ def processor_runner(req_queue, res_queue):
                 num_images=options['num_images'],
                 seed=options['seed'],
                 base_image=options.get('base_image'),
-                base_image_strength=options.get('base_image_strength'),
+                base_image_decimation=options.get('base_image_decimation'),
                 sampler=options['sampler'],
                 sampler_steps=options['sampler_steps'],
                 sampler_eta=options['sampler_eta'],

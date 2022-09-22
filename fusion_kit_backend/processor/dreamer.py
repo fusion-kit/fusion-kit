@@ -160,7 +160,7 @@ class Dreamer():
         num_images_per_batch,
         steps_per_image_preview,
         base_image=None,
-        base_image_strength=None,
+        base_image_decimation=None,
         image_progress_callback=None,
     ):
         """
@@ -204,10 +204,11 @@ class Dreamer():
             will be "inspired by" the base image guided by the prompt
             (img2img mode). When not set, only the prompt will be used to
             generate images (txt2img mode).
-        base_image_strength
+        base_image_decimation
             Value between 0.0 and 1.0 indicating the strength used for
             noising/denoising the base image. Must be set when `base_image`
-            is set.
+            is set. A value of 1.0 completely decimates the input image,
+            discarding most details.
         """
         # opt_fixed_code = False # if enabled, uses the same starting code across samples
         opt_ddim_eta = sampler_eta
@@ -231,14 +232,14 @@ class Dreamer():
         actual_sampler_steps = sampler_steps
 
         if base_image is not None:
-            assert base_image_strength is not None, "base_image_strength is required if base_image is set"
-            base_image_strength = np.clip(base_image_strength, 0.0, 1.0)
+            assert base_image_decimation is not None, "base_image_decimation is required if base_image is set"
+            base_image_decimation = np.clip(base_image_decimation, 0.0, 1.0)
 
             # load the first-stage model with the same precision as the other models
             model_fs_precision = "autocast"
 
             # Reduce the sampler steps when using a base image
-            actual_sampler_steps = int(base_image_strength * sampler_steps)
+            actual_sampler_steps = int(base_image_decimation * sampler_steps)
 
         seed_everything(seed)
 

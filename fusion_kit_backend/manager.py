@@ -46,7 +46,7 @@ class FusionKitManager():
                 'content_type': base_image_upload.content_type,
             }
         else:
-            options.pop('base_image_strength', None)
+            options.pop('base_image_decimation', None)
 
         dream_settings = {
             'options': options,

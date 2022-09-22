@@ -149,10 +149,10 @@ const OptionsForm: React.FC<OptionsFormProps> = (props) => {
         </div>
         <div className="sm:col-span-6">
           <NumberSliderInput
-            label="Base image strength"
-            value={options.baseImageStrength}
+            label="Base image decimation"
+            value={options.baseImageDecimation}
             disabled={options.baseImage == null}
-            onChange={(newStrength) => updateOptions({ baseImageStrength: newStrength })}
+            onChange={(newDecimation) => updateOptions({ baseImageDecimation: newDecimation })}
             lowValue={0}
             highValue={1}
             step={0.01}

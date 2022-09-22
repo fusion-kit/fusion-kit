@@ -175,7 +175,7 @@
             "deprecationReason": null
           },
           {
-            "name": "baseImageStrength",
+            "name": "baseImageDecimation",
             "description": null,
             "type": {
               "kind": "SCALAR",

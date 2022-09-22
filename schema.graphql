@@ -17,7 +17,7 @@ input DreamOptionsInput {
   numImages: Int!
   seed: Int
   baseImage: Upload
-  baseImageStrength: Float
+  baseImageDecimation: Float
   sampler: DreamSampler!
   samplerSteps: Int!
   samplerEta: Float!
