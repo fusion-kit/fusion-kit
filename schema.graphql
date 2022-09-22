@@ -17,7 +17,18 @@ input DreamOptionsInput {
   numImages: Int!
   seed: Int
   baseImage: Upload
-  baseImageStrength: Int
+  baseImageStrength: Float
+  sampler: DreamSampler!
+  samplerSteps: Int!
+  samplerEta: Float!
+  guidanceScale: Float!
+  downsamplingFactor: Int!
+  latentChannels: Int!
+}
+
+enum DreamSampler {
+  DDIM
+  PLMS
 }
 
 interface Dream {

@@ -26,10 +26,22 @@ export type DreamImage = {
 
 export type DreamOptionsInput = {
   baseImage?: InputMaybe<Scalars['Upload']>;
+  baseImageStrength?: InputMaybe<Scalars['Float']>;
+  downsamplingFactor: Scalars['Int'];
+  guidanceScale: Scalars['Float'];
+  latentChannels: Scalars['Int'];
   numImages: Scalars['Int'];
   prompt: Scalars['String'];
+  sampler: DreamSampler;
+  samplerEta: Scalars['Float'];
+  samplerSteps: Scalars['Int'];
   seed?: InputMaybe<Scalars['Int']>;
 };
+
+export enum DreamSampler {
+  Ddim = 'DDIM',
+  Plms = 'PLMS'
+}
 
 export type FinishedDream = Dream & {
   __typename?: 'FinishedDream';

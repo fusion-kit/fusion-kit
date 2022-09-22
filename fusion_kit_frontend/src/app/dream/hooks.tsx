@@ -4,6 +4,7 @@ import {
 import { useCallback, useState } from "react";
 import { BACKEND_URL, joinUrlPath } from "../../client";
 import {
+  DreamSampler,
   StartDreamDocument, StartDreamMutation, StoppedDreamReason,
   WatchDreamDocument, WatchDreamSubscription,
 } from "../../generated/graphql";
@@ -14,6 +15,13 @@ export interface DreamOptions {
   numImages: number,
   seed: number | null,
   baseImage: File | null,
+  baseImageStrength: number,
+  sampler: DreamSampler,
+  samplerSteps: number,
+  samplerEta: number,
+  guidanceScale: number,
+  downsamplingFactor: number,
+  latentChannels: number,
 }
 
 export interface SelectedFile {
@@ -52,6 +60,7 @@ export type DreamImage = Dream["images"][0];
 export function useCreateDream(): UseCreateDream {
   const [startDream, startDreamResult] = useMutation(StartDreamDocument);
   const createDream = useCallback(async (opts: DreamOptions) => {
+    const baseImageStrength = opts.baseImage != null ? opts.baseImageStrength : null;
     await startDream({
       variables: {
         options: {
@@ -59,6 +68,13 @@ export function useCreateDream(): UseCreateDream {
           numImages: opts.numImages,
           seed: opts.seed ?? undefined,
           baseImage: opts.baseImage ?? undefined,
+          baseImageStrength,
+          sampler: opts.sampler,
+          samplerSteps: opts.samplerSteps,
+          samplerEta: opts.samplerEta,
+          guidanceScale: opts.guidanceScale,
+          downsamplingFactor: opts.downsamplingFactor,
+          latentChannels: opts.latentChannels,
         },
       },
     });

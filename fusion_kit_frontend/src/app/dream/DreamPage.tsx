@@ -4,6 +4,7 @@ import { DreamInputForm } from "./DreamInputForm";
 import { CurrentDream } from "./CurrentDream";
 import { useCreateDream, useDreamImageSelection, useDreamOptions } from "./hooks";
 import { ShowDreamImage } from "./components";
+import { DreamSampler } from "../../generated/graphql";
 
 export const DreamPage: React.FC = () => {
   const { options, updateOptions } = useDreamOptions({
@@ -11,6 +12,13 @@ export const DreamPage: React.FC = () => {
     numImages: 1,
     seed: null,
     baseImage: null,
+    baseImageStrength: 0.75,
+    sampler: DreamSampler.Ddim,
+    samplerSteps: 50,
+    samplerEta: 0.0,
+    guidanceScale: 7.5,
+    downsamplingFactor: 8,
+    latentChannels: 4,
   });
   const { createDream, dreamState } = useCreateDream();
 
