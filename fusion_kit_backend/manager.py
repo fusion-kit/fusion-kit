@@ -143,6 +143,9 @@ class FusionKitManager():
         return self.get_image(key=image_key)
 
     def get_image_uri(self, key):
+        if key is None:
+            return None
+
         if key not in self.registered_images:
             raise Exception(f"Image not found: {key}")
 
@@ -171,7 +174,7 @@ async def dream_watcher(manager, dream, responses):
                 else:
                     print(f"warning: unexpected image state: {image['state']}")
 
-                if 'image' in image:
+                if image.get('image') is not None:
                     image_key = (dream.images[i].id, image['image_key'])
                     manager.register_image(image=image['image'], key=image_key)
                     dream.images[i].image_key = image_key
