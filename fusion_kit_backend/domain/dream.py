@@ -23,7 +23,7 @@ class Dream():
                 id=dream_image_id,
                 dream_id=id,
                 seed=self.seed + image_index,
-                num_steps=self.num_steps_per_image,
+                sampler_steps=self.sampler_steps,
             )
             self.images.append(dream_image)
 
@@ -50,8 +50,8 @@ class Dream():
         return self.settings['options']['num_images']
 
     @property
-    def num_steps_per_image(self):
-        return self.settings['num_steps_per_image']
+    def sampler_steps(self):
+        return self.settings['sampler_steps']
 
     ### GraphQL resolvers ###
 
@@ -59,7 +59,7 @@ class Dream():
         return self.num_images
 
     def num_total_steps(self, *_):
-        return self.num_images * self.num_steps_per_image
+        return self.num_images * self.sampler_steps
 
     def num_finished_images(self, *_):
         return sum(1 for image in self.images if image.is_complete())

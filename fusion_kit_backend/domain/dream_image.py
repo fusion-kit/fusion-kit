@@ -7,14 +7,14 @@ def resolve_dream_image_type(dream_image, *_):
     return dream_image.state
 
 class DreamImage():
-    def __init__(self, id, dream_id, num_steps, seed):
+    def __init__(self, id, dream_id, seed, sampler_steps):
         self.id = id
         self.seed = seed
         self.dream_id = dream_id
         self.state = 'PendingDreamImage'
         self.image_key = None
         self.num_finished_steps = 0
-        self.num_total_steps = num_steps
+        self.num_total_steps = sampler_steps
 
     def complete(self):
         self.state = 'FinishedDreamImage'

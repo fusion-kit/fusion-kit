@@ -151,7 +151,7 @@ class Dreamer():
         prompt,
         seed,
         num_images,
-        num_steps_per_image,
+        sampler_steps,
         num_images_per_batch,
         steps_per_image_preview,
         base_image=None,
@@ -170,7 +170,7 @@ class Dreamer():
             seed value with the same inputs will produce the same result.
         num_images
             The total number of images to generate.
-        num_steps_per_image
+        sampler_steps
             Number of sampler (DDIM/PLMS) sampling steps to use per image.
         num_images_per_batch
             Number of images to submit to the model in a single batch.
@@ -208,7 +208,7 @@ class Dreamer():
         model_fs_precision = "full"
 
         # Reduce the sampler steps when using a base image
-        actual_sampler_steps = num_steps_per_image
+        actual_sampler_steps = sampler_steps
 
         if base_image is not None:
             assert base_image_strength is not None, "base_image_strength is required if base_image is set"
@@ -218,7 +218,7 @@ class Dreamer():
             model_fs_precision = "autocast"
 
             # Reduce the sampler steps when using a base image
-            actual_sampler_steps = int(base_image_strength * num_steps_per_image)
+            actual_sampler_steps = int(base_image_strength * sampler_steps)
 
         seed_everything(seed)
 
@@ -267,7 +267,7 @@ class Dreamer():
                 'image': None,
                 'image_key': None,
                 'completed_steps': 0,
-                'total_steps': num_steps_per_image,
+                'total_steps': actual_sampler_steps,
             }
             for i in range(num_images)
         ]
@@ -334,7 +334,7 @@ class Dreamer():
                             torch.tensor([actual_sampler_steps] * batch_size).to(opt_device),
                             batch_seed,
                             opt_ddim_eta,
-                            num_steps_per_image,
+                            sampler_steps,
                         )
 
                     img_callback = make_img_callback(
@@ -371,7 +371,7 @@ class Dreamer():
                         images[image_index]['image'] = image
                         images[image_index]['image_key'] = 'image'
                         images[image_index]['state'] = 'complete'
-                        images[image_index]['completed_steps'] = num_steps_per_image
+                        images[image_index]['completed_steps'] = actual_sampler_steps
 
                     image_progress_callback(image_progress=images)
 
