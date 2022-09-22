@@ -23,26 +23,27 @@ export const DreamInputForm: React.FC<DreamInputFormProps> = (props) => {
 
   const promptInputId = useId();
 
-  const onSubmit = useCallback((e?: React.FormEvent) => {
+  const onSubmit = useCallback((close: () => void, e?: React.FormEvent) => {
     e?.stopPropagation();
     e?.preventDefault();
 
+    close();
     onStartDream();
   }, [onStartDream]);
 
-  const onPromptKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = useCallback((e) => {
+  const onPromptKeyDown = useCallback((close: () => void, e: React.KeyboardEvent) => {
     if (!e.shiftKey && e.key === "Enter") {
       e.stopPropagation();
       e.preventDefault();
 
-      onSubmit();
+      onSubmit(close);
     }
   }, [onSubmit]);
 
   return (
     <Disclosure>
-      {({ open }) => (
-        <form onSubmit={onSubmit} className="flex flex-col border border-gray-300 shadow-sm rounded-lg">
+      {({ open, close }) => (
+        <form onSubmit={(e) => onSubmit(close, e)} className="flex flex-col border border-gray-300 shadow-sm rounded-lg">
           <div className="overflow-hidden rounded-t-lg z-10 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500">
             <label htmlFor={promptInputId} className="sr-only">
               Prompt
@@ -51,7 +52,7 @@ export const DreamInputForm: React.FC<DreamInputFormProps> = (props) => {
               rows={1}
               name="prompt"
               id={promptInputId}
-              onKeyDown={onPromptKeyDown}
+              onKeyDown={(e) => onPromptKeyDown(close, e)}
               className="block w-full resize-none border-0 py-4 placeholder-gray-500 focus:ring-0 sm:text-sm"
               placeholder="Enter a prompt..."
               onChange={(e) => { updateOptions({ prompt: e.target.value }); }}
