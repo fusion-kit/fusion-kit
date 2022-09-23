@@ -98,12 +98,34 @@ class FusionKitManager():
 
     def persist_dream(self, dream):
         with db.Session() as session:
+            dream_dir = os.path.join(self.images_dir, dream.id)
+            base_image_path = None
+            base_image_mask_path = None
+
+            if dream.base_image is not None:
+                os.makedirs(dream_dir, exist_ok=True)
+                base_image_path = os.path.join(dream_dir, 'base-image.png')
+                image_format = dream.base_image.format
+                if image_format is None:
+                    image_format = "PNG"
+                dream.base_image.save(base_image_path, format=image_format)
+
+            if dream.base_image_mask is not None:
+                os.makedirs(dream_dir, exist_ok=True)
+                base_image_mask_path = os.path.join(dream_dir, 'base-image-mask.png')
+                image_format = dream.base_image_mask.format
+                if image_format is None:
+                    image_format = "PNG"
+                dream.base_image_mask.save(base_image_mask_path, format=image_format)
+
             db_dream = db.Dream(
                 id=dream.id,
                 prompt=dream.prompt,
                 seed=dream.seed,
                 num_images=dream.num_images,
                 settings_json=dream.settings_json(),
+                base_image_path=base_image_path,
+                base_image_mask_path=base_image_mask_path,
             )
             session.add(db_dream)
 

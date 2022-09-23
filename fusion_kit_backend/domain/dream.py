@@ -54,6 +54,14 @@ class Dream():
     def sampler_steps(self):
         return self.settings['options']['sampler_steps']
 
+    @property
+    def base_image(self):
+        return self.settings['options'].get('base_image')
+
+    @property
+    def base_image_mask(self):
+        return self.settings['options'].get('base_image_mask')
+
     ### GraphQL resolvers ###
 
     def num_total_images(self, *_):
