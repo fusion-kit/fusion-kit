@@ -15,6 +15,7 @@ export interface DreamOptions {
   numImages: number,
   seed: number | null,
   baseImage: File | null,
+  baseImageMask: File | null,
   baseImageDecimation: number,
   sampler: DreamSampler,
   samplerSteps: number,
@@ -59,6 +60,7 @@ export function useCreateDream(): UseCreateDream {
   const [startDream, startDreamResult] = useMutation(StartDreamDocument);
   const createDream = useCallback(async (opts: DreamOptions) => {
     const baseImageDecimation = opts.baseImage != null ? opts.baseImageDecimation : null;
+    const baseImageMask = opts.baseImage != null ? opts.baseImageMask : null;
     await startDream({
       variables: {
         options: {
@@ -66,6 +68,7 @@ export function useCreateDream(): UseCreateDream {
           numImages: opts.numImages,
           seed: opts.seed ?? undefined,
           baseImage: opts.baseImage ?? undefined,
+          baseImageMask,
           baseImageDecimation,
           sampler: opts.sampler,
           samplerSteps: opts.samplerSteps,

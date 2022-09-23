@@ -215,6 +215,13 @@ const OptionsForm: React.FC<OptionsFormProps> = (props) => {
           />
         </div>
         <div className="sm:col-span-6">
+          <ImageInput
+            label="Base image mask"
+            file={options.baseImageMask}
+            onChange={(newFile) => updateOptions({ baseImageMask: newFile })}
+          />
+        </div>
+        <div className="sm:col-span-6">
           <NumberSliderInput
             label="Base image decimation"
             value={options.baseImageDecimation}

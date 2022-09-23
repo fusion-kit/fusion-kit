@@ -12,6 +12,7 @@ export const DreamPage: React.FC = () => {
     numImages: 1,
     seed: null,
     baseImage: null,
+    baseImageMask: null,
     baseImageDecimation: 0.75,
     sampler: DreamSampler.Ddim,
     samplerSteps: 50,
