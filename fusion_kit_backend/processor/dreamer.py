@@ -91,18 +91,12 @@ class Dreamer():
 
         actual_sampler_steps = sampler_steps
 
-        init_image_path = None
         if base_image is not None:
             assert base_image_decimation is not None, 'base_image_decimation is required if base_image is set'
             base_image_decimation = numpy.clip(base_image_decimation, 0.0, 1.0)
 
             # Reduce the sampler steps when using a base image
             actual_sampler_steps = int(base_image_decimation * sampler_steps)
-
-            base_image_file = tempfile.NamedTemporaryFile(delete=False)
-            init_image_path = base_image_file.name
-            base_image.save(init_image_path, format='PNG')
-            print(f'Saved base image file to {init_image_path}')
 
         images = [
             {
@@ -144,7 +138,7 @@ class Dreamer():
                 log_tokenization=False,
                 with_variations=None,
                 variation_amount=0.0,
-                init_img=init_image_path,
+                init_img=base_image,
                 init_mask=None,
                 fit=False,
                 strength=base_image_decimation,
@@ -164,9 +158,6 @@ class Dreamer():
             images[index]['image_key'] = 'image'
             images[index]['state'] = 'complete'
             images[index]['completed_steps'] = actual_sampler_steps
-
-        if init_image_path is not None:
-            os.unlink(init_image_path)
 
         return {
             'images': images,
