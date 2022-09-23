@@ -34,6 +34,7 @@ class Dream():
         settings_json = copy(self.settings)
         settings_json['options'] = copy(settings_json['options'])
         settings_json['options'].pop('base_image', None)
+        settings_json['options'].pop('base_image_mask', None)
 
         return json.dumps(settings_json)
 

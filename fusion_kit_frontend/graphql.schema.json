@@ -187,6 +187,18 @@
             "deprecationReason": null
           },
           {
+            "name": "baseImageMask",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Upload",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "guidanceScale",
             "description": null,
             "type": {

@@ -38,6 +38,7 @@ class Dreamer():
         guidance_scale,
         steps_per_image_preview,
         base_image=None,
+        base_image_mask=None,
         base_image_decimation=None,
         image_progress_callback=None,
     ):
@@ -97,6 +98,8 @@ class Dreamer():
 
             # Reduce the sampler steps when using a base image
             actual_sampler_steps = int(base_image_decimation * sampler_steps)
+        else:
+            assert base_image_mask is None, 'base_image_mask can only be used if base_image is set'
 
         images = [
             {
@@ -139,7 +142,7 @@ class Dreamer():
                 with_variations=None,
                 variation_amount=0.0,
                 init_img=base_image,
-                init_mask=None,
+                init_mask=base_image_mask,
                 fit=False,
                 strength=base_image_decimation,
                 gfpgan_strength=0,

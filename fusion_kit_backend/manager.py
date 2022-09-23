@@ -45,8 +45,17 @@ class FusionKitManager():
                 'filename': base_image_upload.filename,
                 'content_type': base_image_upload.content_type,
             }
+
+            base_image_mask_upload = options.get('base_image_mask')
+            if base_image_mask_upload is not None:
+                options['base_image_mask'] = Image.open(base_image_mask_upload.file)
+                options['base_image_mask_details'] = {
+                    'filename': base_image_upload.filename,
+                    'content_type': base_image_upload.content_type,
+                }
         else:
             options.pop('base_image_decimation', None)
+            options.pop('base_image_mask', None)
 
         dream_settings = {
             'options': options,

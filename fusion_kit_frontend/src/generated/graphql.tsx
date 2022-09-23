@@ -27,6 +27,7 @@ export type DreamImage = {
 export type DreamOptionsInput = {
   baseImage?: InputMaybe<Scalars['Upload']>;
   baseImageDecimation?: InputMaybe<Scalars['Float']>;
+  baseImageMask?: InputMaybe<Scalars['Upload']>;
   guidanceScale: Scalars['Float'];
   numImages: Scalars['Int'];
   prompt: Scalars['String'];
