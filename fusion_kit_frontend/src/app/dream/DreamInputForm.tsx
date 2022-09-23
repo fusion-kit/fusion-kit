@@ -101,6 +101,7 @@ export const DreamInputForm: React.FC<DreamInputFormProps> = (props) => {
                           className="h-8 w-8 p-2 bg-slate-200 hover:bg-slate-100"
                           onClick={onRemoveBaseImage}
                         >
+                          <span className="sr-only">Remove image</span>
                           <XMarkIcon className="h-full w-full" />
                         </button>
                       </div>
@@ -571,9 +572,11 @@ const ImageInput: React.FC<ImageInputProps> = (props) => {
                   <div className="bg-gray-200 p-2 m-4 rounded-lg shadow-sm relative">
                     <div className="absolute -top-3 -right-6 rounded-full overflow-hidden shadow-xl divide-x divide-slate-400 text-slate-600">
                       <button type="button" className="h-12 w-12 p-3 bg-slate-200 hover:bg-slate-100">
+                        <span className="sr-only">Edit image</span>
                         <PencilSquareIcon className="h-full w-full" />
                       </button>
                       <button type="button" className="h-12 w-12 p-3 bg-slate-200 hover:bg-slate-100" onClick={onRemove}>
+                        <span className="sr-only">Remove image</span>
                         <XMarkIcon className="h-full w-full" />
                       </button>
                     </div>
