@@ -38,6 +38,8 @@ class Dream(Base):
     seed = Column(Integer, nullable=False)
     num_images = Column(Integer, nullable=False)
     settings_json = Column(String, nullable=False)
+    base_image_path = Column(String)
+    base_image_mask_path = Column(String)
     created_at = Column(DateTime, nullable=False, server_default=func.current_timestamp())
 
 class DreamImage(Base):

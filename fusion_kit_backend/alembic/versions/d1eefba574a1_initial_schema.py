@@ -24,6 +24,8 @@ def upgrade() -> None:
         sa.Column('seed', sa.Integer, nullable=False),
         sa.Column('num_images', sa.Integer, nullable=False),
         sa.Column('settings_json', sa.String, nullable=False),
+        sa.Column('base_image_path', sa.Integer, nullable=True),
+        sa.Column('base_image_mask_path', sa.Integer, nullable=True),
         sa.Column('created_at', sa.DateTime, nullable=False, server_default=sa.func.current_timestamp()),
     )
 
