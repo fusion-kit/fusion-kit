@@ -19,6 +19,7 @@ interface DreamInputFormProps {
   options: DreamOptions,
   updateOptions: UpdateDreamOptions,
   onStartDream: () => void,
+  onEditImage: () => void,
 }
 
 export const DreamInputForm: React.FC<DreamInputFormProps> = (props) => {
@@ -167,7 +168,11 @@ export const DreamInputForm: React.FC<DreamInputFormProps> = (props) => {
                   }}
                   transition={{ duration: 0.2, ease: "easeInOut" }}
                 >
-                  <OptionsForm options={options} updateOptions={updateOptions} />
+                  <OptionsForm
+                    options={options}
+                    updateOptions={updateOptions}
+                    onEditImage={props.onEditImage}
+                  />
                 </motion.div>
               ) : null}
             </AnimatePresence>
@@ -181,6 +186,7 @@ export const DreamInputForm: React.FC<DreamInputFormProps> = (props) => {
 interface OptionsFormProps {
   options: DreamOptions,
   updateOptions: (_newOptions: Partial<DreamOptions>) => void,
+  onEditImage?: () => void,
 }
 
 const OptionsForm: React.FC<OptionsFormProps> = (props) => {
@@ -213,6 +219,7 @@ const OptionsForm: React.FC<OptionsFormProps> = (props) => {
             label="Base image"
             file={options.baseImage}
             onChange={(newFile) => updateOptions({ baseImage: newFile })}
+            onEdit={props.onEditImage}
           />
         </div>
         <div className="sm:col-span-6">
@@ -523,12 +530,15 @@ const DropdownInput = <V extends string = string>(
 
 interface ImageInputProps {
   label: string,
-  file: File | null,
-  onChange: (_newFile: File | null) => void,
+  file: File | Blob | null,
+  onChange: (_newFile: File | Blob | null) => void,
+  onEdit?: () => void,
 }
 
 const ImageInput: React.FC<ImageInputProps> = (props) => {
-  const { label, file, onChange } = props;
+  const {
+    label, file, onChange, onEdit,
+  } = props;
 
   const objectUrl = useFileObjectUrl(file);
 
@@ -542,7 +552,14 @@ const ImageInput: React.FC<ImageInputProps> = (props) => {
     onChange(acceptedFile);
   }, [onChange]);
 
-  const onRemove: React.MouseEventHandler<HTMLButtonElement> = useCallback((e) => {
+  const onEditClicked: React.MouseEventHandler<HTMLButtonElement> = useCallback((e) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    onEdit?.();
+  }, [onEdit]);
+
+  const onRemoveClicked: React.MouseEventHandler<HTMLButtonElement> = useCallback((e) => {
     e.stopPropagation();
     e.preventDefault();
 
@@ -571,11 +588,19 @@ const ImageInput: React.FC<ImageInputProps> = (props) => {
                 ? (
                   <div className="bg-gray-200 p-2 m-4 rounded-lg shadow-sm relative">
                     <div className="absolute -top-3 -right-6 rounded-full overflow-hidden shadow-xl divide-x divide-slate-400 text-slate-600">
-                      <button type="button" className="h-12 w-12 p-3 bg-slate-200 hover:bg-slate-100">
+                      <button
+                        type="button"
+                        onClick={onEditClicked}
+                        className="h-12 w-12 p-3 bg-slate-200 hover:bg-slate-100"
+                      >
                         <span className="sr-only">Edit image</span>
                         <PencilSquareIcon className="h-full w-full" />
                       </button>
-                      <button type="button" className="h-12 w-12 p-3 bg-slate-200 hover:bg-slate-100" onClick={onRemove}>
+                      <button
+                        type="button"
+                        onClick={onRemoveClicked}
+                        className="h-12 w-12 p-3 bg-slate-200 hover:bg-slate-100"
+                      >
                         <span className="sr-only">Remove image</span>
                         <XMarkIcon className="h-full w-full" />
                       </button>

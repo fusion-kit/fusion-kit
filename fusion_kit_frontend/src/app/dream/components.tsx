@@ -86,7 +86,7 @@ type BigImageContainerProps = React.PropsWithChildren<{
   heightRatio: number,
 }>;
 
-const BigImageContainer: React.FC<BigImageContainerProps> = (props) => {
+export const BigImageContainer: React.FC<BigImageContainerProps> = (props) => {
   const { widthRatio, heightRatio } = props;
   return (
     <div className="h-full max-h-[70vmin] lg:w-full lg:max-h-full">

@@ -14,8 +14,8 @@ export interface DreamOptions {
   prompt: string,
   numImages: number,
   seed: number | null,
-  baseImage: File | null,
-  baseImageMask: File | null,
+  baseImage: File | Blob | null,
+  baseImageMask: File | Blob | null,
   baseImageDecimation: number,
   sampler: DreamSampler,
   samplerSteps: number,
@@ -287,7 +287,7 @@ export function getDreamImageProgress(dreamImage: DreamImage | null): number | n
   }
 }
 
-export function useFileObjectUrl(file: File | null): string | null {
+export function useFileObjectUrl(file: File | Blob | null): string | null {
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
 
   useEffect(() => {
