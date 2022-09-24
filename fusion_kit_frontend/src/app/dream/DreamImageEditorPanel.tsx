@@ -1,6 +1,6 @@
 import { Dialog, Transition } from "@headlessui/react";
 import React, {
-  Fragment, useCallback, useEffect, useState,
+  Fragment, useCallback, useEffect, useMemo, useState,
 } from "react";
 import { BigImageContainer } from "./components";
 
@@ -77,38 +77,34 @@ const DreamImageEditor: React.FC<DreamImageEditorProps> = (props) => {
     image, imageMask, onSaveImage: _, onSaveMask, onClose,
   } = props;
 
-  const [dimensions, setDimensions] = useState({ width: 1, height: 1 });
-  const [imageEl, setImageEl] = useState<HTMLImageElement | null>(null);
-  const [imageMaskEl, setImageMaskEl] = useState<HTMLImageElement | null>(null);
-  const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
-  const [maskCanvas] = useState<HTMLCanvasElement>(() => document.createElement("canvas"));
+  const imageEl = useLoadImage(image);
+  const imageMaskEl = useLoadImage(imageMask);
+  const [editorCanvas, setEditorCanvas] = useState<HTMLCanvasElement | null>(null);
+  const [maskCanvas, setMaskCanvas] = useState<HTMLCanvasElement | null>(null);
+  const dimensions = useMemo(() => (
+    getDimensions(imageEl) ?? { width: 1, height: 1 }
+  ), [imageEl]);
 
   const [penSize] = useState(10);
   const [cursorPos, setCursorPos] = useState<Position | null>(null);
   const [mousePos, setMousePos] = useState<Position | null>(null);
   const [isPainting, setIsPainting] = useState(false);
+  const [watermark, setWatermark] = useState(0);
 
+  // Initialize mask canvas by drawing mask image
   useEffect(() => {
-    maskCanvas.width = dimensions.width;
-    maskCanvas.height = dimensions.height;
-
-    if (imageMaskEl == null) {
+    if (imageMaskEl == null || maskCanvas == null) {
       return;
     }
 
-    setTimeout(() => {
-      const maskCtx = maskCanvas.getContext("2d");
-      maskCtx?.drawImage(imageMaskEl, 0, 0, maskCanvas.width, maskCanvas.height);
-    }, 0);
-  }, [imageMaskEl, maskCanvas, dimensions]);
-
-  useEffect(() => {
     const maskCtx = maskCanvas.getContext("2d");
-    if (maskCtx == null) {
-      return;
-    }
+    maskCtx?.drawImage(imageMaskEl, 0, 0);
+  }, [imageMaskEl, maskCanvas]);
 
-    if (mousePos == null) {
+  // Paint on the mask canvas while the user is holding down the mouse button
+  useEffect(() => {
+    const maskCtx = maskCanvas?.getContext("2d");
+    if (maskCtx == null || mousePos == null) {
       return;
     }
 
@@ -122,57 +118,30 @@ const DreamImageEditor: React.FC<DreamImageEditorProps> = (props) => {
       maskCtx.fill();
 
       maskCtx.restore();
+
+      setWatermark((watermark) => watermark + 1);
     }
   }, [maskCanvas, mousePos, isPainting, penSize]);
 
   useEffect(() => {
-    if (image == null) {
-      return undefined;
-    }
+    const ctx = editorCanvas?.getContext("2d");
 
-    const objectUrl = URL.createObjectURL(image);
-    const newImageEl = new Image();
-    newImageEl.src = objectUrl;
-    newImageEl.onload = () => {
-      setImageEl(newImageEl);
-      setDimensions({ width: newImageEl.width, height: newImageEl.height });
-    };
-
-    return () => { URL.revokeObjectURL(objectUrl); };
-  }, [image, maskCanvas]);
-
-  useEffect(() => {
-    if (imageMask == null) {
-      return undefined;
-    }
-
-    const objectUrl = URL.createObjectURL(imageMask);
-    const newImageMaskEl = new Image();
-    newImageMaskEl.src = objectUrl;
-    newImageMaskEl.onload = () => {
-      setImageMaskEl(newImageMaskEl);
-    };
-
-    return () => { URL.revokeObjectURL(objectUrl); };
-  }, [imageMask, maskCanvas]);
-
-  useEffect(() => {
-    maskCanvas.width = dimensions.width;
-    maskCanvas.height = dimensions.height;
-  }, [maskCanvas, dimensions]);
-
-  useEffect(() => {
-    if (canvas == null || imageEl == null) {
-      return;
-    }
-
-    const ctx = canvas.getContext("2d");
-    if (ctx == null) {
+    if (ctx == null || imageEl == null) {
       return;
     }
 
     ctx.clearRect(0, 0, dimensions.width, dimensions.height);
+
     ctx.drawImage(imageEl, 0, 0, dimensions.width, dimensions.height);
+
+    if (maskCanvas != null) {
+      ctx.save();
+
+      ctx.globalAlpha = 0.7;
+      ctx.drawImage(maskCanvas, 0, 0);
+
+      ctx.restore();
+    }
 
     if (cursorPos != null) {
       ctx.save();
@@ -188,27 +157,20 @@ const DreamImageEditor: React.FC<DreamImageEditorProps> = (props) => {
 
       ctx.restore();
     }
+  }, [editorCanvas, imageEl, dimensions, cursorPos, mousePos, penSize, maskCanvas, watermark]);
 
-    ctx.save();
-
-    ctx.globalAlpha = 0.7;
-    ctx.drawImage(maskCanvas, 0, 0);
-
-    ctx.restore();
-  }, [canvas, imageEl, dimensions, cursorPos, mousePos, penSize, maskCanvas]);
-
-  const documentOnMouseEnter = useCallback((e: MouseEvent) => {
-    if (canvas == null) {
+  const onDocumentMouseEnter = useCallback((e: MouseEvent) => {
+    if (editorCanvas == null) {
       return;
     }
 
-    const pos = getEventCanvasPosition(canvas, e);
+    const pos = getEventCanvasPosition(editorCanvas, e);
     setCursorPos(pos);
     setMousePos(pos);
-  }, [canvas]);
+  }, [editorCanvas]);
 
-  const documentOnMouseMove = useCallback((e: MouseEvent) => {
-    if (canvas == null) {
+  const onDocumentMouseMove = useCallback((e: MouseEvent) => {
+    if (editorCanvas == null) {
       return;
     }
 
@@ -217,35 +179,41 @@ const DreamImageEditor: React.FC<DreamImageEditorProps> = (props) => {
       setIsPainting(false);
     }
 
-    const pos = getEventCanvasPosition(canvas, e);
+    const pos = getEventCanvasPosition(editorCanvas, e);
     setCursorPos(pos);
     setMousePos(pos);
-  }, [canvas]);
+  }, [editorCanvas]);
 
-  const documentOnMouseOut = useCallback(() => {
-    if (canvas == null) {
+  const onDocumentMouseOut = useCallback(() => {
+    if (editorCanvas == null) {
       return;
     }
 
-    // setIsPainting(false);
     setCursorPos(null);
     setMousePos(null);
-  }, [canvas]);
+  }, [editorCanvas]);
+
+  const onEditorMouseDown: React.MouseEventHandler = useCallback((e) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    setIsPainting(true);
+  }, []);
 
   useEffect(() => {
-    document.body.addEventListener("mouseover", documentOnMouseEnter);
-    document.body.addEventListener("mousemove", documentOnMouseMove);
-    document.body.addEventListener("mouseout", documentOnMouseOut);
+    document.body.addEventListener("mouseover", onDocumentMouseEnter);
+    document.body.addEventListener("mousemove", onDocumentMouseMove);
+    document.body.addEventListener("mouseout", onDocumentMouseOut);
 
     return () => {
-      document.body.removeEventListener("mouseover", documentOnMouseEnter);
-      document.body.removeEventListener("mousemove", documentOnMouseMove);
-      document.body.removeEventListener("mouseout", documentOnMouseMove);
+      document.body.removeEventListener("mouseover", onDocumentMouseEnter);
+      document.body.removeEventListener("mousemove", onDocumentMouseMove);
+      document.body.removeEventListener("mouseout", onDocumentMouseMove);
     };
   });
 
   const onSaveClick = useCallback(() => {
-    maskCanvas.toBlob((blob) => {
+    maskCanvas?.toBlob((blob) => {
       if (blob == null) {
         console.warn("Failed to create blob");
         return;
@@ -261,10 +229,17 @@ const DreamImageEditor: React.FC<DreamImageEditorProps> = (props) => {
       <BigImageContainer widthRatio={dimensions.width} heightRatio={dimensions.height}>
         <canvas
           className="w-full"
-          ref={setCanvas}
+          ref={setEditorCanvas}
           width={dimensions.width}
           height={dimensions.height}
-          onMouseDown={() => setIsPainting(true)}
+          onMouseDown={onEditorMouseDown}
+        >
+        </canvas>
+        <canvas
+          className="hidden"
+          ref={setMaskCanvas}
+          width={dimensions.width}
+          height={dimensions.height}
         >
         </canvas>
       </BigImageContainer>
@@ -293,6 +268,11 @@ interface Position {
   y: number,
 }
 
+interface Dimensions {
+  width: number,
+  height: number,
+}
+
 function getEventCanvasPosition(
   canvas: HTMLCanvasElement,
   event: React.MouseEvent | MouseEvent,
@@ -304,4 +284,36 @@ function getEventCanvasPosition(
     x: (event.clientX - rect.left) * scaleX,
     y: (event.clientY - rect.top) * scaleY,
   };
+}
+
+function getDimensions(image: HTMLImageElement | null): Dimensions | null {
+  if (image == null) {
+    return null;
+  }
+
+  return {
+    width: image.width,
+    height: image.height,
+  };
+}
+
+function useLoadImage(image: File | Blob | null): HTMLImageElement | null {
+  const [imageEl, setImageEl] = useState<HTMLImageElement | null>(null);
+
+  useEffect(() => {
+    if (image == null) {
+      return undefined;
+    }
+
+    const objectUrl = URL.createObjectURL(image);
+    const newImageEl = new Image();
+    newImageEl.src = objectUrl;
+    newImageEl.onload = () => {
+      setImageEl(newImageEl);
+    };
+
+    return () => { URL.revokeObjectURL(objectUrl); };
+  }, [image]);
+
+  return imageEl;
 }
