@@ -1,6 +1,6 @@
 import { Dialog, Transition } from "@headlessui/react";
 import React, {
-  Fragment, useCallback, useEffect, useMemo, useState,
+  Fragment, useCallback, useEffect, useMemo, useRef, useState,
 } from "react";
 import { BigImageContainer } from "./components";
 
@@ -85,11 +85,13 @@ const DreamImageEditor: React.FC<DreamImageEditorProps> = (props) => {
     getDimensions(imageEl) ?? { width: 1, height: 1 }
   ), [imageEl]);
 
-  const [penSize] = useState(10);
+  const [penSize] = useState(20);
   const [cursorPos, setCursorPos] = useState<Position | null>(null);
   const [mousePos, setMousePos] = useState<Position | null>(null);
   const [isPainting, setIsPainting] = useState(false);
   const [watermark, setWatermark] = useState(0);
+
+  const lastPaintPoint = useRef<Position | null>();
 
   // Initialize mask canvas by drawing mask image
   useEffect(() => {
@@ -112,14 +114,27 @@ const DreamImageEditor: React.FC<DreamImageEditorProps> = (props) => {
       maskCtx.save();
 
       maskCtx.fillStyle = "black";
+      maskCtx.strokeStyle = "black";
+      maskCtx.lineWidth = penSize;
+      maskCtx.lineCap = "round";
 
-      maskCtx.beginPath();
-      maskCtx.arc(mousePos.x, mousePos.y, penSize, 0, 2 * Math.PI);
-      maskCtx.fill();
+      if (lastPaintPoint.current != null) {
+        maskCtx.beginPath();
+        maskCtx.moveTo(lastPaintPoint.current.x, lastPaintPoint.current.y);
+        maskCtx.lineTo(mousePos.x, mousePos.y);
+        maskCtx.stroke();
+      } else {
+        maskCtx.beginPath();
+        maskCtx.arc(mousePos.x, mousePos.y, penSize / 2, 0, 2 * Math.PI);
+        maskCtx.fill();
+      }
 
       maskCtx.restore();
 
       setWatermark((watermark) => watermark + 1);
+      lastPaintPoint.current = mousePos;
+    } else {
+      lastPaintPoint.current = null;
     }
   }, [maskCanvas, mousePos, isPainting, penSize]);
 
@@ -151,7 +166,7 @@ const DreamImageEditor: React.FC<DreamImageEditorProps> = (props) => {
       ctx.lineWidth = 2;
 
       ctx.beginPath();
-      ctx.arc(cursorPos.x, cursorPos.y, penSize, 0, 2 * Math.PI);
+      ctx.arc(cursorPos.x, cursorPos.y, penSize / 2, 0, 2 * Math.PI);
       ctx.stroke();
       ctx.fill();
 
