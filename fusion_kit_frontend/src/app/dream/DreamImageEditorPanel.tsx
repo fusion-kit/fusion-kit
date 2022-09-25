@@ -1,11 +1,24 @@
 import { Dialog, Transition } from "@headlessui/react";
-import clsx from "clsx";
+import { clsx } from "clsx";
 import React, {
   Fragment, useCallback, useEffect, useMemo, useRef, useState,
 } from "react";
 import { BrushFill, EraserFill } from "react-bootstrap-icons";
 import { unreachable } from "../../utils";
 import { BigImageContainer } from "./components";
+
+const IMAGE_EDITOR_TABS = [
+  {
+    name: "Image mask",
+    key: "image-mask",
+    component: (props: ImageEditorProps) => (<ImageMaskEditor {...props} />),
+  },
+  {
+    name: "Resize",
+    key: "resize",
+    component: (_props: ImageEditorProps) => null,
+  },
+] as const;
 
 interface DreamImageEditorPanelProps {
   open: boolean,
@@ -20,6 +33,10 @@ export const DreamImageEditorPanel: React.FC<DreamImageEditorPanelProps> = (prop
   const {
     open, onClose, image, imageMask, onSaveImage, onSaveMask,
   } = props;
+
+  const [currentTab, setCurrentTab] = useState(0);
+
+  const TabComponent = IMAGE_EDITOR_TABS[currentTab].component;
 
   return (
     <Transition.Root show={open} as={Fragment}>
@@ -37,7 +54,7 @@ export const DreamImageEditorPanel: React.FC<DreamImageEditorPanelProps> = (prop
         </Transition.Child>
 
         <div className="fixed inset-0 z-10 overflow-y-auto">
-          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+          <div className="flex min-h-full items-start justify-center p-4 text-center sm:p-0">
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -51,7 +68,31 @@ export const DreamImageEditorPanel: React.FC<DreamImageEditorPanelProps> = (prop
                 <Dialog.Title className="text-lg font-medium leading-6 text-gray-900">
                   Edit base image
                 </Dialog.Title>
-                <DreamImageEditor
+                <div className="border-b border-gray-200">
+                  <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                    {IMAGE_EDITOR_TABS.map((tab, index) => {
+                      const isCurrent = index === currentTab;
+                      return (
+                        <button
+                          // eslint-disable-next-line react/no-array-index-key
+                          key={index}
+                          type="button"
+                          className={clsx(
+                            isCurrent
+                              ? "border-indigo-500 text-indigo-600"
+                              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
+                            "whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm",
+                          )}
+                          onClick={() => setCurrentTab(index)}
+                          aria-current={isCurrent}
+                        >
+                          {tab.name}
+                        </button>
+                      );
+                    })}
+                  </nav>
+                </div>
+                <TabComponent
                   image={image}
                   imageMask={imageMask}
                   onSaveImage={onSaveImage}
@@ -69,7 +110,7 @@ export const DreamImageEditorPanel: React.FC<DreamImageEditorPanelProps> = (prop
 
 type PenType = "brush" | "eraser";
 
-interface DreamImageEditorProps {
+interface ImageEditorProps {
   image: File | Blob | null,
   imageMask: File | Blob | null,
   onSaveImage: () => void,
@@ -77,7 +118,7 @@ interface DreamImageEditorProps {
   onClose: () => void,
 }
 
-const DreamImageEditor: React.FC<DreamImageEditorProps> = (props) => {
+const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
   const {
     image, imageMask, onSaveImage: _, onSaveMask, onClose,
   } = props;
@@ -262,6 +303,9 @@ const DreamImageEditor: React.FC<DreamImageEditorProps> = (props) => {
 
   return (
     <div>
+      <div className="my-3">
+        <p className="text-gray-500 text-sm">Draw an image mask to only replace specific parts of the base image (also called &quot;inpainting&quot;).</p>
+      </div>
       <BigImageContainer widthRatio={dimensions.width} heightRatio={dimensions.height}>
         <canvas
           className="w-full"
