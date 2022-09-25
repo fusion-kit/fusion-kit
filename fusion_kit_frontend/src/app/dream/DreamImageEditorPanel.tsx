@@ -95,9 +95,44 @@ const DreamImageEditor: React.FC<DreamImageEditorProps> = (props) => {
   const [cursorPos, setCursorPos] = useState<Position | null>(null);
   const [mousePos, setMousePos] = useState<Position | null>(null);
   const [isPainting, setIsPainting] = useState(false);
-  const [watermark, setWatermark] = useState(0);
 
   const lastPaintPoint = useRef<Position | null>();
+
+  const drawEditorCanvas = useCallback(() => {
+    const ctx = editorCanvas?.getContext("2d");
+
+    if (ctx == null || imageEl == null) {
+      return;
+    }
+
+    ctx.clearRect(0, 0, dimensions.width, dimensions.height);
+
+    ctx.drawImage(imageEl, 0, 0, dimensions.width, dimensions.height);
+
+    if (maskCanvas != null) {
+      ctx.save();
+
+      ctx.globalAlpha = 0.7;
+      ctx.drawImage(maskCanvas, 0, 0);
+
+      ctx.restore();
+    }
+
+    if (cursorPos != null) {
+      ctx.save();
+
+      ctx.strokeStyle = "black";
+      ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+      ctx.lineWidth = 2;
+
+      ctx.beginPath();
+      ctx.arc(cursorPos.x, cursorPos.y, penSize / 2, 0, 2 * Math.PI);
+      ctx.stroke();
+      ctx.fill();
+
+      ctx.restore();
+    }
+  }, [editorCanvas, imageEl, dimensions, cursorPos, penSize, maskCanvas]);
 
   // Initialize mask canvas by drawing mask image
   useEffect(() => {
@@ -147,48 +182,18 @@ const DreamImageEditor: React.FC<DreamImageEditorProps> = (props) => {
 
       maskCtx.restore();
 
-      setWatermark((watermark) => watermark + 1);
+      drawEditorCanvas();
       lastPaintPoint.current = mousePos;
     } else {
       lastPaintPoint.current = null;
     }
-  }, [maskCanvas, mousePos, isPainting, penSize, penType]);
+  }, [maskCanvas, mousePos, isPainting, penSize, penType, drawEditorCanvas]);
 
+  // Redraw the editor canvas whenever the `drawEditorCanvas` function
+  // changes (meaning that some dependency of the function has changed).
   useEffect(() => {
-    const ctx = editorCanvas?.getContext("2d");
-
-    if (ctx == null || imageEl == null) {
-      return;
-    }
-
-    ctx.clearRect(0, 0, dimensions.width, dimensions.height);
-
-    ctx.drawImage(imageEl, 0, 0, dimensions.width, dimensions.height);
-
-    if (maskCanvas != null) {
-      ctx.save();
-
-      ctx.globalAlpha = 0.7;
-      ctx.drawImage(maskCanvas, 0, 0);
-
-      ctx.restore();
-    }
-
-    if (cursorPos != null) {
-      ctx.save();
-
-      ctx.strokeStyle = "black";
-      ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
-      ctx.lineWidth = 2;
-
-      ctx.beginPath();
-      ctx.arc(cursorPos.x, cursorPos.y, penSize / 2, 0, 2 * Math.PI);
-      ctx.stroke();
-      ctx.fill();
-
-      ctx.restore();
-    }
-  }, [editorCanvas, imageEl, dimensions, cursorPos, mousePos, penSize, maskCanvas, watermark]);
+    drawEditorCanvas();
+  }, [drawEditorCanvas]);
 
   const onDocumentMouseEnter = useCallback((e: MouseEvent) => {
     if (editorCanvas == null) {
