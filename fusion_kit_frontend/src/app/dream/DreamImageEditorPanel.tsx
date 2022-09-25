@@ -1,7 +1,10 @@
 import { Dialog, Transition } from "@headlessui/react";
+import clsx from "clsx";
 import React, {
   Fragment, useCallback, useEffect, useMemo, useRef, useState,
 } from "react";
+import { BrushFill, EraserFill } from "react-bootstrap-icons";
+import { unreachable } from "../../utils";
 import { BigImageContainer } from "./components";
 
 interface DreamImageEditorPanelProps {
@@ -64,6 +67,8 @@ export const DreamImageEditorPanel: React.FC<DreamImageEditorPanelProps> = (prop
   );
 };
 
+type PenType = "brush" | "eraser";
+
 interface DreamImageEditorProps {
   image: File | Blob | null,
   imageMask: File | Blob | null,
@@ -86,6 +91,7 @@ const DreamImageEditor: React.FC<DreamImageEditorProps> = (props) => {
   ), [imageEl]);
 
   const [penSize] = useState(20);
+  const [penType, setPenType] = useState<PenType>("brush");
   const [cursorPos, setCursorPos] = useState<Position | null>(null);
   const [mousePos, setMousePos] = useState<Position | null>(null);
   const [isPainting, setIsPainting] = useState(false);
@@ -118,6 +124,16 @@ const DreamImageEditor: React.FC<DreamImageEditorProps> = (props) => {
       maskCtx.lineWidth = penSize;
       maskCtx.lineCap = "round";
 
+      switch (penType) {
+        case "brush":
+          break;
+        case "eraser":
+          maskCtx.globalCompositeOperation = "destination-out";
+          break;
+        default:
+          unreachable(penType);
+      }
+
       if (lastPaintPoint.current != null) {
         maskCtx.beginPath();
         maskCtx.moveTo(lastPaintPoint.current.x, lastPaintPoint.current.y);
@@ -136,7 +152,7 @@ const DreamImageEditor: React.FC<DreamImageEditorProps> = (props) => {
     } else {
       lastPaintPoint.current = null;
     }
-  }, [maskCanvas, mousePos, isPainting, penSize]);
+  }, [maskCanvas, mousePos, isPainting, penSize, penType]);
 
   useEffect(() => {
     const ctx = editorCanvas?.getContext("2d");
@@ -258,6 +274,24 @@ const DreamImageEditor: React.FC<DreamImageEditorProps> = (props) => {
         >
         </canvas>
       </BigImageContainer>
+      <div className="py-2 lg:pb-0 flex space-x-2 justify-between">
+        <div className="flex space-x-2">
+          <ImageEditorActionButton
+            label="Brush"
+            selected={penType === "brush"}
+            onClick={() => setPenType("brush")}
+          >
+            <BrushFill className="h-full w-full" aria-hidden="true" />
+          </ImageEditorActionButton>
+          <ImageEditorActionButton
+            label="Eraser"
+            selected={penType === "eraser"}
+            onClick={() => setPenType("eraser")}
+          >
+            <EraserFill className="h-full w-full" aria-hidden="true" />
+          </ImageEditorActionButton>
+        </div>
+      </div>
       <div className="mt-4 flex justify-end space-x-2">
         <button
           type="button"
@@ -275,6 +309,32 @@ const DreamImageEditor: React.FC<DreamImageEditorProps> = (props) => {
         </button>
       </div>
     </div>
+  );
+};
+
+type ImageEditorActionButtonProps = React.PropsWithChildren<{
+  label: string,
+  selected?: boolean,
+  onClick?: () => void,
+}>;
+
+const ImageEditorActionButton: React.FC<ImageEditorActionButtonProps> = (props) => {
+  const { selected = false, onClick } = props;
+  return (
+    <button
+      type="button"
+      title={props.label}
+      onClick={onClick}
+      className={clsx(
+        "flex h-8 w-8 p-1.5 items-center justify-center rounded-full",
+        selected
+          ? "bg-gray-400 text-white border-2 border-gray-400 hover:border-gray-600 hover:bg-gray-600 focus:outline-none focus:border-blue-600"
+          : "text-gray-400 border-2 border-gray-400 hover:text-gray-600 hover:border-gray-600 focus:outline-none focus:border-blue-600 focus:text-blue-600",
+      )}
+    >
+      {props.children}
+      <span className="sr-only">{props.label}</span>
+    </button>
   );
 };
 
