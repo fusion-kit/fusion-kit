@@ -30,6 +30,7 @@ def processor_runner(req_queue, res_queue):
                 seed=options['seed'],
                 base_image=options.get('base_image'),
                 base_image_mask=options.get('base_image_mask'),
+                base_image_mask_type=options.get('base_image_mask_type'),
                 base_image_decimation=options.get('base_image_decimation'),
                 sampler=options['sampler'],
                 sampler_steps=options['sampler_steps'],

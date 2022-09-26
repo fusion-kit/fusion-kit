@@ -1,8 +1,7 @@
 from itertools import islice
 from ldm.generate import Generate
 import numpy
-import os
-import tempfile
+from PIL import Image
 from ulid import ULID
 
 def chunk(iterator, size):
@@ -39,6 +38,7 @@ class Dreamer():
         steps_per_image_preview,
         base_image=None,
         base_image_mask=None,
+        base_image_mask_type=None,
         base_image_decimation=None,
         image_progress_callback=None,
     ):
@@ -77,6 +77,16 @@ class Dreamer():
             will be "inspired by" the base image guided by the prompt
             (img2img mode). When not set, only the prompt will be used to
             generate images (txt2img mode).
+        base_image_mask
+            A mask to apply when generating images in img2img mode. When set,
+            the mask should be a image with black and alpha sections, where
+            black sections are used to mask the base image. How the mask
+            affects the base image is determined by `base_image_mask_type`.
+        base_image_mask_type
+            `'KEEP_MASKED'` means that sections of the base image covered by
+            the mask will be kept and the rest of the image will be replaced;
+            `'REPLACE_MASKED'` means that only masked sections of the base
+            image will be replaced and the rest of the image will be kept.
         base_image_decimation
             Value between 0.0 and 1.0 indicating the strength used for
             noising/denoising the base image. Must be set when `base_image`
@@ -101,6 +111,15 @@ class Dreamer():
         else:
             assert base_image_mask is None, 'base_image_mask can only be used if base_image is set'
 
+        image_mask = None
+        if base_image_mask is not None:
+            assert base_image_mask_type is not None, 'base_image_mask_type must be set if base_image_mask is set'
+            image_mask = prepare_image_mask(
+                base_image_mask,
+                base_image_mask_type
+            )
+        else:
+            assert base_image_mask_type is None, 'base_image_mask_type can only be set if base_image_mask is set'
         images = [
             {
                 'index': i,
@@ -142,7 +161,7 @@ class Dreamer():
                 with_variations=None,
                 variation_amount=0.0,
                 init_img=base_image,
-                init_mask=base_image_mask,
+                init_mask=image_mask,
                 fit=False,
                 strength=base_image_decimation,
                 gfpgan_strength=0,
@@ -193,3 +212,21 @@ def make_img_callback(
         image_progress_callback(image_progress=images)
 
     return img_callback
+
+def prepare_image_mask(
+    mask,
+    mask_type,
+):
+    if mask_type == 'KEEP_MASKED':
+        return mask
+    elif mask_type == 'REPLACE_MASKED':
+        # Invert the alpha channel of each pixel in the mask
+        mask_data = mask.convert("RGBA").getdata()
+        new_mask_data = [(pixel[0], pixel[1], pixel[2], 255 - pixel[3]) for pixel in mask_data]
+
+        new_mask = Image.new(mode="RGBA", size=mask.size)
+        new_mask.putdata(new_mask_data)
+
+        return new_mask
+    else:
+        raise Exception(f'Unknown mask type: {mask_type}')
