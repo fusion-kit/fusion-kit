@@ -4,7 +4,9 @@ import { clsx } from "clsx";
 import React, {
   Fragment, useCallback, useEffect, useMemo, useRef, useState,
 } from "react";
-import { BrushFill, EraserFill } from "react-bootstrap-icons";
+import {
+  ArrowClockwise, ArrowCounterclockwise, BrushFill, EraserFill, TrashFill,
+} from "react-bootstrap-icons";
 import { DreamBaseImageMaskType } from "../../generated/graphql";
 import { unreachable } from "../../utils";
 import { BigImageContainer } from "./components";
@@ -157,6 +159,12 @@ const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
   const [isPainting, setIsPainting] = useState(false);
 
   const lastPaintPoint = useRef<Position | null>();
+  const {
+    reinitializeHistory, pushHistory, undoHistory, redoHistory, canUndo, canRedo,
+  } = useMaskImageHistory({
+    initialImage: null,
+    maxImages: 12,
+  });
 
   const drawEditorCanvas = useCallback(() => {
     const ctx = editorCanvas?.getContext("2d");
@@ -202,12 +210,16 @@ const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
 
     const maskCtx = maskCanvas.getContext("2d");
     maskCtx?.drawImage(imageMaskEl, 0, 0);
-  }, [imageMaskEl, maskCanvas]);
+    reinitializeHistory(maskCanvas.toDataURL());
+    drawEditorCanvas();
+    // NOTE: We exclude drawEditorCanvas so we only reinitialize once
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [imageMaskEl, maskCanvas, reinitializeHistory]);
 
   // Paint on the mask canvas while the user is holding down the mouse button
   useEffect(() => {
     const maskCtx = maskCanvas?.getContext("2d");
-    if (maskCtx == null || mousePos == null) {
+    if (maskCtx == null || maskCanvas == null || mousePos == null) {
       return;
     }
 
@@ -245,15 +257,84 @@ const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
       drawEditorCanvas();
       lastPaintPoint.current = mousePos;
     } else {
+      // If we just stopped drawing, then save the mask in the history
+      // for undo/redo
+      if (lastPaintPoint.current != null) {
+        pushHistory(maskCanvas.toDataURL());
+      }
+
       lastPaintPoint.current = null;
     }
-  }, [maskCanvas, mousePos, isPainting, penSize, penType, drawEditorCanvas]);
+  }, [maskCanvas, mousePos, isPainting, penSize, penType, drawEditorCanvas, pushHistory]);
 
   // Redraw the editor canvas whenever the `drawEditorCanvas` function
   // changes (meaning that some dependency of the function has changed).
   useEffect(() => {
     drawEditorCanvas();
   }, [drawEditorCanvas]);
+
+  const redrawMaskCanvasWithSource = useCallback(
+    (source: string | null) => {
+      const maskCtx = maskCanvas?.getContext("2d");
+      if (maskCanvas == null || maskCtx == null) {
+        return;
+      }
+
+      if (source == null) {
+        maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+        drawEditorCanvas();
+      } else {
+        const image = new Image();
+        image.onload = () => {
+          maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+          maskCtx.drawImage(image, 0, 0);
+          drawEditorCanvas();
+        };
+        image.src = source;
+      }
+    },
+    [maskCanvas, drawEditorCanvas],
+  );
+
+  const clearMaskCanvas = useCallback(() => {
+    const maskCtx = maskCanvas?.getContext("2d");
+    if (maskCanvas == null || maskCtx == null) {
+      return;
+    }
+
+    pushHistory(null);
+    redrawMaskCanvasWithSource(null);
+  }, [maskCanvas, pushHistory, redrawMaskCanvasWithSource]);
+
+  const undoMaskCanvas = useCallback(() => {
+    const maskCtx = maskCanvas?.getContext("2d");
+    if (maskCanvas == null || maskCtx == null) {
+      return;
+    }
+
+    if (!canUndo) {
+      console.warn("Undo callback called unexpectedly");
+      return;
+    }
+
+    const imageData = undoHistory();
+    redrawMaskCanvasWithSource(imageData);
+  }, [maskCanvas, canUndo, undoHistory, redrawMaskCanvasWithSource]);
+
+  const redoMaskCanvas = useCallback(() => {
+    const maskCtx = maskCanvas?.getContext("2d");
+    if (maskCanvas == null || maskCtx == null) {
+      return;
+    }
+
+    if (!canRedo) {
+      console.warn("Redo callback called unexpectedly");
+      return;
+    }
+
+    const imageData = redoHistory();
+    redrawMaskCanvasWithSource(imageData);
+  }, [maskCanvas, canRedo, redoHistory, redrawMaskCanvasWithSource]);
 
   const onDocumentMouseEnter = useCallback((e: MouseEvent) => {
     if (editorCanvas == null) {
@@ -324,6 +405,33 @@ const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
     <div>
       <div className="my-3">
         <p className="text-gray-500 text-sm">Draw an image mask to only replace specific parts of the base image (also called &quot;inpainting&quot;).</p>
+      </div>
+      <div className="py-2 lg:pt-0 flex space-x-2 justify-between">
+        <div className="flex space-x-2">
+          <ImageEditorActionButton
+            label="Undo"
+            disabled={!canUndo}
+            onClick={undoMaskCanvas}
+          >
+            <ArrowCounterclockwise className="h-full w-full" aria-hidden="true" />
+          </ImageEditorActionButton>
+          <ImageEditorActionButton
+            label="Redo"
+            disabled={!canRedo}
+            onClick={redoMaskCanvas}
+          >
+            <ArrowClockwise className="h-full w-full" aria-hidden="true" />
+          </ImageEditorActionButton>
+        </div>
+        <div className="flex items-center space-x-2">
+          <ImageEditorActionButton
+            label="Clear"
+            showLabel
+            onClick={() => { clearMaskCanvas(); }}
+          >
+            <TrashFill className="h-full w-full" aria-hidden="true" />
+          </ImageEditorActionButton>
+        </div>
       </div>
       <BigImageContainer widthRatio={dimensions.width} heightRatio={dimensions.height}>
         <canvas
@@ -439,27 +547,30 @@ const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
 };
 
 type ImageEditorActionButtonProps = React.PropsWithChildren<{
-  label: string,
+  label?: string,
+  disabled?: boolean,
+  showLabel?: boolean,
   selected?: boolean,
   onClick?: () => void,
 }>;
 
 const ImageEditorActionButton: React.FC<ImageEditorActionButtonProps> = (props) => {
-  const { selected = false, onClick } = props;
+  const { selected = false, showLabel = false, onClick } = props;
   return (
     <button
       type="button"
       title={props.label}
+      disabled={props.disabled}
       onClick={onClick}
       className={clsx(
-        "flex h-8 w-8 p-1.5 items-center justify-center rounded-full",
+        "flex h-8 p-1.5 items-center justify-center rounded-full",
         selected
-          ? "bg-gray-400 text-white border-2 border-gray-400 hover:border-gray-600 hover:bg-gray-600 focus:outline-none focus:border-blue-600"
-          : "text-gray-400 border-2 border-gray-400 hover:text-gray-600 hover:border-gray-600 focus:outline-none focus:border-blue-600 focus:text-blue-600",
+          ? "bg-gray-400 text-white border-2 border-gray-400 hover:border-gray-600 hover:bg-gray-600 focus:outline-none focus:border-blue-600 disabled:bg-gray-200 disabled:border-gray-200"
+          : "text-gray-400 border-2 border-gray-400 hover:text-gray-600 hover:border-gray-600 focus:outline-none focus:border-blue-600 focus:text-blue-600 disabled:text-gray-200 disabled:border-gray-200",
       )}
     >
       {props.children}
-      <span className="sr-only">{props.label}</span>
+      <span className={clsx(showLabel ? "px-2" : "sr-only")}>{props.label}</span>
     </button>
   );
 };
@@ -517,4 +628,91 @@ function useLoadImage(image: File | Blob | null): HTMLImageElement | null {
   }, [image]);
 
   return imageEl;
+}
+
+interface MaskHistory {
+  images: (string | null)[],
+  index: number,
+}
+
+interface UseMaskImageHistory {
+  reinitializeHistory: (_newImage: string | null) => void,
+  pushHistory: (_newImage: string | null) => void,
+  undoHistory: () => string | null,
+  redoHistory: () => string | null,
+  canUndo: boolean,
+  canRedo: boolean,
+}
+
+interface UseMaskImageHistoryOptions {
+  initialImage: string | null,
+  maxImages: number,
+}
+
+function useMaskImageHistory(opts: UseMaskImageHistoryOptions): UseMaskImageHistory {
+  const [maskHistory, setMaskHistory] = useState<MaskHistory>({
+    images: [opts.initialImage],
+    index: 0,
+  });
+
+  const pushHistory = useCallback((newImage: string | null) => {
+    setMaskHistory((currentHistory) => {
+      const currentImages = currentHistory.images.slice(0, currentHistory.index + 1);
+      const updatedImages = [...currentImages, newImage];
+      const images = updatedImages.slice(-opts.maxImages);
+      return {
+        images,
+        index: updatedImages.length - 1,
+      };
+    });
+  }, [opts.maxImages]);
+
+  const reinitializeHistory = useCallback((newImage: string | null) => {
+    setMaskHistory({
+      images: [newImage],
+      index: 0,
+    });
+  }, []);
+
+  const canUndo = maskHistory.index > 0;
+  const canRedo = maskHistory.index < maskHistory.images.length - 1;
+
+  const undoHistory = useCallback(() => {
+    if (!canUndo) {
+      throw new Error("Called `undoHistory` but `canUndo` is false");
+    }
+
+    const prevState = maskHistory.images[maskHistory.index - 1];
+
+    setMaskHistory(({ images, index }) => ({
+      images,
+      index: index - 1,
+    }));
+
+    return prevState;
+  }, [maskHistory, canUndo]);
+
+  const redoHistory = useCallback(() => {
+    if (!canRedo) {
+      throw new Error("Called `undoHistory` but `canUndo` is false");
+    }
+
+    const nextState = maskHistory.images[maskHistory.index + 1];
+
+    setMaskHistory(({ images, index }) => ({
+      images,
+      index: index + 1,
+    }));
+
+    return nextState;
+  }, [maskHistory, canRedo]);
+
+  return {
+    reinitializeHistory,
+    pushHistory,
+    undoHistory,
+    redoHistory,
+    canUndo,
+    canRedo,
+  };
 }
