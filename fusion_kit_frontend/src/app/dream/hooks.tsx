@@ -16,12 +16,15 @@ export interface DreamOptions {
   seed: number | null,
   baseImage: File | Blob | null,
   baseImageMask: File | Blob | null,
+  baseImageMaskType: DreamBaseImageMaskType,
   baseImageDecimation: number,
   sampler: DreamSampler,
   samplerSteps: number,
   samplerEta: number,
   guidanceScale: number,
 }
+
+export type DreamBaseImageMaskType = "KEEP_MASKED" | "REPLACE_MASKED";
 
 export interface SelectedFile {
   file: File,

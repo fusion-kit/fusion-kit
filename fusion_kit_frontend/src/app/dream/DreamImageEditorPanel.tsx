@@ -1,4 +1,5 @@
-import { Dialog, Transition } from "@headlessui/react";
+import { Dialog, RadioGroup, Transition } from "@headlessui/react";
+import { CheckCircleIcon } from "@heroicons/react/20/solid";
 import { clsx } from "clsx";
 import React, {
   Fragment, useCallback, useEffect, useMemo, useRef, useState,
@@ -6,6 +7,7 @@ import React, {
 import { BrushFill, EraserFill } from "react-bootstrap-icons";
 import { unreachable } from "../../utils";
 import { BigImageContainer } from "./components";
+import { DreamBaseImageMaskType } from "./hooks";
 
 const IMAGE_EDITOR_TABS = [
   {
@@ -20,18 +22,32 @@ const IMAGE_EDITOR_TABS = [
   },
 ] as const;
 
+const IMAGE_MASK_TYPES = [
+  {
+    value: "REPLACE_MASKED",
+    title: "Replace Masked Sections",
+    description: "Replace only the parts of the image covered by the mask, keep everything else.",
+  },
+  {
+    value: "KEEP_MASKED",
+    title: "Keep Masked Sections",
+    description: "Keep the parts of the image covered by the mask, replace everything else.",
+  },
+];
+
 interface DreamImageEditorPanelProps {
   open: boolean,
   image: File | Blob | null,
   imageMask: File | Blob | null,
+  imageMaskType: DreamBaseImageMaskType,
   onClose: () => void,
   onSaveImage: () => void,
-  onSaveMask: (_newMask: Blob) => void,
+  onSaveMask: (_newMask: Blob, _newMaskType: DreamBaseImageMaskType) => void,
 }
 
 export const DreamImageEditorPanel: React.FC<DreamImageEditorPanelProps> = (props) => {
   const {
-    open, onClose, image, imageMask, onSaveImage, onSaveMask,
+    open, onClose, image, imageMask, imageMaskType, onSaveImage, onSaveMask,
   } = props;
 
   const [currentTab, setCurrentTab] = useState(0);
@@ -64,7 +80,7 @@ export const DreamImageEditorPanel: React.FC<DreamImageEditorPanelProps> = (prop
               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-sm sm:p-6">
+              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-xl sm:p-6">
                 <Dialog.Title className="text-lg font-medium leading-6 text-gray-900">
                   Edit base image
                 </Dialog.Title>
@@ -95,6 +111,7 @@ export const DreamImageEditorPanel: React.FC<DreamImageEditorPanelProps> = (prop
                 <TabComponent
                   image={image}
                   imageMask={imageMask}
+                  imageMaskType={imageMaskType}
                   onSaveImage={onSaveImage}
                   onSaveMask={onSaveMask}
                   onClose={onClose}
@@ -113,8 +130,9 @@ type PenType = "brush" | "eraser";
 interface ImageEditorProps {
   image: File | Blob | null,
   imageMask: File | Blob | null,
+  imageMaskType: DreamBaseImageMaskType,
   onSaveImage: () => void,
-  onSaveMask: (_newMask: Blob) => void,
+  onSaveMask: (_newMask: Blob, _newMaskType: DreamBaseImageMaskType) => void,
   onClose: () => void,
 }
 
@@ -127,6 +145,7 @@ const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
   const imageMaskEl = useLoadImage(imageMask);
   const [editorCanvas, setEditorCanvas] = useState<HTMLCanvasElement | null>(null);
   const [maskCanvas, setMaskCanvas] = useState<HTMLCanvasElement | null>(null);
+  const [currentMaskType, setCurrentMaskType] = useState(props.imageMaskType);
   const dimensions = useMemo(() => (
     getDimensions(imageEl) ?? { width: 1, height: 1 }
   ), [imageEl]);
@@ -296,10 +315,10 @@ const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
         return;
       }
 
-      onSaveMask(blob);
+      onSaveMask(blob, currentMaskType);
       onClose();
     });
-  }, [onSaveMask, onClose, maskCanvas]);
+  }, [onSaveMask, onClose, maskCanvas, currentMaskType]);
 
   return (
     <div>
@@ -352,6 +371,52 @@ const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
           />
           <div className="border-2 rounded-full p-1.5"></div>
         </div>
+      </div>
+      <div className="mt-4">
+        <RadioGroup value={currentMaskType} onChange={setCurrentMaskType}>
+          <RadioGroup.Label className="text-base font-medium text-gray-900">Mask type</RadioGroup.Label>
+
+          <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+            {IMAGE_MASK_TYPES.map((maskType) => (
+              <RadioGroup.Option
+                key={maskType.value}
+                value={maskType.value}
+                className={({ checked, active }) => clsx(
+                  "relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none flex-1",
+                  checked ? "border-transparent" : "border-gray-300",
+                  active ? "border-indigo-500 ring-2 ring-indigo-500" : "",
+                )}
+              >
+                {({ checked, active }) => (
+                  <>
+                    <span className="flex flex-1">
+                      <span className="flex flex-col">
+                        <RadioGroup.Label as="span" className="block text-sm font-medium text-gray-900">
+                          {maskType.title}
+                        </RadioGroup.Label>
+                        <RadioGroup.Description as="span" className="mt-1 flex items-center text-sm text-gray-500">
+                          {maskType.description}
+                        </RadioGroup.Description>
+                      </span>
+                    </span>
+                    <CheckCircleIcon
+                      className={clsx("h-5 w-5 text-indigo-600", checked ? "" : "invisible")}
+                      aria-hidden="true"
+                    />
+                    <span
+                      className={clsx(
+                        active ? "border" : "border-2",
+                        checked ? "border-indigo-500" : "border-transparent",
+                        "pointer-events-none absolute -inset-px rounded-lg",
+                      )}
+                      aria-hidden="true"
+                    />
+                  </>
+                )}
+              </RadioGroup.Option>
+            ))}
+          </div>
+        </RadioGroup>
       </div>
       <div className="mt-4 flex justify-end space-x-2">
         <button

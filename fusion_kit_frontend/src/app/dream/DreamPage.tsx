@@ -2,7 +2,9 @@ import React, { useCallback, useState } from "react";
 import clsx from "clsx";
 import { DreamInputForm } from "./DreamInputForm";
 import { CurrentDream } from "./CurrentDream";
-import { useCreateDream, useDreamImageSelection, useDreamOptions } from "./hooks";
+import {
+  DreamBaseImageMaskType, useCreateDream, useDreamImageSelection, useDreamOptions,
+} from "./hooks";
 import { ShowDreamImage } from "./components";
 import { DreamSampler } from "../../generated/graphql";
 import { DreamImageEditorPanel } from "./DreamImageEditorPanel";
@@ -16,6 +18,7 @@ export const DreamPage: React.FC = () => {
     seed: null,
     baseImage: null,
     baseImageMask: null,
+    baseImageMaskType: "REPLACE_MASKED",
     baseImageDecimation: 0.75,
     sampler: DreamSampler.Ddim,
     samplerSteps: 50,
@@ -32,6 +35,19 @@ export const DreamPage: React.FC = () => {
     const response = await createDream(options);
     console.info("Started dream", { prompt, response });
   }, [createDream, options]);
+
+  const onSaveMask = useCallback(
+    (
+      newMask: File | Blob | null,
+      newMaskType: DreamBaseImageMaskType,
+    ) => {
+      updateOptions({
+        baseImageMask: newMask,
+        baseImageMaskType: newMaskType,
+      });
+    },
+    [updateOptions],
+  );
 
   return (
     <>
@@ -67,9 +83,10 @@ export const DreamPage: React.FC = () => {
         open={isImageEditorOpen}
         image={options.baseImage}
         imageMask={options.baseImageMask}
+        imageMaskType={options.baseImageMaskType}
         onClose={() => setIsImageEditorOpen(false)}
         onSaveImage={() => {}}
-        onSaveMask={(newMask) => { updateOptions({ baseImageMask: newMask }); }}
+        onSaveMask={onSaveMask}
       />
     </>
   );
