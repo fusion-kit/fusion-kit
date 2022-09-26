@@ -5,9 +5,9 @@ import React, {
   Fragment, useCallback, useEffect, useMemo, useRef, useState,
 } from "react";
 import { BrushFill, EraserFill } from "react-bootstrap-icons";
+import { DreamBaseImageMaskType } from "../../generated/graphql";
 import { unreachable } from "../../utils";
 import { BigImageContainer } from "./components";
-import { DreamBaseImageMaskType } from "./hooks";
 
 const IMAGE_EDITOR_TABS = [
   {
@@ -24,12 +24,12 @@ const IMAGE_EDITOR_TABS = [
 
 const IMAGE_MASK_TYPES = [
   {
-    value: "REPLACE_MASKED",
+    value: DreamBaseImageMaskType.ReplaceMasked,
     title: "Replace Masked Sections",
     description: "Replace only the parts of the image covered by the mask, keep everything else.",
   },
   {
-    value: "KEEP_MASKED",
+    value: DreamBaseImageMaskType.KeepMasked,
     title: "Keep Masked Sections",
     description: "Keep the parts of the image covered by the mask, replace everything else.",
   },

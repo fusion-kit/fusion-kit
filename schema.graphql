@@ -18,6 +18,7 @@ input DreamOptionsInput {
   seed: Int
   baseImage: Upload
   baseImageMask: Upload
+  baseImageMaskType: DreamBaseImageMaskType,
   baseImageDecimation: Float
   sampler: DreamSampler!
   samplerSteps: Int!
@@ -28,6 +29,11 @@ input DreamOptionsInput {
 enum DreamSampler {
   DDIM
   PLMS
+}
+
+enum DreamBaseImageMaskType {
+  KEEP_MASKED,
+  REPLACE_MASKED,
 }
 
 interface Dream {

@@ -2,11 +2,9 @@ import React, { useCallback, useState } from "react";
 import clsx from "clsx";
 import { DreamInputForm } from "./DreamInputForm";
 import { CurrentDream } from "./CurrentDream";
-import {
-  DreamBaseImageMaskType, useCreateDream, useDreamImageSelection, useDreamOptions,
-} from "./hooks";
+import { useCreateDream, useDreamImageSelection, useDreamOptions } from "./hooks";
 import { ShowDreamImage } from "./components";
-import { DreamSampler } from "../../generated/graphql";
+import { DreamBaseImageMaskType, DreamSampler } from "../../generated/graphql";
 import { DreamImageEditorPanel } from "./DreamImageEditorPanel";
 
 export const DreamPage: React.FC = () => {
@@ -18,7 +16,7 @@ export const DreamPage: React.FC = () => {
     seed: null,
     baseImage: null,
     baseImageMask: null,
-    baseImageMaskType: "REPLACE_MASKED",
+    baseImageMaskType: DreamBaseImageMaskType.ReplaceMasked,
     baseImageDecimation: 0.75,
     sampler: DreamSampler.Ddim,
     samplerSteps: 50,

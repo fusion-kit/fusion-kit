@@ -4,6 +4,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { BACKEND_URL, joinUrlPath } from "../../client";
 import {
+  DreamBaseImageMaskType,
   DreamSampler,
   StartDreamDocument, StartDreamMutation, StoppedDreamReason,
   WatchDreamDocument, WatchDreamSubscription,
@@ -23,8 +24,6 @@ export interface DreamOptions {
   samplerEta: number,
   guidanceScale: number,
 }
-
-export type DreamBaseImageMaskType = "KEEP_MASKED" | "REPLACE_MASKED";
 
 export interface SelectedFile {
   file: File,
@@ -64,6 +63,7 @@ export function useCreateDream(): UseCreateDream {
   const createDream = useCallback(async (opts: DreamOptions) => {
     const baseImageDecimation = opts.baseImage != null ? opts.baseImageDecimation : null;
     const baseImageMask = opts.baseImage != null ? opts.baseImageMask : null;
+    const baseImageMaskType = baseImageMask != null ? opts.baseImageMaskType : null;
     await startDream({
       variables: {
         options: {
@@ -72,6 +72,7 @@ export function useCreateDream(): UseCreateDream {
           seed: opts.seed ?? undefined,
           baseImage: opts.baseImage ?? undefined,
           baseImageMask,
+          baseImageMaskType,
           baseImageDecimation,
           sampler: opts.sampler,
           samplerSteps: opts.samplerSteps,

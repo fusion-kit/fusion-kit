@@ -19,6 +19,11 @@ export type Dream = {
   images: Array<DreamImage>;
 };
 
+export enum DreamBaseImageMaskType {
+  KeepMasked = 'KEEP_MASKED',
+  ReplaceMasked = 'REPLACE_MASKED'
+}
+
 export type DreamImage = {
   dreamId: Scalars['ID'];
   id: Scalars['ID'];
@@ -28,6 +33,7 @@ export type DreamOptionsInput = {
   baseImage?: InputMaybe<Scalars['Upload']>;
   baseImageDecimation?: InputMaybe<Scalars['Float']>;
   baseImageMask?: InputMaybe<Scalars['Upload']>;
+  baseImageMaskType?: InputMaybe<DreamBaseImageMaskType>;
   guidanceScale: Scalars['Float'];
   numImages: Scalars['Int'];
   prompt: Scalars['String'];

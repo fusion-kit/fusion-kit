@@ -93,6 +93,29 @@
         ]
       },
       {
+        "kind": "ENUM",
+        "name": "DreamBaseImageMaskType",
+        "description": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "KEEP_MASKED",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "REPLACE_MASKED",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
         "kind": "INTERFACE",
         "name": "DreamImage",
         "description": null,
@@ -192,6 +215,18 @@
             "type": {
               "kind": "SCALAR",
               "name": "Upload",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "baseImageMaskType",
+            "description": null,
+            "type": {
+              "kind": "ENUM",
+              "name": "DreamBaseImageMaskType",
               "ofType": null
             },
             "defaultValue": null,
