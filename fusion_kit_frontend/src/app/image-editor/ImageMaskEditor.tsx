@@ -37,7 +37,7 @@ export const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
 
   const [editorCanvas, setEditorCanvas] = useState<HTMLCanvasElement | null>(null);
 
-  const [penSize, setPenSize] = useState(20);
+  const [penSize, setPenSize] = useState(120);
   const [penType, setPenType] = useState<PenType>("brush");
   const [cursorPos, setCursorPos] = useState<Position | null>(null);
   const [mousePos, setMousePos] = useState<Position | null>(null);
@@ -370,16 +370,17 @@ export const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
           </ImageEditorActionButton>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="border-2 rounded-full p-0.5"></div>
+          <span className="sr-only">Pen size</span>
+          <div className="border-2 rounded-full p-0.5" aria-hidden="true"></div>
           <input
             type="range"
             className="appearance-none w-full h-2 bg-gray-200 shadow-sm rounded-full"
             min={1}
-            max={100}
+            max={200}
             value={penSize}
             onChange={(e) => { setPenSize(e.target.valueAsNumber); }}
           />
-          <div className="border-2 rounded-full p-1.5"></div>
+          <div className="border-2 rounded-full p-1.5" aria-hidden="true"></div>
         </div>
       </div>
       <div className="mt-4">
