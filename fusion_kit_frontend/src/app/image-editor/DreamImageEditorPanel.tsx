@@ -1,10 +1,11 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { clsx } from "clsx";
 import React, {
-  Fragment, useCallback, useState,
+  Fragment, useCallback, useEffect, useState,
 } from "react";
 import { DreamBaseImageMaskType } from "../../generated/graphql";
-import { Dimensions, useCreateCanvas } from "./hooks";
+import { unreachable } from "../../utils";
+import { Dimensions, Position, useCreateCanvas } from "./hooks";
 import { ImageMaskEditor } from "./ImageMaskEditor";
 import { ImageResizeEditor } from "./ImageResizeEditor";
 
@@ -21,19 +22,21 @@ const IMAGE_EDITOR_TABS = [
   },
 ] as const;
 
+type ResizeType = "crop" | "resize";
+
 interface DreamImageEditorPanelProps {
   open: boolean,
   image: File | Blob | null,
   imageMask: File | Blob | null,
   imageMaskType: DreamBaseImageMaskType,
   onClose: () => void,
-  onSaveImage: () => void,
+  onSaveImage: (_newImage: Blob) => void,
   onSaveMask: (_newMask: Blob, _newMaskType: DreamBaseImageMaskType) => void,
 }
 
 export const DreamImageEditorPanel: React.FC<DreamImageEditorPanelProps> = (props) => {
   const {
-    open, onClose, image, imageMask, imageMaskType, onSaveImage: _, onSaveMask,
+    open, onClose, image, imageMask, imageMaskType, onSaveImage, onSaveMask,
   } = props;
 
   const [currentTab, setCurrentTab] = useState(0);
@@ -47,17 +50,89 @@ export const DreamImageEditorPanel: React.FC<DreamImageEditorPanelProps> = (prop
     canvas: maskCanvas,
   } = useCreateCanvas({ image: imageMask, dimensions });
 
-  const onSaveClick = useCallback(() => {
-    maskCanvas?.toBlob((blob) => {
-      if (blob == null) {
-        console.warn("Failed to create blob");
-        return;
-      }
+  const [resizeDimensions, setResizeDimensions] = useState(dimensions);
+  const [resizeType, setResizeType] = useState<ResizeType>("crop");
+  const [cropOffset, setCropOffset] = useState<Position>({ x: 0, y: 0 });
 
-      onSaveMask(blob, currentImageMaskType);
-      onClose();
+  useEffect(() => {
+    setResizeDimensions(dimensions);
+  }, [dimensions]);
+
+  const onSaveClick = useCallback(() => {
+    if (imageCanvas == null || maskCanvas == null) {
+      console.error("Could not save image/mask because a canvas was null");
+      return;
+    }
+
+    const outputImageCanvas = document.createElement("canvas");
+    outputImageCanvas.width = resizeDimensions.width;
+    outputImageCanvas.height = resizeDimensions.height;
+
+    const imageCtx = outputImageCanvas.getContext("2d");
+    if (imageCtx == null) {
+      console.error("Failed to create image context");
+      return;
+    }
+
+    const outputMaskCanvas = document.createElement("canvas");
+    outputMaskCanvas.width = resizeDimensions.width;
+    outputMaskCanvas.height = resizeDimensions.height;
+
+    const maskCtx = outputMaskCanvas.getContext("2d");
+    if (maskCtx == null) {
+      console.error("Failed to create image context");
+      return;
+    }
+
+    switch (resizeType) {
+      case "crop":
+        imageCtx.drawImage(
+          imageCanvas,
+          cropOffset.x,
+          cropOffset.y,
+          resizeDimensions.width,
+          resizeDimensions.height,
+          0,
+          0,
+          resizeDimensions.width,
+          resizeDimensions.height,
+        );
+        maskCtx.drawImage(
+          maskCanvas,
+          cropOffset.x,
+          cropOffset.y,
+          resizeDimensions.width,
+          resizeDimensions.height,
+          0,
+          0,
+          resizeDimensions.width,
+          resizeDimensions.height,
+        );
+        break;
+      case "resize":
+        imageCtx.drawImage(imageCanvas, 0, 0, resizeDimensions.width, resizeDimensions.height);
+        maskCtx.drawImage(maskCanvas, 0, 0, resizeDimensions.width, resizeDimensions.height);
+        break;
+      default:
+        unreachable(resizeType);
+    }
+
+    outputImageCanvas.toBlob((imageBlob) => {
+      outputMaskCanvas.toBlob((maskBlob) => {
+        if (imageBlob == null || maskBlob == null) {
+          console.error("Failed to create output image blobs");
+          return;
+        }
+
+        onSaveImage(imageBlob);
+        onSaveMask(maskBlob, currentImageMaskType);
+        onClose();
+      });
     });
-  }, [onSaveMask, onClose, maskCanvas, currentImageMaskType]);
+  }, [
+    imageCanvas, maskCanvas, resizeDimensions, resizeType, cropOffset,
+    onSaveImage, onSaveMask, currentImageMaskType, onClose,
+  ]);
 
   const TabComponent = IMAGE_EDITOR_TABS[currentTab].component;
 
@@ -121,6 +196,12 @@ export const DreamImageEditorPanel: React.FC<DreamImageEditorPanelProps> = (prop
                   imageMaskCanvas={maskCanvas}
                   currentImageMaskType={currentImageMaskType}
                   setCurrentImageMaskType={setCurrentImageMaskType}
+                  resizeDimensions={resizeDimensions}
+                  setResizeDimensions={setResizeDimensions}
+                  resizeType={resizeType}
+                  setResizeType={setResizeType}
+                  cropOffset={cropOffset}
+                  setCropOffset={setCropOffset}
                 />
                 <div className="mt-4 flex justify-end space-x-2">
                   <button
@@ -153,6 +234,12 @@ export interface ImageEditorProps {
   imageMaskCanvas: HTMLCanvasElement | null,
   currentImageMaskType: DreamBaseImageMaskType,
   setCurrentImageMaskType: (_maskType: DreamBaseImageMaskType) => void,
+  resizeType: ResizeType,
+  setResizeType: (_resizeType: ResizeType) => void,
+  resizeDimensions: Dimensions,
+  setResizeDimensions: (_dimensions: Dimensions) => void,
+  cropOffset: Position,
+  setCropOffset: (_offset: Position) => void,
 }
 
 type ImageEditorActionButtonProps = React.PropsWithChildren<{

@@ -12,8 +12,6 @@ import {
   Dimensions, getEventCanvasPosition, Position,
 } from "./hooks";
 
-type ResizeType = "crop" | "resize";
-
 const RESIZE_TYPES = [
   {
     value: "crop",
@@ -27,13 +25,11 @@ const RESIZE_TYPES = [
 
 export const ImageResizeEditor: React.FC<ImageEditorProps> = (props) => {
   const {
-    dimensions, imageCanvas,
+    dimensions, imageCanvas, resizeDimensions, setResizeDimensions,
+    resizeType, setResizeType, cropOffset, setCropOffset,
   } = props;
 
   const [previewCanvas, setPreviewCanvas] = useState<HTMLCanvasElement | null>(null);
-  const [resizeDimensions, setResizeDimensions] = useState(dimensions ?? { width: 1, height: 1 });
-  const [resizeType, setResizeType] = useState<ResizeType>("crop");
-  const [cropOffset, setCropOffset] = useState<Position>({ x: 0, y: 0 });
 
   const [mousePos, setMousePos] = useState<Position | null>(null);
   const [moveStart, setMoveStart] = useState<Position | null>(null);
@@ -66,7 +62,7 @@ export const ImageResizeEditor: React.FC<ImageEditorProps> = (props) => {
 
     const pos = getEventCanvasPosition(previewCanvas, e);
     setMousePos(pos);
-  }, [cropOffset, dimensions, mousePos, moveStart, previewCanvas, resizeDimensions]);
+  }, [cropOffset, dimensions, mousePos, moveStart, previewCanvas, resizeDimensions, setCropOffset]);
 
   const onDocumentMouseOut = useCallback(() => {
     if (previewCanvas == null) {
@@ -115,7 +111,7 @@ export const ImageResizeEditor: React.FC<ImageEditorProps> = (props) => {
     if (dimensions != null) {
       setResizeDimensions(dimensions);
     }
-  }, [dimensions]);
+  }, [dimensions, setResizeDimensions]);
 
   useEffect(() => {
     const ctx = previewCanvas?.getContext("2d");
@@ -171,13 +167,13 @@ export const ImageResizeEditor: React.FC<ImageEditorProps> = (props) => {
     resizeDimensions, cropOffset, dimensions, moveStart, mousePos,
   ]);
 
-  const setWidth = useCallback((newWidth: number) => {
-    setResizeDimensions(({ height }) => ({ width: newWidth, height }));
-  }, []);
+  const setWidth = useCallback((width: number) => {
+    setResizeDimensions({ ...resizeDimensions, width });
+  }, [resizeDimensions, setResizeDimensions]);
 
-  const setHeight = useCallback((newHeight: number) => {
-    setResizeDimensions(({ width }) => ({ width, height: newHeight }));
-  }, []);
+  const setHeight = useCallback((height: number) => {
+    setResizeDimensions({ ...resizeDimensions, height });
+  }, [resizeDimensions, setResizeDimensions]);
 
   return (
     <div>

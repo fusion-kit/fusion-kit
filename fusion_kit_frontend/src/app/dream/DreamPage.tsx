@@ -34,6 +34,13 @@ export const DreamPage: React.FC = () => {
     console.info("Started dream", { prompt, response });
   }, [createDream, options]);
 
+  const onSaveImage = useCallback(
+    (newImage: File | Blob | null) => {
+      updateOptions({ baseImage: newImage });
+    },
+    [updateOptions],
+  );
+
   const onSaveMask = useCallback(
     (
       newMask: File | Blob | null,
@@ -83,7 +90,7 @@ export const DreamPage: React.FC = () => {
         imageMask={options.baseImageMask}
         imageMaskType={options.baseImageMaskType}
         onClose={() => setIsImageEditorOpen(false)}
-        onSaveImage={() => {}}
+        onSaveImage={onSaveImage}
         onSaveMask={onSaveMask}
       />
     </>
