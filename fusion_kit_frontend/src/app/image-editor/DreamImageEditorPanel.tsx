@@ -6,6 +6,7 @@ import React, {
 import { DreamBaseImageMaskType } from "../../generated/graphql";
 import { Dimensions, useCreateCanvas } from "./hooks";
 import { ImageMaskEditor } from "./ImageMaskEditor";
+import { ImageResizeEditor } from "./ImageResizeEditor";
 
 const IMAGE_EDITOR_TABS = [
   {
@@ -16,7 +17,7 @@ const IMAGE_EDITOR_TABS = [
   {
     name: "Resize",
     key: "resize",
-    component: (_props: ImageEditorProps) => null,
+    component: (props: ImageEditorProps) => (<ImageResizeEditor {...props} />),
   },
 ] as const;
 

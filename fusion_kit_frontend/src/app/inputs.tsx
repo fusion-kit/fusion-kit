@@ -1,4 +1,6 @@
-import React, { useCallback, useId, useState } from "react";
+import React, {
+  useCallback, useEffect, useId, useState,
+} from "react";
 
 interface OptionalNumberInputProps {
   label: string,
@@ -16,6 +18,10 @@ export const OptionalNumberInput: React.FC<OptionalNumberInputProps> = (props) =
   const textInputId = useId();
 
   const [textValue, setTextValue] = useState(value != null ? value.toString() : "");
+
+  useEffect(() => {
+    setTextValue(value?.toString() ?? "");
+  }, [value]);
 
   const onTextInputChange: React.ChangeEventHandler<HTMLInputElement> = useCallback((e) => {
     const newStringValue = e.target.value;
