@@ -19,9 +19,30 @@ export function getEventCanvasPosition(
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
+
   return {
     x: (event.clientX - rect.left) * scaleX,
     y: (event.clientY - rect.top) * scaleY,
+  };
+}
+
+export function getEventCanvasTouchPosition(
+  canvas: HTMLCanvasElement,
+  event: React.TouchEvent | TouchEvent,
+): Position | null {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  const touch = event.touches.item(0);
+
+  if (touch == null) {
+    return null;
+  }
+
+  return {
+    x: (touch.clientX - rect.left) * scaleX,
+    y: (touch.clientY - rect.top) * scaleY,
   };
 }
 

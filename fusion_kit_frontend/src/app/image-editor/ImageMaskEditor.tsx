@@ -12,7 +12,7 @@ import { unreachable } from "../../utils";
 import { BigImageContainer } from "../dream/components";
 import { ImageEditorActionButton, ImageEditorProps } from "./DreamImageEditorPanel";
 import {
-  Position, getEventCanvasPosition, useMaskImageHistory,
+  Position, getEventCanvasPosition, useMaskImageHistory, getEventCanvasTouchPosition,
 } from "./hooks";
 
 type PenType = "brush" | "eraser";
@@ -234,6 +234,32 @@ export const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
     setMousePos(pos);
   }, [editorCanvas]);
 
+  const onDocumentTouchMove = useCallback((e: TouchEvent) => {
+    if (editorCanvas == null) {
+      return;
+    }
+
+    if (isPainting) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    const pos = getEventCanvasTouchPosition(editorCanvas, e);
+    setMousePos(pos);
+  }, [editorCanvas, isPainting]);
+
+  const onDocumentTouchEnd = useCallback((e: TouchEvent) => {
+    if (editorCanvas == null) {
+      return;
+    }
+
+    const pos = getEventCanvasTouchPosition(editorCanvas, e);
+    setIsPainting(false);
+    setMousePos(pos);
+    setCursorPos(null);
+    lastPaintPoint.current = null;
+  }, [editorCanvas]);
+
   const onDocumentMouseOut = useCallback(() => {
     if (editorCanvas == null) {
       return;
@@ -250,15 +276,33 @@ export const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
     setIsPainting(true);
   }, []);
 
+  const onEditorTouchStart: React.TouchEventHandler = useCallback((e) => {
+    if (editorCanvas == null) {
+      return;
+    }
+
+    e.stopPropagation();
+
+    const pos = getEventCanvasTouchPosition(editorCanvas, e);
+    setIsPainting(true);
+    setMousePos(pos);
+    setCursorPos(null);
+    lastPaintPoint.current = null;
+  }, [editorCanvas]);
+
   useEffect(() => {
     document.body.addEventListener("mouseover", onDocumentMouseEnter);
     document.body.addEventListener("mousemove", onDocumentMouseMove);
     document.body.addEventListener("mouseout", onDocumentMouseOut);
+    document.body.addEventListener("touchmove", onDocumentTouchMove, { passive: false });
+    document.body.addEventListener("touchend", onDocumentTouchEnd);
 
     return () => {
       document.body.removeEventListener("mouseover", onDocumentMouseEnter);
       document.body.removeEventListener("mousemove", onDocumentMouseMove);
       document.body.removeEventListener("mouseout", onDocumentMouseMove);
+      document.body.removeEventListener("touchmove", onDocumentTouchMove);
+      document.body.removeEventListener("touchend", onDocumentTouchEnd);
     };
   });
 
@@ -304,6 +348,7 @@ export const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
           width={dimensions?.width ?? 1}
           height={dimensions?.height ?? 1}
           onMouseDown={onEditorMouseDown}
+          onTouchStart={onEditorTouchStart}
         >
         </canvas>
       </BigImageContainer>
