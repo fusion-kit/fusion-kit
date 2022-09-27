@@ -4,6 +4,7 @@ import {
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import React, { Fragment, useState } from "react";
+import logo from "../assets/logo.svg";
 
 const navigation = [
   {
@@ -73,8 +74,8 @@ export const AppLayout: React.FC<React.PropsWithChildren> = (props) => {
                   <div className="flex flex-shrink-0 items-center px-4">
                     <img
                       className="h-8 w-auto"
-                      src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
-                      alt="Your Company"
+                      src={logo}
+                      alt="FusionKit"
                     />
                   </div>
                   <nav aria-label="Sidebar" className="mt-5">
@@ -140,8 +141,8 @@ export const AppLayout: React.FC<React.PropsWithChildren> = (props) => {
               <div className="flex flex-shrink-0 items-center px-4">
                 <img
                   className="h-8 w-auto"
-                  src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
-                  alt="Your Company"
+                  src={logo}
+                  alt="FusionKit"
                 />
               </div>
               <nav className="mt-5 flex-1" aria-label="Sidebar">
@@ -196,8 +197,8 @@ export const AppLayout: React.FC<React.PropsWithChildren> = (props) => {
             <div>
               <img
                 className="h-8 w-auto"
-                src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
-                alt="Your Company"
+                src={logo}
+                alt="FusionKit"
               />
             </div>
             <div>
