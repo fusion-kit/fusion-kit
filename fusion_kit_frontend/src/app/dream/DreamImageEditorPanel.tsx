@@ -2,7 +2,7 @@ import { Dialog, RadioGroup, Transition } from "@headlessui/react";
 import { CheckCircleIcon } from "@heroicons/react/20/solid";
 import { clsx } from "clsx";
 import React, {
-  Fragment, useCallback, useEffect, useMemo, useRef, useState,
+  Fragment, useCallback, useEffect, useRef, useState,
 } from "react";
 import {
   ArrowClockwise, ArrowCounterclockwise, BrushFill, EraserFill, TrashFill,
@@ -49,10 +49,31 @@ interface DreamImageEditorPanelProps {
 
 export const DreamImageEditorPanel: React.FC<DreamImageEditorPanelProps> = (props) => {
   const {
-    open, onClose, image, imageMask, imageMaskType, onSaveImage, onSaveMask,
+    open, onClose, image, imageMask, imageMaskType, onSaveImage: _, onSaveMask,
   } = props;
 
   const [currentTab, setCurrentTab] = useState(0);
+  const [currentImageMaskType, setCurrentImageMaskType] = useState(imageMaskType);
+
+  const {
+    canvas: imageCanvas,
+    dimensions,
+  } = useCreateCanvas({ image });
+  const {
+    canvas: maskCanvas,
+  } = useCreateCanvas({ image: imageMask, dimensions });
+
+  const onSaveClick = useCallback(() => {
+    maskCanvas?.toBlob((blob) => {
+      if (blob == null) {
+        console.warn("Failed to create blob");
+        return;
+      }
+
+      onSaveMask(blob, currentImageMaskType);
+      onClose();
+    });
+  }, [onSaveMask, onClose, maskCanvas, currentImageMaskType]);
 
   const TabComponent = IMAGE_EDITOR_TABS[currentTab].component;
 
@@ -111,13 +132,28 @@ export const DreamImageEditorPanel: React.FC<DreamImageEditorPanelProps> = (prop
                   </nav>
                 </div>
                 <TabComponent
-                  image={image}
-                  imageMask={imageMask}
-                  imageMaskType={imageMaskType}
-                  onSaveImage={onSaveImage}
-                  onSaveMask={onSaveMask}
-                  onClose={onClose}
+                  dimensions={dimensions}
+                  imageCanvas={imageCanvas}
+                  imageMaskCanvas={maskCanvas}
+                  currentImageMaskType={currentImageMaskType}
+                  setCurrentImageMaskType={setCurrentImageMaskType}
                 />
+                <div className="mt-4 flex justify-end space-x-2">
+                  <button
+                    type="button"
+                    className="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
+                    onClick={onClose}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
+                    onClick={onSaveClick}
+                  >
+                    Save
+                  </button>
+                </div>
               </Dialog.Panel>
             </Transition.Child>
           </div>
@@ -130,27 +166,19 @@ export const DreamImageEditorPanel: React.FC<DreamImageEditorPanelProps> = (prop
 type PenType = "brush" | "eraser";
 
 interface ImageEditorProps {
-  image: File | Blob | null,
-  imageMask: File | Blob | null,
-  imageMaskType: DreamBaseImageMaskType,
-  onSaveImage: () => void,
-  onSaveMask: (_newMask: Blob, _newMaskType: DreamBaseImageMaskType) => void,
-  onClose: () => void,
+  dimensions: Dimensions | null,
+  imageCanvas: HTMLCanvasElement | null,
+  imageMaskCanvas: HTMLCanvasElement | null,
+  currentImageMaskType: DreamBaseImageMaskType,
+  setCurrentImageMaskType: (_maskType: DreamBaseImageMaskType) => void,
 }
 
 const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
   const {
-    image, imageMask, onSaveImage: _, onSaveMask, onClose,
+    dimensions, imageCanvas, imageMaskCanvas, currentImageMaskType, setCurrentImageMaskType,
   } = props;
 
-  const imageEl = useLoadImage(image);
-  const imageMaskEl = useLoadImage(imageMask);
   const [editorCanvas, setEditorCanvas] = useState<HTMLCanvasElement | null>(null);
-  const [maskCanvas, setMaskCanvas] = useState<HTMLCanvasElement | null>(null);
-  const [currentMaskType, setCurrentMaskType] = useState(props.imageMaskType);
-  const dimensions = useMemo(() => (
-    getDimensions(imageEl) ?? { width: 1, height: 1 }
-  ), [imageEl]);
 
   const [penSize, setPenSize] = useState(20);
   const [penType, setPenType] = useState<PenType>("brush");
@@ -160,28 +188,30 @@ const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
 
   const lastPaintPoint = useRef<Position | null>();
   const {
-    reinitializeHistory, pushHistory, undoHistory, redoHistory, canUndo, canRedo,
+    pushHistory, undoHistory, redoHistory, canUndo, canRedo,
   } = useMaskImageHistory({
-    initialImage: null,
+    initialImage: imageMaskCanvas?.toDataURL() ?? null,
     maxImages: 12,
   });
 
   const drawEditorCanvas = useCallback(() => {
     const ctx = editorCanvas?.getContext("2d");
 
-    if (ctx == null || imageEl == null) {
+    if (ctx == null) {
       return;
     }
 
-    ctx.clearRect(0, 0, dimensions.width, dimensions.height);
+    if (imageCanvas != null) {
+      ctx.clearRect(0, 0, imageCanvas.width, imageCanvas.height);
 
-    ctx.drawImage(imageEl, 0, 0, dimensions.width, dimensions.height);
+      ctx.drawImage(imageCanvas, 0, 0, imageCanvas.width, imageCanvas.height);
+    }
 
-    if (maskCanvas != null) {
+    if (imageMaskCanvas != null) {
       ctx.save();
 
       ctx.globalAlpha = 0.7;
-      ctx.drawImage(maskCanvas, 0, 0);
+      ctx.drawImage(imageMaskCanvas, 0, 0);
 
       ctx.restore();
     }
@@ -200,26 +230,12 @@ const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
 
       ctx.restore();
     }
-  }, [editorCanvas, imageEl, dimensions, cursorPos, penSize, maskCanvas]);
-
-  // Initialize mask canvas by drawing mask image
-  useEffect(() => {
-    if (imageMaskEl == null || maskCanvas == null) {
-      return;
-    }
-
-    const maskCtx = maskCanvas.getContext("2d");
-    maskCtx?.drawImage(imageMaskEl, 0, 0);
-    reinitializeHistory(maskCanvas.toDataURL());
-    drawEditorCanvas();
-    // NOTE: We exclude drawEditorCanvas so we only reinitialize once
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [imageMaskEl, maskCanvas, reinitializeHistory]);
+  }, [editorCanvas, cursorPos, penSize, imageCanvas, imageMaskCanvas]);
 
   // Paint on the mask canvas while the user is holding down the mouse button
   useEffect(() => {
-    const maskCtx = maskCanvas?.getContext("2d");
-    if (maskCtx == null || maskCanvas == null || mousePos == null) {
+    const maskCtx = imageMaskCanvas?.getContext("2d");
+    if (maskCtx == null || imageMaskCanvas == null || mousePos == null) {
       return;
     }
 
@@ -260,12 +276,12 @@ const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
       // If we just stopped drawing, then save the mask in the history
       // for undo/redo
       if (lastPaintPoint.current != null) {
-        pushHistory(maskCanvas.toDataURL());
+        pushHistory(imageMaskCanvas.toDataURL());
       }
 
       lastPaintPoint.current = null;
     }
-  }, [maskCanvas, mousePos, isPainting, penSize, penType, drawEditorCanvas, pushHistory]);
+  }, [imageMaskCanvas, mousePos, isPainting, penSize, penType, drawEditorCanvas, pushHistory]);
 
   // Redraw the editor canvas whenever the `drawEditorCanvas` function
   // changes (meaning that some dependency of the function has changed).
@@ -275,40 +291,40 @@ const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
 
   const redrawMaskCanvasWithSource = useCallback(
     (source: string | null) => {
-      const maskCtx = maskCanvas?.getContext("2d");
-      if (maskCanvas == null || maskCtx == null) {
+      const maskCtx = imageMaskCanvas?.getContext("2d");
+      if (imageMaskCanvas == null || maskCtx == null) {
         return;
       }
 
       if (source == null) {
-        maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+        maskCtx.clearRect(0, 0, imageMaskCanvas.width, imageMaskCanvas.height);
         drawEditorCanvas();
       } else {
         const image = new Image();
         image.onload = () => {
-          maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+          maskCtx.clearRect(0, 0, imageMaskCanvas.width, imageMaskCanvas.height);
           maskCtx.drawImage(image, 0, 0);
           drawEditorCanvas();
         };
         image.src = source;
       }
     },
-    [maskCanvas, drawEditorCanvas],
+    [imageMaskCanvas, drawEditorCanvas],
   );
 
   const clearMaskCanvas = useCallback(() => {
-    const maskCtx = maskCanvas?.getContext("2d");
-    if (maskCanvas == null || maskCtx == null) {
+    const maskCtx = imageMaskCanvas?.getContext("2d");
+    if (imageMaskCanvas == null || maskCtx == null) {
       return;
     }
 
     pushHistory(null);
     redrawMaskCanvasWithSource(null);
-  }, [maskCanvas, pushHistory, redrawMaskCanvasWithSource]);
+  }, [imageMaskCanvas, pushHistory, redrawMaskCanvasWithSource]);
 
   const undoMaskCanvas = useCallback(() => {
-    const maskCtx = maskCanvas?.getContext("2d");
-    if (maskCanvas == null || maskCtx == null) {
+    const maskCtx = imageMaskCanvas?.getContext("2d");
+    if (imageMaskCanvas == null || maskCtx == null) {
       return;
     }
 
@@ -319,11 +335,11 @@ const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
 
     const imageData = undoHistory();
     redrawMaskCanvasWithSource(imageData);
-  }, [maskCanvas, canUndo, undoHistory, redrawMaskCanvasWithSource]);
+  }, [imageMaskCanvas, canUndo, undoHistory, redrawMaskCanvasWithSource]);
 
   const redoMaskCanvas = useCallback(() => {
-    const maskCtx = maskCanvas?.getContext("2d");
-    if (maskCanvas == null || maskCtx == null) {
+    const maskCtx = imageMaskCanvas?.getContext("2d");
+    if (imageMaskCanvas == null || maskCtx == null) {
       return;
     }
 
@@ -334,7 +350,7 @@ const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
 
     const imageData = redoHistory();
     redrawMaskCanvasWithSource(imageData);
-  }, [maskCanvas, canRedo, redoHistory, redrawMaskCanvasWithSource]);
+  }, [imageMaskCanvas, canRedo, redoHistory, redrawMaskCanvasWithSource]);
 
   const onDocumentMouseEnter = useCallback((e: MouseEvent) => {
     if (editorCanvas == null) {
@@ -389,18 +405,6 @@ const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
     };
   });
 
-  const onSaveClick = useCallback(() => {
-    maskCanvas?.toBlob((blob) => {
-      if (blob == null) {
-        console.warn("Failed to create blob");
-        return;
-      }
-
-      onSaveMask(blob, currentMaskType);
-      onClose();
-    });
-  }, [onSaveMask, onClose, maskCanvas, currentMaskType]);
-
   return (
     <div>
       <div className="my-3">
@@ -433,20 +437,16 @@ const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
           </ImageEditorActionButton>
         </div>
       </div>
-      <BigImageContainer widthRatio={dimensions.width} heightRatio={dimensions.height}>
+      <BigImageContainer
+        widthRatio={dimensions?.width ?? 1}
+        heightRatio={dimensions?.height ?? 1}
+      >
         <canvas
           className="w-full"
           ref={setEditorCanvas}
-          width={dimensions.width}
-          height={dimensions.height}
+          width={dimensions?.width ?? 1}
+          height={dimensions?.height ?? 1}
           onMouseDown={onEditorMouseDown}
-        >
-        </canvas>
-        <canvas
-          className="hidden"
-          ref={setMaskCanvas}
-          width={dimensions.width}
-          height={dimensions.height}
         >
         </canvas>
       </BigImageContainer>
@@ -481,7 +481,7 @@ const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
         </div>
       </div>
       <div className="mt-4">
-        <RadioGroup value={currentMaskType} onChange={setCurrentMaskType}>
+        <RadioGroup value={currentImageMaskType} onChange={setCurrentImageMaskType}>
           <RadioGroup.Label className="text-base font-medium text-gray-900">Mask type</RadioGroup.Label>
 
           <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
@@ -525,22 +525,6 @@ const ImageMaskEditor: React.FC<ImageEditorProps> = (props) => {
             ))}
           </div>
         </RadioGroup>
-      </div>
-      <div className="mt-4 flex justify-end space-x-2">
-        <button
-          type="button"
-          className="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
-          onClick={onClose}
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          className="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
-          onClick={onSaveClick}
-        >
-          Save
-        </button>
       </div>
     </div>
   );
@@ -609,11 +593,76 @@ function getDimensions(image: HTMLImageElement | null): Dimensions | null {
   };
 }
 
-function useLoadImage(image: File | Blob | null): HTMLImageElement | null {
-  const [imageEl, setImageEl] = useState<HTMLImageElement | null>(null);
+interface UseCreateCanvasOptions {
+  image?: File | Blob | null,
+  dimensions?: Dimensions,
+}
+
+interface UseCreateCanvas {
+  canvas: HTMLCanvasElement | null,
+  dimensions: Dimensions,
+}
+
+function useCreateCanvas(options: UseCreateCanvasOptions): UseCreateCanvas {
+  const { image, dimensions } = options;
+
+  const canvas = useRef(document.createElement("canvas"));
+
+  const { imageEl, loading } = useLoadImage(image ?? null);
+
+  const [loadedCanvas, setLoadedCanvas] = useState<HTMLCanvasElement | null>(null);
+  const [currentDimensions, setCurrentDimensions] = useState<Dimensions>({
+    width: 1,
+    height: 1,
+  });
+
+  useEffect(() => {
+    const newDimensions = dimensions ?? getDimensions(imageEl) ?? { width: 1, height: 1 };
+    canvas.current.width = newDimensions.width;
+    canvas.current.height = newDimensions.height;
+
+    setCurrentDimensions(newDimensions);
+
+    const ctx = canvas.current.getContext("2d");
+    if (ctx == null) {
+      console.warn("Failed to get canvas context");
+      return;
+    }
+
+    if (imageEl != null) {
+      ctx.drawImage(imageEl, 0, 0, newDimensions.width, newDimensions.height);
+    }
+
+    if (loading) {
+      setLoadedCanvas(null);
+    } else {
+      setLoadedCanvas(canvas.current);
+    }
+  }, [imageEl, loading, dimensions]);
+
+  return {
+    canvas: loadedCanvas,
+    dimensions: currentDimensions,
+  };
+}
+
+interface UseLoadImage {
+  imageEl: HTMLImageElement | null,
+  loading: boolean,
+}
+
+function useLoadImage(image: File | Blob | null): UseLoadImage {
+  const [state, setState] = useState<UseLoadImage>({
+    imageEl: null,
+    loading: true,
+  });
 
   useEffect(() => {
     if (image == null) {
+      setState({
+        imageEl: null,
+        loading: false,
+      });
       return undefined;
     }
 
@@ -621,13 +670,16 @@ function useLoadImage(image: File | Blob | null): HTMLImageElement | null {
     const newImageEl = new Image();
     newImageEl.src = objectUrl;
     newImageEl.onload = () => {
-      setImageEl(newImageEl);
+      setState({
+        imageEl: newImageEl,
+        loading: false,
+      });
     };
 
     return () => { URL.revokeObjectURL(objectUrl); };
   }, [image]);
 
-  return imageEl;
+  return state;
 }
 
 interface MaskHistory {
@@ -636,7 +688,6 @@ interface MaskHistory {
 }
 
 interface UseMaskImageHistory {
-  reinitializeHistory: (_newImage: string | null) => void,
   pushHistory: (_newImage: string | null) => void,
   undoHistory: () => string | null,
   redoHistory: () => string | null,
@@ -666,13 +717,6 @@ function useMaskImageHistory(opts: UseMaskImageHistoryOptions): UseMaskImageHist
       };
     });
   }, [opts.maxImages]);
-
-  const reinitializeHistory = useCallback((newImage: string | null) => {
-    setMaskHistory({
-      images: [newImage],
-      index: 0,
-    });
-  }, []);
 
   const canUndo = maskHistory.index > 0;
   const canRedo = maskHistory.index < maskHistory.images.length - 1;
@@ -708,7 +752,6 @@ function useMaskImageHistory(opts: UseMaskImageHistoryOptions): UseMaskImageHist
   }, [maskHistory, canRedo]);
 
   return {
-    reinitializeHistory,
     pushHistory,
     undoHistory,
     redoHistory,
