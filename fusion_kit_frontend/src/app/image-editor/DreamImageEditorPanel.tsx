@@ -31,7 +31,7 @@ interface DreamImageEditorPanelProps {
   imageMaskType: DreamBaseImageMaskType,
   onClose: () => void,
   onSaveImage: (_newImage: Blob) => void,
-  onSaveMask: (_newMask: Blob, _newMaskType: DreamBaseImageMaskType) => void,
+  onSaveMask: (_newMask: Blob | null, _newMaskType: DreamBaseImageMaskType) => void,
 }
 
 export const DreamImageEditorPanel: React.FC<DreamImageEditorPanelProps> = (props) => {
@@ -125,7 +125,14 @@ export const DreamImageEditorPanel: React.FC<DreamImageEditorPanelProps> = (prop
         }
 
         onSaveImage(imageBlob);
-        onSaveMask(maskBlob, currentImageMaskType);
+
+        if (isCanvasEmpty(outputMaskCanvas)) {
+          // Remove the mask if it's empty
+          onSaveMask(null, currentImageMaskType);
+        } else {
+          onSaveMask(maskBlob, currentImageMaskType);
+        }
+
         onClose();
       });
     });
@@ -270,3 +277,23 @@ export const ImageEditorActionButton: React.FC<ImageEditorActionButtonProps> = (
     </button>
   );
 };
+
+function isCanvasEmpty(canvas: HTMLCanvasElement | null): boolean {
+  const ctx = canvas?.getContext("2d");
+  if (canvas == null || ctx == null) {
+    return true;
+  }
+
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+  // Image data contains a byte array of pixels in RGBA order with a stride of 4
+  for (let i = 0; i < imageData.data.length; i += 4) {
+    const alpha = imageData.data[i + 3];
+    if (alpha > 0) {
+      // We found a non-transparent pixel, so the canvas is not empty
+      return false;
+    }
+  }
+
+  return true;
+}
