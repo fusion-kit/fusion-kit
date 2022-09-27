@@ -180,7 +180,7 @@ export const ImageResizeEditor: React.FC<ImageEditorProps> = (props) => {
       <div className="my-3">
         <p className="text-gray-500 text-sm">Strech, squish, or crop an image before dreaming. Stable Diffusion works best with square 512&times;512 images.</p>
       </div>
-      <div className="flex space-x-0 sm:space-x-4 flex-col-reverse sm:flex-row">
+      <div className="flex space-x-0 space-y-4 sm:space-x-4 sm:space-y-0 flex-col sm:flex-row">
         <canvas
           className="min-w-0 min-h-0 w-full max-h-36 object-contain flex-1"
           ref={setPreviewCanvas}

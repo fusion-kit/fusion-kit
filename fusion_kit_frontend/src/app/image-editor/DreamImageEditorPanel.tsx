@@ -210,10 +210,10 @@ export const DreamImageEditorPanel: React.FC<DreamImageEditorPanelProps> = (prop
                   cropOffset={cropOffset}
                   setCropOffset={setCropOffset}
                 />
-                <div className="mt-4 flex justify-end space-x-2">
+                <div className="mt-4 flex justify-end space-x-2 border-t pt-4 border-gray-200">
                   <button
                     type="button"
-                    className="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
+                    className="inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto sm:text-sm"
                     onClick={onClose}
                   >
                     Cancel
