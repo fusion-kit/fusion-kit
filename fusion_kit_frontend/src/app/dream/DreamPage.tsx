@@ -5,7 +5,7 @@ import { CurrentDream } from "./CurrentDream";
 import { useCreateDream, useDreamImageSelection, useDreamOptions } from "./hooks";
 import { ShowDreamImage } from "./components";
 import { DreamBaseImageMaskType, DreamSampler } from "../../generated/graphql";
-import { DreamImageEditorPanel } from "./DreamImageEditorPanel";
+import { DreamImageEditorPanel } from "../image-editor/DreamImageEditorPanel";
 
 export const DreamPage: React.FC = () => {
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
