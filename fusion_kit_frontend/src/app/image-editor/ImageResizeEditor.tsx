@@ -124,11 +124,12 @@ export const ImageResizeEditor: React.FC<ImageEditorProps> = (props) => {
       return;
     }
 
-    if (imageCanvas != null) {
-      ctx.clearRect(0, 0, previewDimensions.width, previewDimensions.height);
-
-      ctx.drawImage(imageCanvas, 0, 0, previewDimensions.width, previewDimensions.height);
+    if (imageCanvas == null) {
+      return;
     }
+
+    ctx.clearRect(0, 0, previewDimensions.width, previewDimensions.height);
+    ctx.drawImage(imageCanvas, 0, 0, previewDimensions.width, previewDimensions.height);
 
     if (resizeType === "crop") {
       ctx.save();
@@ -142,12 +143,26 @@ export const ImageResizeEditor: React.FC<ImageEditorProps> = (props) => {
       });
 
       ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-      ctx.fillRect(
+      ctx.strokeStyle = "rgba(55, 55, 256, 0.7)";
+      ctx.lineWidth = 20;
+      ctx.fillRect(0, 0, previewDimensions.width, previewDimensions.height);
+      ctx.strokeRect(
         newCropOffset.x,
         newCropOffset.y,
         resizeDimensions.width,
         resizeDimensions.height,
       );
+      ctx.clearRect(
+        newCropOffset.x,
+        newCropOffset.y,
+        resizeDimensions.width,
+        resizeDimensions.height,
+      );
+
+      ctx.globalCompositeOperation = "destination-atop";
+      ctx.drawImage(imageCanvas, 0, 0, previewDimensions.width, previewDimensions.height);
+
+      ctx.globalCompositeOperation = "source-over";
 
       ctx.restore();
     }
