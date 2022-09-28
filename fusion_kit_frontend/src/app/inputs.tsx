@@ -6,13 +6,14 @@ interface OptionalNumberInputProps {
   label: string,
   placeholder?: string,
   value: number | null,
+  disabled?: boolean,
   onChange: (_newValue: number | null) => void,
   allowDecimal?: boolean,
 }
 
 export const OptionalNumberInput: React.FC<OptionalNumberInputProps> = (props) => {
   const {
-    label, placeholder, value, onChange, allowDecimal = false,
+    label, placeholder, value, disabled, onChange, allowDecimal = false,
   } = props;
 
   const textInputId = useId();
@@ -46,9 +47,10 @@ export const OptionalNumberInput: React.FC<OptionalNumberInputProps> = (props) =
         type="text"
         inputMode="numeric"
         pattern={allowDecimal ? "[0-9\\.]*" : "[0-9]*"}
-        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-500 sm:text-sm"
         id={textInputId}
         value={textValue}
+        disabled={disabled}
         placeholder={placeholder}
         onChange={onTextInputChange}
         onBlur={onTextInputBlur}
@@ -61,13 +63,14 @@ interface NumberInputProps {
   label: string,
   placeholder?: string,
   value: number | null,
+  disabled?: boolean,
   onChange: (_newValue: number) => void,
   allowDecimal?: boolean,
 }
 
 export const NumberInput: React.FC<NumberInputProps> = (props) => {
   const {
-    label, placeholder, value, onChange, allowDecimal,
+    label, placeholder, value, disabled, onChange, allowDecimal,
   } = props;
 
   const onInputChange = useCallback((newValue: number | null) => {
@@ -81,6 +84,7 @@ export const NumberInput: React.FC<NumberInputProps> = (props) => {
       label={label}
       placeholder={placeholder}
       value={value}
+      disabled={disabled}
       onChange={onInputChange}
       allowDecimal={allowDecimal}
     />
