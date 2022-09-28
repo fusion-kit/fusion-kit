@@ -1,5 +1,6 @@
 from io import BytesIO
 import os
+import shutil
 import asyncio
 import appdirs
 from ariadne import gql
@@ -20,12 +21,23 @@ project_path = os.path.realpath(os.path.join(os.path.realpath(__file__), "..", "
 graphql_schema_path = os.path.join(project_path, "schema.graphql")
 alembic_ini_path = os.path.join(project_path, "fusion_kit_backend", "alembic.ini")
 alembic_script_path = os.path.join(project_path, "fusion_kit_backend", "alembic")
+default_model_config = os.path.join(project_path, "invoke_ai", "configs", "stable-diffusion", "v1-inference.yaml")
+
 data_dir = appdirs.user_data_dir("fusion-kit")
 images_dir = os.path.join(data_dir, "images")
+models_dir = os.path.join(data_dir, "models")
+configs_dir = os.path.join(data_dir, "configs")
 db_path = os.path.join(data_dir, "fusion-kit.db")
 
 os.makedirs(data_dir, exist_ok=True)
 os.makedirs(images_dir, exist_ok=True)
+os.makedirs(models_dir, exist_ok=True)
+os.makedirs(configs_dir, exist_ok=True)
+
+default_config_path = os.path.join(configs_dir, 'v1-inference.yaml')
+if not os.path.isfile(default_config_path):
+    print(f'Copying default config to {default_config_path}')
+    shutil.copyfile(default_model_config, default_config_path)
 
 # Parse and validate GraphQL schema
 with open(graphql_schema_path) as file:
@@ -47,7 +59,7 @@ def get_image(request):
     return StreamingResponse(data, media_type='image/png')
 
 async def main():
-    async with FusionKitManager(db_config=db_config, images_dir=images_dir) as manager:
+    async with FusionKitManager(db_config=db_config, data_dir=data_dir) as manager:
         # Run datababase migrations
         db.run_db_migrations(db_config=db_config, db_conn=manager.db_conn)
 

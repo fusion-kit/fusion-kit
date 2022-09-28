@@ -13,9 +13,9 @@ import db
 from domain.dream import Dream
 
 class FusionKitManager():
-    def __init__(self, db_config, images_dir):
+    def __init__(self, db_config, data_dir):
         self.db_engine = db_config.db_engine
-        self.images_dir = images_dir
+        self.data_dir = data_dir
 
         self.broadcast = Broadcast("memory://")
         self.processor = Processor(broadcast=self.broadcast)
@@ -181,6 +181,10 @@ class FusionKitManager():
 
         segments = '/'.join(key)
         return f"/images/{segments}.png"
+
+    @property
+    def images_dir(self):
+        return self.data_dir.join('/images')
 
 async def dream_watcher(manager, dream, responses):
     broadcast = manager.broadcast
