@@ -118,8 +118,8 @@ type Settings {
 type SettingsModel {
   id: ID!
   name: String!
-  filename: String!
-  configFile: String!
+  weightFilename: String!
+  configFilename: String!
   width: Int!
   height: Int!
 }
@@ -135,8 +135,8 @@ input SettingsInput {
 input SettingsModelInput {
   id: ID!
   name: String!
-  filename: String!
-  configFile: String!
+  weightFilename: String!
+  configFilename: String!
   width: Int!
   height: Int!
 }

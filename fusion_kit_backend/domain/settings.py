@@ -56,11 +56,11 @@ class Settings():
 
         errors = []
 
-        if not os.path.isfile(os.path.join(models_dir, model['filename'])):
-            errors.append(f"model file '{model['filename']}' does not exist")
+        if not os.path.isfile(os.path.join(models_dir, model['weight_filename'])):
+            errors.append(f"model weight file '{model['weight_filename']}' does not exist")
 
-        if not os.path.isfile(os.path.join(configs_dir, model['config_file'])):
-            errors.append(f"model config '{model['config_file']}' does not exist")
+        if not os.path.isfile(os.path.join(configs_dir, model['config_filename'])):
+            errors.append(f"model config '{model['config_filename']}' does not exist")
 
         return errors
 
