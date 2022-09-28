@@ -24,7 +24,7 @@ def processor_runner(settings, data_dir, req_queue, res_queue):
                 })
 
             if settings['show_previews']:
-                steps_per_image_preview = settings['step_per_preview']
+                steps_per_image_preview = settings['steps_per_preview']
             else:
                 steps_per_image_preview = 0
 
