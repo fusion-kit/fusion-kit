@@ -1,5 +1,6 @@
 from io import BytesIO
 import os
+import multiprocessing
 import shutil
 import asyncio
 import appdirs
@@ -59,6 +60,9 @@ def get_image(request):
     return StreamingResponse(data, media_type='image/png')
 
 async def main():
+    # Spawn is required when CUDA is initialized in the parent process
+    multiprocessing.set_start_method('spawn')
+
     async with FusionKitManager(db_config=db_config, data_dir=data_dir) as manager:
         # Run datababase migrations
         db.run_db_migrations(db_config=db_config, db_conn=manager.db_conn)
