@@ -3,6 +3,9 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { AppLayout } from "./app/AppLayout";
 import { DreamPage } from "./app/dream/DreamPage";
 import { ErrorPage, NotFoundResponse } from "./app/ErrorPage";
+import { GalleryPage } from "./app/GalleryPage";
+import { ImageLabPage } from "./app/ImageLabPage";
+import { SettingsPage } from "./app/SettingsPage";
 
 export const App: React.FC = () => {
   const router = createBrowserRouter([
@@ -13,6 +16,18 @@ export const App: React.FC = () => {
         {
           path: "/",
           element: <DreamPage />,
+        },
+        {
+          path: "/gallery",
+          element: <GalleryPage />,
+        },
+        {
+          path: "/image-lab",
+          element: <ImageLabPage />,
+        },
+        {
+          path: "/settings",
+          element: <SettingsPage />,
         },
         {
           path: "/*",
