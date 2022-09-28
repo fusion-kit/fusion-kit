@@ -1,4 +1,5 @@
 import os
+import re
 from ariadne import ObjectType
 import torch.cuda
 
@@ -20,6 +21,9 @@ def get_default_device():
     return sorted_devices[-1][0]
 
 gql_settings = ObjectType('Settings')
+
+# Don't allow path separators in filenames (avoids path traversal issues)
+FILENAME_REGEX = r'\A[^/\\]*\Z'
 
 class Settings():
     def __init__(
@@ -56,10 +60,14 @@ class Settings():
 
         errors = []
 
-        if not os.path.isfile(os.path.join(models_dir, model['weight_filename'])):
+        if re.match(FILENAME_REGEX, model['weight_filename']) is None:
+            errors.append(f"invalid model weight filename '{model['weight_filename']}'")
+        elif not os.path.isfile(os.path.join(models_dir, model['weight_filename'])):
             errors.append(f"model weight file '{model['weight_filename']}' does not exist")
 
-        if not os.path.isfile(os.path.join(configs_dir, model['config_filename'])):
+        if re.match(FILENAME_REGEX, model['config_filename']) is None:
+            errors.append(f"invalid model config filename '{model['config_filename']}'")
+        elif not os.path.isfile(os.path.join(configs_dir, model['config_filename'])):
             errors.append(f"model config '{model['config_filename']}' does not exist")
 
         return errors
