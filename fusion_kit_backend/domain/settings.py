@@ -53,6 +53,13 @@ class Settings():
         if self.device not in get_available_devices():
             errors.append(f'unsupported device: {self.device}')
 
+        if self.show_previews:
+            if self.steps_per_preview is None:
+                errors.append('previews enabled but steps per preview not set')
+        else:
+            if self.steps_per_preview is not None:
+                errors.append('previews disabled but steps per preview is set')
+
         return errors
 
     def _validate_model(self, model, data_dir):
