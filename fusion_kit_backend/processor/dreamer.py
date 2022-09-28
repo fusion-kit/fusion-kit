@@ -18,7 +18,7 @@ class Dreamer():
         settings,
         data_dir,
     ):
-        weights = os.path.join(data_dir, 'models', settings['models'][0]['weight_filename'])
+        weights = os.path.join(data_dir, 'models', settings['models'][0]['weights_filename'])
         config = os.path.join(data_dir, 'configs', settings['models'][0]['config_filename'])
         device = settings['device']
         full_precision = settings['use_full_precision']

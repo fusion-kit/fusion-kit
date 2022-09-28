@@ -68,10 +68,10 @@ class Settings():
 
         errors = []
 
-        if re.match(FILENAME_REGEX, model['weight_filename']) is None:
-            errors.append(f"invalid model weight filename '{model['weight_filename']}'")
-        elif not os.path.isfile(os.path.join(models_dir, model['weight_filename'])):
-            errors.append(f"model weight file '{model['weight_filename']}' does not exist")
+        if re.match(FILENAME_REGEX, model['weights_filename']) is None:
+            errors.append(f"invalid model weights filename '{model['weights_filename']}'")
+        elif not os.path.isfile(os.path.join(models_dir, model['weights_filename'])):
+            errors.append(f"model weight file '{model['weights_filename']}' does not exist")
 
         if re.match(FILENAME_REGEX, model['config_filename']) is None:
             errors.append(f"invalid model config filename '{model['config_filename']}'")
