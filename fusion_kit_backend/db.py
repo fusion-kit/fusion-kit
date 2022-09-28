@@ -53,3 +53,9 @@ class DreamImage(Base):
     width = Column(Integer, nullable=False)
     height = Column(Integer, nullable=False)
     blurhash = Column(String, nullable=False)
+
+class Settings(Base):
+    __tablename__ = 'settings'
+
+    key = Column(String, primary_key=True)
+    settings_json = Column(String, nullable=False)
