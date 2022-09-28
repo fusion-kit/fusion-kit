@@ -25,6 +25,7 @@
     "react-dom": "^18.2.0",
     "react-dropzone": "^14.2.2",
     "react-expanding-textarea": "^2.3.6",
+    "react-router-dom": "^6.4.1",
     "ulid": "^2.3.0"
   },
   "devDependencies": {
