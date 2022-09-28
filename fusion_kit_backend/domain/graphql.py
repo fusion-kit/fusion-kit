@@ -25,7 +25,7 @@ async def resolve_start_dream(_, info, options):
 async def resolve_update_settings(_, info, new_settings):
     manager = info.context['manager']
 
-    await manager.update_settings(new_settings)
+    manager.update_settings(new_settings)
     return manager.settings
 
 subscription = SubscriptionType()

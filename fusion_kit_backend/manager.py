@@ -188,7 +188,7 @@ class FusionKitManager():
 
             session.commit()
 
-    async def update_settings(self, new_settings):
+    def update_settings(self, new_settings):
         updated_settings = Settings(
             models=new_settings['models'],
             device=new_settings['device'],
@@ -223,7 +223,7 @@ class FusionKitManager():
 
         self.settings = updated_settings
         self.settings.synthesize_invoke_ai_config(self.invoke_ai_config_path)
-        await self.processor.update_settings(self.settings.to_json())
+        self.processor.update_settings(self.settings.to_json())
 
     def register_image(self, image, key):
         if key not in self.registered_images:

@@ -9,7 +9,7 @@ class ProcessorError(Exception):
 class WatchdogFailedError(ProcessorError):
     def __init__(self, request_id):
         super().__init__(f"runner process died while waiting for response")
-        self.request_id = request_id\
+        self.request_id = request_id
 
 class Processor():
     def __init__(self, broadcast, settings, data_dir):
@@ -59,11 +59,11 @@ class Processor():
                     if response.get('stopped', False):
                          return
 
-    async def update_settings(self, settings):
+    def update_settings(self, settings):
         self.settings = settings
-        await self.restart()
+        self.restart()
 
-    async def restart(self):
+    def restart(self):
         self.run()
 
         self.req_queue.put({
@@ -72,10 +72,7 @@ class Processor():
             'body': {},
         })
 
-        loop = asyncio.get_running_loop()
-        await loop.run_in_executor(None, self.runner_process.join)
-
-        self.run()
+        self.restart_task = asyncio.create_task(finish_restart(self))
 
 async def runner_broadcaster(processor):
     loop = asyncio.get_running_loop()
@@ -107,3 +104,10 @@ async def runner_watchdog(processor):
             processor.active_requests.clear()
 
         await asyncio.sleep(5)
+
+
+async def finish_restart(processor):
+    loop = asyncio.get_running_loop()
+    await loop.run_in_executor(None, processor.runner_process.join)
+
+    processor.run()
