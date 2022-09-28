@@ -12,7 +12,9 @@ class WatchdogFailedError(ProcessorError):
         self.request_id = request_id\
 
 class Processor():
-    def __init__(self, broadcast):
+    def __init__(self, broadcast, settings, data_dir):
+        self.settings = settings
+        self.data_dir = data_dir
         self.runner_process = None
         self.broadcast = broadcast
         self.active_requests = set()
@@ -28,6 +30,8 @@ class Processor():
             self.runner_process = multiprocessing.Process(
                 target=processor_runner,
                 kwargs={
+                    'settings': self.settings,
+                    'data_dir': self.data_dir,
                     'req_queue': self.req_queue,
                     'res_queue': self.res_queue,
                 }
@@ -54,6 +58,24 @@ class Processor():
                     yield response.get('body')
                     if response.get('stopped', False):
                          return
+
+    async def update_settings(self, settings):
+        self.settings = settings
+        await self.restart()
+
+    async def restart(self):
+        self.run()
+
+        self.req_queue.put({
+            'request_id': None,
+            'request': 'stop',
+            'body': {},
+        })
+
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, self.runner_process.join)
+
+        self.run()
 
 async def runner_broadcaster(processor):
     loop = asyncio.get_running_loop()

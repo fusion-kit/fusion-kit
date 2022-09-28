@@ -48,7 +48,11 @@ class FusionKitManager():
 
 
         self.broadcast = Broadcast("memory://")
-        self.processor = Processor(broadcast=self.broadcast)
+        self.processor = Processor(
+            broadcast=self.broadcast,
+            settings=self.settings.to_json(),
+            data_dir=self.data_dir,
+        )
         self.active_dreams = {}
         self.registered_images = {}
 
@@ -184,7 +188,7 @@ class FusionKitManager():
 
             session.commit()
 
-    def update_settings(self, new_settings):
+    async def update_settings(self, new_settings):
         updated_settings = Settings(
             models=new_settings['models'],
             device=new_settings['device'],
@@ -219,6 +223,7 @@ class FusionKitManager():
 
         self.settings = updated_settings
         self.settings.synthesize_invoke_ai_config(self.invoke_ai_config_path)
+        await self.processor.update_settings(self.settings.to_json())
 
     def register_image(self, image, key):
         if key not in self.registered_images:

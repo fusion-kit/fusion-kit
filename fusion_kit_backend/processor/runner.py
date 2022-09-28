@@ -1,12 +1,12 @@
 import sys
 
-def processor_runner(req_queue, res_queue):
+def processor_runner(settings, data_dir, req_queue, res_queue):
     sys.path.append('./invoke_ai')
     from .dreamer import Dreamer
 
     print("started processor")
 
-    dreamer = Dreamer()
+    dreamer = Dreamer(settings=settings, data_dir=data_dir)
     while True:
         request = req_queue.get()
         request_id = request['request_id']
@@ -23,6 +23,11 @@ def processor_runner(req_queue, res_queue):
                     }
                 })
 
+            if settings['show_previews']:
+                steps_per_image_preview = settings['step_per_preview']
+            else:
+                steps_per_image_preview = 0
+
             options = request_body['options']
             result = dreamer.dream(
                 prompt=options['prompt'],
@@ -36,7 +41,7 @@ def processor_runner(req_queue, res_queue):
                 sampler_steps=options['sampler_steps'],
                 sampler_eta=options['sampler_eta'],
                 guidance_scale=options['guidance_scale'],
-                steps_per_image_preview=request_body['steps_per_image_preview'],
+                steps_per_image_preview=steps_per_image_preview,
                 image_progress_callback=image_progress_callback,
             )
             res_queue.put({
@@ -48,8 +53,11 @@ def processor_runner(req_queue, res_queue):
                     'seed': result['seed'],
                 }
             })
+        elif request_type == 'stop':
+            print('stopping processor')
+            return
         else:
-            print(f"Unkown request type: {request_type}")
+            print(f"Unknown request type: {request_type}")
             res_queue.put({
                 'request_id': request_id,
                 'stopped': True,

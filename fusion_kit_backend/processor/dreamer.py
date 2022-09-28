@@ -1,6 +1,7 @@
 from itertools import islice
 from ldm.generate import Generate
 import numpy
+import os
 from PIL import Image
 from ulid import ULID
 
@@ -14,15 +15,18 @@ CKPT_FILE = 'invoke_ai/models/ldm/stable-diffusion-v1/model.ckpt'
 class Dreamer():
     def __init__(
         self,
-        device_type='cuda',
-        full_precision=False,
-        config=CONFIG_FILE,
-        weights=CKPT_FILE,
+        settings,
+        data_dir,
     ):
+        weights = os.path.join(data_dir, 'models', settings['models'][0]['weight_filename'])
+        config = os.path.join(data_dir, 'configs', settings['models'][0]['config_filename'])
+        device = settings['device']
+        full_precision = settings['use_full_precision']
+
         self.generator = Generate(
             weights=weights,
             config=config,
-            device_type=device_type,
+            device_type=device,
             full_precision=full_precision,
         )
 
