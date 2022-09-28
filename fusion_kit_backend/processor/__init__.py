@@ -1,4 +1,6 @@
 import asyncio
+import queue
+from time import time
 from broadcaster import Broadcast
 import multiprocessing
 from .runner import processor_runner
@@ -18,15 +20,23 @@ class Processor():
         self.runner_process = None
         self.broadcast = broadcast
         self.active_requests = set()
-        self.run()
+        self.run(recreate_queues=True)
+
+        self.broadcast_task = asyncio.create_task(runner_broadcaster(self))
+        self.watchdog_task = asyncio.create_task(runner_watchdog(self))
 
     def is_running(self):
         return self.runner_process is not None and self.runner_process.is_alive()
 
-    def run(self):
+    def run(self, recreate_queues=True):
         if not self.is_running():
-            self.req_queue = multiprocessing.Queue()
-            self.res_queue = multiprocessing.Queue()
+            if recreate_queues:
+                self.req_queue = multiprocessing.Queue()
+                self.res_queue = multiprocessing.Queue()
+
+                self.req_queue.cancel_join_thread()
+                self.res_queue.cancel_join_thread()
+
             self.runner_process = multiprocessing.Process(
                 target=processor_runner,
                 kwargs={
@@ -37,9 +47,6 @@ class Processor():
                 }
             )
             self.runner_process.start()
-
-            self.broadcast_task = asyncio.create_task(runner_broadcaster(self))
-            self.watchdog_task = asyncio.create_task(runner_watchdog(self))
 
     async def send_request_and_watch(self, request_id, request, body):
         self.active_requests.add(request_id)
@@ -77,13 +84,18 @@ class Processor():
 async def runner_broadcaster(processor):
     loop = asyncio.get_running_loop()
     while True:
-        response = await loop.run_in_executor(None, processor.res_queue.get)
-        await processor.broadcast.publish(channel="response", message=response)
+        try:
+            response = await loop.run_in_executor(None, processor.res_queue.get, True, 5)
+        except queue.Empty:
+            response = None
 
-        request_id = response.get("request_id")
-        is_stopped = response.get("stopped", False)
-        if request_id is not None and is_stopped:
-            processor.active_requests.discard(request_id)
+        if response is not None:
+            await processor.broadcast.publish(channel="response", message=response)
+
+            request_id = response.get("request_id")
+            is_stopped = response.get("stopped", False)
+            if request_id is not None and is_stopped:
+                processor.active_requests.discard(request_id)
 
 async def runner_watchdog(processor):
     print("started watchdog")
@@ -110,4 +122,4 @@ async def finish_restart(processor):
     loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, processor.runner_process.join)
 
-    processor.run()
+    processor.run(recreate_queues=False)

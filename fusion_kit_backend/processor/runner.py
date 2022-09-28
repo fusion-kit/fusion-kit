@@ -6,6 +6,10 @@ def processor_runner(settings, data_dir, req_queue, res_queue):
 
     print("started processor")
 
+    # Allow the processor to exit even if the queues still have data
+    req_queue.cancel_join_thread()
+    res_queue.cancel_join_thread()
+
     dreamer = Dreamer(settings=settings, data_dir=data_dir)
     while True:
         request = req_queue.get()
