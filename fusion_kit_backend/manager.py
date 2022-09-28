@@ -2,20 +2,49 @@ import asyncio
 from random import randint
 from broadcaster import Broadcast
 from copy import copy
+import json
 import blurhash_numba
 import numpy
 import os
 from PIL import Image
 from processor import Processor
 import re
+from sqlalchemy import select
 from ulid import ULID
 import db
 from domain.dream import Dream
+from domain.settings import Settings
 
 class FusionKitManager():
     def __init__(self, db_config, data_dir):
         self.db_engine = db_config.db_engine
         self.data_dir = data_dir
+
+        self.settings = None
+        with db.Session() as session:
+            result = session.execute(
+                select(db.Settings)
+                    .where(db.Settings.key == 'settings_v0')
+                    .limit(1)
+            )
+            settings_row = result.scalar()
+            if settings_row is None:
+                print('Settings not found (first-time setup)')
+            else:
+                settings_json = json.loads(settings_row.settings_json)
+                settings = Settings.from_json(settings_json)
+                settings_errors = settings.validate()
+
+                if len(settings_errors) == 0:
+                    print("loaded settings")
+                    self.settings = settings
+                else:
+                    print("settings errors:")
+                    for error in settings_errors:
+                        print(error)
+
+        if self.settings is not None:
+            self.settings.synthesize_invoke_ai_config(self.invoke_ai_config_path)
 
         self.broadcast = Broadcast("memory://")
         self.processor = Processor(broadcast=self.broadcast)
@@ -185,6 +214,10 @@ class FusionKitManager():
     @property
     def images_dir(self):
         return self.data_dir.join('/images')
+
+    @property
+    def invoke_ai_config_path(self):
+        return self.data_dir.join('/invoke-ai-config.yml')
 
 async def dream_watcher(manager, dream, responses):
     broadcast = manager.broadcast
