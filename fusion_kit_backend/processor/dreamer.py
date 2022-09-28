@@ -18,17 +18,20 @@ class Dreamer():
         settings,
         data_dir,
     ):
-        weights = os.path.join(data_dir, 'models', settings['models'][0]['weights_filename'])
-        config = os.path.join(data_dir, 'configs', settings['models'][0]['config_filename'])
-        device = settings['device']
-        full_precision = settings['use_full_precision']
+        active_model = next((model for model in settings['models'] if model['is_active']), None)
 
-        self.generator = Generate(
-            weights=weights,
-            config=config,
-            device_type=device,
-            full_precision=full_precision,
-        )
+        if active_model is not None:
+            weights = os.path.join(data_dir, 'models', active_model['weights_filename'])
+            config = os.path.join(data_dir, 'configs', active_model['config_filename'])
+            device = settings['device']
+            full_precision = settings['use_full_precision']
+
+            self.generator = Generate(
+                weights=weights,
+                config=config,
+                device_type=device,
+                full_precision=full_precision,
+            )
 
     def dream(
         self,
