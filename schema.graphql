@@ -1,9 +1,10 @@
 type Query {
-  hello: String!
+  settings: Settings!
 }
 
 type Mutation {
   startDream(options: DreamOptionsInput!): Dream!
+  updateSettings(newSettings: SettingsInput!): Settings!
 }
 
 type Subscription {
@@ -100,4 +101,42 @@ type FinishedDreamImage implements DreamImage {
 type StoppedDreamImage implements DreamImage {
   id: ID!
   dreamId: ID!
+}
+
+type Settings {
+  isReady: Boolean!
+  availableDevices: [String!]!
+  modelsFilePath: String!
+
+  device: String!
+  showPreviews: Boolean!
+  stepsPerPreview: Int
+  useFullPrecision: Boolean!
+  models: [SettingsModel!]!
+}
+
+type SettingsModel {
+  id: ID!
+  name: String!
+  filename: String!
+  configFile: String!
+  width: Int!
+  height: Int!
+}
+
+input SettingsInput {
+  device: String!
+  showPreviews: Boolean!
+  stepsPerPreview: Int
+  useFullPrecision: Boolean!
+  models: [SettingsModelInput!]!
+}
+
+input SettingsModelInput {
+  id: ID!
+  name: String!
+  filename: String!
+  configFile: String!
+  width: Int!
+  height: Int!
 }

@@ -4,9 +4,11 @@ from domain.dream_image import gql_dream_image
 
 query = ObjectType("Query")
 
-@query.field("hello")
-def resolve_hello(*_):
-    return "Hello world!"
+@query.field("settings")
+def resolve_settings(_, info):
+    manager = info.context['manager']
+
+    return manager.settings
 
 mutation = ObjectType("Mutation")
 
@@ -17,6 +19,14 @@ async def resolve_start_dream(_, info, options):
 
     dream = await manager.start_dream(options)
     return dream
+
+@mutation.field("updateSettings")
+@convert_kwargs_to_snake_case
+async def resolve_update_settings(_, info, new_settings):
+    manager = info.context['manager']
+
+    manager.update_settings(new_settings)
+    return manager.settings
 
 subscription = SubscriptionType()
 

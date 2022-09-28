@@ -15,16 +15,18 @@ import db
 from domain.dream import Dream
 from domain.settings import Settings
 
+DB_SETTINGS_KEY = 'settings_v0'
+
 class FusionKitManager():
     def __init__(self, db_config, data_dir):
         self.db_engine = db_config.db_engine
         self.data_dir = data_dir
 
-        self.settings = None
+        self.settings = Settings.get_default_settings()
         with db.Session() as session:
             result = session.execute(
                 select(db.Settings)
-                    .where(db.Settings.key == 'settings_v0')
+                    .where(db.Settings.key == DB_SETTINGS_KEY)
                     .limit(1)
             )
             settings_row = result.scalar()
@@ -32,19 +34,18 @@ class FusionKitManager():
                 print('Settings not found (first-time setup)')
             else:
                 settings_json = json.loads(settings_row.settings_json)
-                settings = Settings.from_json(settings_json)
-                settings_errors = settings.validate()
+                self.settings = Settings.from_json(settings_json)
 
-                if len(settings_errors) == 0:
-                    print("loaded settings")
-                    self.settings = settings
-                else:
-                    print("settings errors:")
-                    for error in settings_errors:
-                        print(error)
+        settings_errors = self.settings.validate(self.data_dir)
 
-        if self.settings is not None:
+        if len(settings_errors) == 0:
+            print("loaded settings successfully")
             self.settings.synthesize_invoke_ai_config(self.invoke_ai_config_path)
+        else:
+            print("settings not ready:")
+            for error in settings_errors:
+                print(error)
+
 
         self.broadcast = Broadcast("memory://")
         self.processor = Processor(broadcast=self.broadcast)
@@ -183,6 +184,42 @@ class FusionKitManager():
 
             session.commit()
 
+    def update_settings(self, new_settings):
+        updated_settings = Settings(
+            models=new_settings['models'],
+            device=new_settings['device'],
+            show_previews=new_settings['show_previews'],
+            steps_per_preview=new_settings['steps_per_preview'],
+            use_full_precision=new_settings['use_full_precision'],
+        )
+
+        errors = updated_settings.validate(self.data_dir)
+        if len(errors) > 0:
+            raise Exception(f"errors in settings: {', '.join(errors)}")
+
+        with db.Session() as session:
+            db_settings_query = session.execute(
+                select(db.Settings)
+                    .where(db.Settings.key == DB_SETTINGS_KEY)
+                    .limit(1)
+            )
+            db_settings = db_settings_query.scalar()
+
+            if db_settings is not None:
+                db_settings.settings_json = json.dumps(updated_settings.to_json())
+                session.merge(db_settings)
+            else:
+                db_settings = db.Settings(
+                    key=DB_SETTINGS_KEY,
+                    settings_json=json.dumps(updated_settings.to_json())
+                )
+                session.add(db_settings)
+
+            session.commit()
+
+        self.settings = updated_settings
+        self.settings.synthesize_invoke_ai_config(self.invoke_ai_config_path)
+
     def register_image(self, image, key):
         if key not in self.registered_images:
             self.registered_images[key] = image
@@ -213,7 +250,11 @@ class FusionKitManager():
 
     @property
     def images_dir(self):
-        return self.data_dir.join('/images')
+        return os.path.join(self.data_dir, 'images')
+
+    @property
+    def models_dir(self):
+        return os.path.join(self.data_dir, 'models')
 
     @property
     def invoke_ai_config_path(self):

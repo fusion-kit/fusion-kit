@@ -1,4 +1,5 @@
 import os
+from ariadne import ObjectType
 import torch.cuda
 
 def get_available_devices():
@@ -17,6 +18,8 @@ def get_default_device():
 
     sorted_devices = sorted(devices.items(), key=lambda pair: pair[1])
     return sorted_devices[-1][0]
+
+gql_settings = ObjectType('Settings')
 
 class Settings():
     def __init__(
@@ -48,8 +51,8 @@ class Settings():
         return errors
 
     def _validate_model(self, model, data_dir):
-        models_dir = data_dir.join('models')
-        configs_dir = data_dir.join('configs')
+        models_dir = os.path.join(data_dir, 'models')
+        configs_dir = os.path.join(data_dir, 'configs')
 
         errors = []
 
@@ -61,12 +64,21 @@ class Settings():
 
         return errors
 
-    def synthesize_invoke_ai_config(path):
+    def synthesize_invoke_ai_config(self, path):
         print("TODO: Synthesize InvokeAI config")
+
+    def to_json(self):
+        return {
+            'models': self.models,
+            'device': self.device,
+            'use_full_precision': self.use_full_precision,
+            'show_previews': self.show_previews,
+            'steps_per_preview': self.steps_per_preview,
+        }
 
     @staticmethod
     def get_default_settings():
-        return Settings.new(
+        return Settings(
             models=[],
             device=get_default_device(),
             use_full_precision=False,
@@ -76,10 +88,28 @@ class Settings():
 
     @staticmethod
     def from_json(json):
-        return Settings.new(
+        return Settings(
             models=json['models'],
             device=json['device'],
             use_full_precision=json['use_full_precision'],
             show_previews=json['show_previews'],
             steps_per_preview=json['steps_per_preview'],
         )
+
+    ### GraphQL resolvers ###
+
+    def is_ready(self, info):
+        manager = info.context['manager']
+
+        return len(self.validate(manager.data_dir)) == 0
+
+    def available_devices(self, *_):
+        devices = get_available_devices()
+
+        sorted_devices = sorted(devices.items(), key=lambda pair: pair[1])
+        return [pair[0] for pair in reversed(sorted_devices)]
+
+    def models_file_path(self, info):
+        manager = info.context['manager']
+
+        return manager.models_dir
