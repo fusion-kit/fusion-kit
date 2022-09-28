@@ -113,9 +113,11 @@ type Settings {
   stepsPerPreview: Int
   useFullPrecision: Boolean!
   models: [SettingsModel!]!
+  activeModel: SettingsModel
 }
 
 type SettingsModel {
+  isActive: Boolean!
   id: ID!
   name: String!
   weightFilename: String!
@@ -133,6 +135,7 @@ input SettingsInput {
 }
 
 input SettingsModelInput {
+  isActive: Boolean!
   id: ID!
   name: String!
   weightFilename: String!

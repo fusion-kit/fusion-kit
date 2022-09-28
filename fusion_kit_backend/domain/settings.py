@@ -20,8 +20,6 @@ def get_default_device():
     sorted_devices = sorted(devices.items(), key=lambda pair: pair[1])
     return sorted_devices[-1][0]
 
-gql_settings = ObjectType('Settings')
-
 # Don't allow path separators in filenames (avoids path traversal issues)
 FILENAME_REGEX = r'\A[^/\\]*\Z'
 
@@ -43,8 +41,11 @@ class Settings():
     def validate(self, data_dir):
         errors = []
 
-        if len(self.models) <= 0:
-            errors.append('No models configured')
+        active_models = [model for model in self.models if model['is_active']]
+        if len(active_models) == 0:
+            errors.append('no active model')
+        elif len(active_models) > 1:
+            errors.append('more than one active model')
 
         for model in self.models:
             errors += self._validate_model(model, data_dir)
@@ -105,6 +106,13 @@ class Settings():
         )
 
     ### GraphQL resolvers ###
+
+    def active_model(self, *_):
+        active_models = [model for model in self.models if model['is_active']]
+        if len(active_models) == 1:
+            return active_models[0]
+        else:
+            return None
 
     def is_ready(self, info):
         manager = info.context['manager']
