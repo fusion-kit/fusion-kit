@@ -4,24 +4,25 @@ import {
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import React, { Fragment, useState } from "react";
+import { Outlet, NavLink } from "react-router-dom";
 import logo from "../assets/logo.svg";
 
 const navigation = [
   {
-    name: "Dream", href: "#", icon: PaintBrushIcon, current: true,
+    name: "Dream", href: "/", icon: PaintBrushIcon,
   },
   {
-    name: "Gallery", href: "#", icon: Squares2X2Icon, current: false,
+    name: "Gallery", href: "/gallery", icon: Squares2X2Icon,
   },
   {
-    name: "Image Lab", href: "#", icon: BeakerIcon, current: false,
+    name: "Image Lab", href: "/image-lab", icon: BeakerIcon,
   },
   {
-    name: "Settings", href: "#", icon: Cog6ToothIcon, current: false,
+    name: "Settings", href: "/settings", icon: Cog6ToothIcon,
   },
 ];
 
-export const AppLayout: React.FC<React.PropsWithChildren> = (props) => {
+export const AppLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
     <div className="flex h-full">
@@ -81,25 +82,30 @@ export const AppLayout: React.FC<React.PropsWithChildren> = (props) => {
                   <nav aria-label="Sidebar" className="mt-5">
                     <div className="space-y-1 px-2">
                       {navigation.map((item) => (
-                        <a
-                          key={item.name}
-                          href={item.href}
-                          className={clsx(
-                            item.current
+                        <NavLink
+                          key={item.href}
+                          to={item.href}
+                          end
+                          className={({ isActive }) => clsx(
+                            isActive
                               ? "bg-gray-100 text-gray-900"
                               : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
                             "group flex items-center px-2 py-2 text-base font-medium rounded-md",
                           )}
                         >
-                          <item.icon
-                            className={clsx(
-                              item.current ? "text-gray-500" : "text-gray-400 group-hover:text-gray-500",
-                              "mr-4 h-6 w-6",
-                            )}
-                            aria-hidden="true"
-                          />
-                          {item.name}
-                        </a>
+                          {({ isActive }) => (
+                            <>
+                              <item.icon
+                                className={clsx(
+                                  isActive ? "text-gray-500" : "text-gray-400 group-hover:text-gray-500",
+                                  "mr-4 h-6 w-6",
+                                )}
+                                aria-hidden="true"
+                              />
+                              {item.name}
+                            </>
+                          )}
+                        </NavLink>
                       ))}
                     </div>
                   </nav>
@@ -129,25 +135,30 @@ export const AppLayout: React.FC<React.PropsWithChildren> = (props) => {
               <nav className="mt-5 flex-1" aria-label="Sidebar">
                 <div className="space-y-1 px-2">
                   {navigation.map((item) => (
-                    <a
-                      key={item.name}
-                      href={item.href}
-                      className={clsx(
-                        item.current
+                    <NavLink
+                      key={item.href}
+                      to={item.href}
+                      end
+                      className={({ isActive }) => clsx(
+                        isActive
                           ? "bg-gray-200 text-gray-900"
                           : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
                         "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
                       )}
                     >
-                      <item.icon
-                        className={clsx(
-                          item.current ? "text-gray-500" : "text-gray-400 group-hover:text-gray-500",
-                          "mr-3 h-6 w-6",
-                        )}
-                        aria-hidden="true"
-                      />
-                      {item.name}
-                    </a>
+                      {({ isActive }) => (
+                        <>
+                          <item.icon
+                            className={clsx(
+                              isActive ? "text-gray-500" : "text-gray-400 group-hover:text-gray-500",
+                              "mr-3 h-6 w-6",
+                            )}
+                            aria-hidden="true"
+                          />
+                          {item.name}
+                        </>
+                      )}
+                    </NavLink>
                   ))}
                 </div>
               </nav>
@@ -178,7 +189,7 @@ export const AppLayout: React.FC<React.PropsWithChildren> = (props) => {
           </div>
         </div>
         <div className="flex flex-1 flex-col lg:flex-row h-full relative">
-          {props.children}
+          <Outlet />
         </div>
       </div>
     </div>
