@@ -73,7 +73,7 @@ export const SettingsPage: React.FC = () => {
                           className="mt-1 flex rounded-md shadow-sm border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                         />
                       </div>
-                      <div className="self-end space-x-2 mt-2">
+                      <div className="self-end space-x-2 mt-2 flex items-center">
                         <button
                           type="button"
                           className="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-indigo-200"
@@ -143,7 +143,7 @@ export const SettingsPage: React.FC = () => {
                   </div>
                 );
               })}
-              <div className="flex items-center">
+              <div className="flex items-center flex-wrap">
                 <button
                   type="button"
                   className="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 mt-4 mr-2"
