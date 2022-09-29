@@ -1,0 +1,9 @@
+query GetSettingsForDream {
+  settings {
+     isReady
+     activeModel {
+       width
+       height
+     }
+  }
+}

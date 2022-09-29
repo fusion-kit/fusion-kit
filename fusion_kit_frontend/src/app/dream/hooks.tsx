@@ -1,11 +1,13 @@
 import {
-  MutationResult, SubscriptionResult, useMutation, useSubscription,
+  MutationResult, SubscriptionResult, useMutation, useQuery, useSubscription,
 } from "@apollo/client";
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { BACKEND_URL, joinUrlPath } from "../../client";
 import {
   DreamBaseImageMaskType,
   DreamSampler,
+  GetSettingsForDreamDocument,
   StartDreamDocument, StartDreamMutation, StoppedDreamReason,
   WatchDreamDocument, WatchDreamSubscription,
 } from "../../generated/graphql";
@@ -182,11 +184,37 @@ interface UseDreamOptions {
 
 export type UpdateDreamOptions = (_newOptions: Partial<DreamOptions>) => void;
 
-export function useDreamOptions(defaultOptions: DreamOptions): UseDreamOptions {
+export function useDreamOptions(initialDefaultOptions: DreamOptions): UseDreamOptions {
+  const navigate = useNavigate();
+
+  const [defaultOptions, setDefaultOptions] = useState(initialDefaultOptions);
   const [options, setOptions] = useState(defaultOptions);
   const updateOptions = useCallback((newOptions: Partial<DreamOptions>) => {
     setOptions((currentOptions) => ({ ...currentOptions, ...newOptions }));
   }, []);
+
+  const settingsResult = useQuery(GetSettingsForDreamDocument);
+
+  useEffect(() => {
+    if (settingsResult.data == null) {
+      return;
+    }
+
+    const { activeModel } = settingsResult.data.settings;
+
+    if (activeModel != null) {
+      setOptions((opts) => ({
+        ...opts,
+        width: activeModel.width,
+        height: activeModel.height,
+      }));
+      setDefaultOptions((opts) => ({
+        ...opts,
+        width: activeModel.width,
+        height: activeModel.height,
+      }));
+    }
+  }, [settingsResult, navigate]);
 
   return {
     options,
