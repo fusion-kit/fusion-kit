@@ -74,7 +74,8 @@ class FusionKitManager():
 
         if options.get('base_image') is not None:
             base_image_upload = options['base_image']
-            options['base_image'] = Image.open(base_image_upload.file)
+            base_image = Image.open(base_image_upload.file)
+            options['base_image'] = base_image
             options['base_image_details'] = {
                 'filename': base_image_upload.filename,
                 'content_type': base_image_upload.content_type,
@@ -87,6 +88,9 @@ class FusionKitManager():
                     'filename': base_image_upload.filename,
                     'content_type': base_image_upload.content_type,
                 }
+
+            options['width'] = base_image.width
+            options['height'] = base_image.width
         else:
             options.pop('base_image_decimation', None)
             options.pop('base_image_mask', None)
