@@ -66,11 +66,17 @@ export type FinishedDreamImage = DreamImage & {
 export type Mutation = {
   __typename?: 'Mutation';
   startDream: Dream;
+  updateSettings: Settings;
 };
 
 
 export type MutationStartDreamArgs = {
   options: DreamOptionsInput;
+};
+
+
+export type MutationUpdateSettingsArgs = {
+  newSettings: SettingsInput;
 };
 
 export type PendingDream = Dream & {
@@ -87,7 +93,7 @@ export type PendingDreamImage = DreamImage & {
 
 export type Query = {
   __typename?: 'Query';
-  hello: Scalars['String'];
+  settings: Settings;
 };
 
 export type RunningDream = Dream & {
@@ -107,6 +113,48 @@ export type RunningDreamImage = DreamImage & {
   numFinishedSteps: Scalars['Int'];
   numTotalSteps: Scalars['Int'];
   previewImagePath?: Maybe<Scalars['String']>;
+};
+
+export type Settings = {
+  __typename?: 'Settings';
+  activeModel?: Maybe<SettingsModel>;
+  availableDevices: Array<Scalars['String']>;
+  device: Scalars['String'];
+  isReady: Scalars['Boolean'];
+  models: Array<SettingsModel>;
+  modelsFilePath: Scalars['String'];
+  showPreviews: Scalars['Boolean'];
+  stepsPerPreview?: Maybe<Scalars['Int']>;
+  useFullPrecision: Scalars['Boolean'];
+};
+
+export type SettingsInput = {
+  device: Scalars['String'];
+  models: Array<SettingsModelInput>;
+  showPreviews: Scalars['Boolean'];
+  stepsPerPreview?: InputMaybe<Scalars['Int']>;
+  useFullPrecision: Scalars['Boolean'];
+};
+
+export type SettingsModel = {
+  __typename?: 'SettingsModel';
+  configFilename: Scalars['String'];
+  height: Scalars['Int'];
+  id: Scalars['ID'];
+  isActive: Scalars['Boolean'];
+  name: Scalars['String'];
+  weightsFilename: Scalars['String'];
+  width: Scalars['Int'];
+};
+
+export type SettingsModelInput = {
+  configFilename: Scalars['String'];
+  height: Scalars['Int'];
+  id: Scalars['ID'];
+  isActive: Scalars['Boolean'];
+  name: Scalars['String'];
+  weightsFilename: Scalars['String'];
+  width: Scalars['Int'];
 };
 
 export type StoppedDream = Dream & {
@@ -137,12 +185,24 @@ export type SubscriptionWatchDreamArgs = {
   dreamId: Scalars['ID'];
 };
 
+export type GetSettingsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetSettingsQuery = { __typename?: 'Query', settings: { __typename?: 'Settings', availableDevices: Array<string>, modelsFilePath: string, device: string, showPreviews: boolean, stepsPerPreview?: number | null, useFullPrecision: boolean, models: Array<{ __typename?: 'SettingsModel', isActive: boolean, id: string, name: string, weightsFilename: string, configFilename: string, width: number, height: number }> } };
+
 export type StartDreamMutationVariables = Exact<{
   options: DreamOptionsInput;
 }>;
 
 
 export type StartDreamMutation = { __typename?: 'Mutation', startDream: { __typename?: 'FinishedDream', id: string } | { __typename?: 'PendingDream', id: string } | { __typename?: 'RunningDream', id: string } | { __typename?: 'StoppedDream', id: string } };
+
+export type UpdateSettingsMutationVariables = Exact<{
+  newSettings: SettingsInput;
+}>;
+
+
+export type UpdateSettingsMutation = { __typename?: 'Mutation', updateSettings: { __typename: 'Settings' } };
 
 export type WatchDreamSubscriptionVariables = Exact<{
   dreamId: Scalars['ID'];
@@ -152,5 +212,7 @@ export type WatchDreamSubscriptionVariables = Exact<{
 export type WatchDreamSubscription = { __typename?: 'Subscription', watchDream: { __typename: 'FinishedDream', id: string, images: Array<{ __typename: 'FinishedDreamImage', imagePath: string, id: string }> } | { __typename: 'PendingDream', id: string, images: Array<{ __typename: 'PendingDreamImage', id: string }> } | { __typename: 'RunningDream', numFinishedImages: number, numTotalImages: number, numFinishedSteps: number, numTotalSteps: number, id: string, images: Array<{ __typename: 'FinishedDreamImage', imagePath: string, id: string } | { __typename: 'PendingDreamImage', id: string } | { __typename: 'RunningDreamImage', numFinishedSteps: number, numTotalSteps: number, previewImagePath?: string | null, id: string } | { __typename: 'StoppedDreamImage', id: string }> } | { __typename: 'StoppedDream', reason: StoppedDreamReason, message?: string | null, id: string, images: Array<{ __typename: 'FinishedDreamImage', imagePath: string, id: string } | { __typename: 'PendingDreamImage', id: string } | { __typename: 'RunningDreamImage', numFinishedSteps: number, numTotalSteps: number, previewImagePath?: string | null, id: string } | { __typename: 'StoppedDreamImage', id: string }> } };
 
 
+export const GetSettingsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetSettings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"settings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"availableDevices"}},{"kind":"Field","name":{"kind":"Name","value":"modelsFilePath"}},{"kind":"Field","name":{"kind":"Name","value":"device"}},{"kind":"Field","name":{"kind":"Name","value":"showPreviews"}},{"kind":"Field","name":{"kind":"Name","value":"stepsPerPreview"}},{"kind":"Field","name":{"kind":"Name","value":"useFullPrecision"}},{"kind":"Field","name":{"kind":"Name","value":"models"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"isActive"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"weightsFilename"}},{"kind":"Field","name":{"kind":"Name","value":"configFilename"}},{"kind":"Field","name":{"kind":"Name","value":"width"}},{"kind":"Field","name":{"kind":"Name","value":"height"}}]}}]}}]}}]} as unknown as DocumentNode<GetSettingsQuery, GetSettingsQueryVariables>;
 export const StartDreamDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"StartDream"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"options"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"DreamOptionsInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"startDream"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"options"},"value":{"kind":"Variable","name":{"kind":"Name","value":"options"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<StartDreamMutation, StartDreamMutationVariables>;
+export const UpdateSettingsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateSettings"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"newSettings"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"SettingsInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateSettings"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"newSettings"},"value":{"kind":"Variable","name":{"kind":"Name","value":"newSettings"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}}]}}]}}]} as unknown as DocumentNode<UpdateSettingsMutation, UpdateSettingsMutationVariables>;
 export const WatchDreamDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"subscription","name":{"kind":"Name","value":"WatchDream"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"dreamId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"watchDream"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"dreamId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"dreamId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"images"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"RunningDreamImage"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"numFinishedSteps"}},{"kind":"Field","name":{"kind":"Name","value":"numTotalSteps"}},{"kind":"Field","name":{"kind":"Name","value":"previewImagePath"}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"FinishedDreamImage"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"imagePath"}}]}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"RunningDream"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"numFinishedImages"}},{"kind":"Field","name":{"kind":"Name","value":"numTotalImages"}},{"kind":"Field","name":{"kind":"Name","value":"numFinishedSteps"}},{"kind":"Field","name":{"kind":"Name","value":"numTotalSteps"}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"StoppedDream"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"reason"}},{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]} as unknown as DocumentNode<WatchDreamSubscription, WatchDreamSubscriptionVariables>;

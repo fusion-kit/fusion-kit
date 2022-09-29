@@ -1,0 +1,20 @@
+query GetSettings {
+  settings {
+    availableDevices
+    modelsFilePath
+
+    device
+    showPreviews
+    stepsPerPreview
+    useFullPrecision
+    models {
+      isActive
+      id
+      name
+      weightsFilename
+      configFilename
+      width
+      height
+    }
+  }
+}

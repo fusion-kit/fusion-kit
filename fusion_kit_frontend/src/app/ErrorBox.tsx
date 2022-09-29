@@ -1,8 +1,18 @@
 import React from "react";
 import { XCircleIcon } from "@heroicons/react/20/solid";
+import { clsx } from "clsx";
 
-export const ErrorBox: React.FC<React.PropsWithChildren> = (props) => (
-  <div className="rounded-md bg-red-50 p-4 my-4">
+interface ErrorBoxProps {
+  className?: string,
+}
+
+export const ErrorBox: React.FC<React.PropsWithChildren<ErrorBoxProps>> = (props) => (
+  <div
+    className={clsx(
+      "rounded-md bg-red-50 p-4 my-4",
+      props.className,
+    )}
+  >
     <div className="flex">
       <div className="flex-shrink-0">
         <XCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
