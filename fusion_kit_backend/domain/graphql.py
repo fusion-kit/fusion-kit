@@ -63,6 +63,7 @@ async def download_model_generator(obj, info, model_id):
         elif state['status'] == 'complete':
             yield {
                 'status': 'ModelDownloadComplete',
+                'id': model_id,
                 'name': state['model']['name'],
                 'weights_filename': state['model']['weights_filename'],
                 'config_filename': state['model']['config_filename'],

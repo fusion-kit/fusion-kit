@@ -146,6 +146,7 @@ input SettingsModelInput {
 }
 
 type ModelDownloadComplete {
+  id: ID!
   name: String!
   weightsFilename: String!
   configFilename: String!
