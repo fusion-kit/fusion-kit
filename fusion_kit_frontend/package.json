@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 2424 --host 0.0.0.0",
+    "dev": "vite --port 2425 --host 0.0.0.0",
     "build": "tsc && vite build",
-    "preview": "vite preview --port 2424 --host 0.0.0.0",
+    "preview": "vite preview --port 2425 --host 0.0.0.0",
     "lint": "eslint 'src/**/*.{js,jsx,ts,tsx}'",
     "fix": "eslint --fix 'src/**/*.{js,jsx,ts,tsx}'",
     "generate": "graphql-codegen --config codegen.yml"

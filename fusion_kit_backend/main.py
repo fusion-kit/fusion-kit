@@ -71,7 +71,7 @@ def get_image(request):
     return StreamingResponse(data, media_type='image/png')
 
 parser = argparse.ArgumentParser(description='FusionKit server')
-parser.add_argument('-p', '--port', default=2425, help='server port')
+parser.add_argument('-p', '--port', default=2424, help='server port')
 parser.add_argument('-a', '--address', default='0.0.0.0', help='server address')
 parser.add_argument('--cors', default='*', help='comma-separated list of origins to allow for API access')
 
