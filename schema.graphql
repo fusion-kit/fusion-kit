@@ -18,6 +18,8 @@ input DreamOptionsInput {
   prompt: String!
   numImages: Int!
   seed: Int
+  width: Int
+  height: Int
   baseImage: Upload
   baseImageMask: Upload
   baseImageMaskType: DreamBaseImageMaskType,

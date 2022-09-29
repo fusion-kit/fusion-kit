@@ -38,6 +38,8 @@ class Dreamer():
         prompt,
         seed,
         num_images,
+        width,
+        height,
         sampler,
         sampler_steps,
         sampler_eta,
@@ -61,6 +63,12 @@ class Dreamer():
             seed value with the same inputs will produce the same result.
         num_images
             The total number of images to generate.
+        width
+            The output image width in pixels. Can only be set if `base_image`
+            is not set.
+        height
+            THe output image height in pixels. Can only be set if `base_image`
+            is not set.
         sampler
             Sampler to use ('DDIM', 'PLMS').
         sampler_steps
@@ -111,6 +119,8 @@ class Dreamer():
 
         if base_image is not None:
             assert base_image_decimation is not None, 'base_image_decimation is required if base_image is set'
+            assert width is None, 'width cannot be set if base_image is set'
+            assert height is None, 'height cannot be set if base_image is set'
             base_image_decimation = numpy.clip(base_image_decimation, 0.0, 1.0)
 
             # Reduce the sampler steps when using a base image
@@ -160,8 +170,8 @@ class Dreamer():
                 skip_normalize=False,
                 image_callback=None,
                 step_callback=step_callback,
-                width=None,
-                height=None,
+                width=width,
+                height=height,
                 sampler_name=sampler_name,
                 seamless=False,
                 log_tokenization=False,

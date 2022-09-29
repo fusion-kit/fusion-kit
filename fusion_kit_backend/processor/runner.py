@@ -37,6 +37,8 @@ def processor_runner(settings, data_dir, req_queue, res_queue):
                 prompt=options['prompt'],
                 num_images=options['num_images'],
                 seed=options['seed'],
+                width=options.get('width'),
+                height=options.get('height'),
                 base_image=options.get('base_image'),
                 base_image_mask=options.get('base_image_mask'),
                 base_image_mask_type=options.get('base_image_mask_type'),

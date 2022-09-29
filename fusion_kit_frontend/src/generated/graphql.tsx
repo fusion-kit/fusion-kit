@@ -36,12 +36,14 @@ export type DreamOptionsInput = {
   baseImageMask?: InputMaybe<Scalars['Upload']>;
   baseImageMaskType?: InputMaybe<DreamBaseImageMaskType>;
   guidanceScale: Scalars['Float'];
+  height?: InputMaybe<Scalars['Int']>;
   numImages: Scalars['Int'];
   prompt: Scalars['String'];
   sampler: DreamSampler;
   samplerEta: Scalars['Float'];
   samplerSteps: Scalars['Int'];
   seed?: InputMaybe<Scalars['Int']>;
+  width?: InputMaybe<Scalars['Int']>;
 };
 
 export enum DreamSampler {

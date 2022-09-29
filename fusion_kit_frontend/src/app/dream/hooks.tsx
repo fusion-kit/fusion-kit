@@ -67,12 +67,16 @@ export function useCreateDream(): UseCreateDream {
     const baseImageDecimation = opts.baseImage != null ? opts.baseImageDecimation : null;
     const baseImageMask = opts.baseImage != null ? opts.baseImageMask : null;
     const baseImageMaskType = baseImageMask != null ? opts.baseImageMaskType : null;
+    const width = opts.baseImage != null ? null : opts.width;
+    const height = opts.baseImage != null ? null : opts.height;
     await startDream({
       variables: {
         options: {
           prompt: opts.prompt,
           numImages: opts.numImages,
           seed: opts.seed ?? undefined,
+          width,
+          height,
           baseImage: opts.baseImage ?? undefined,
           baseImageMask,
           baseImageMaskType,

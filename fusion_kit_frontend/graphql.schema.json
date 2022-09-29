@@ -260,6 +260,18 @@
             "deprecationReason": null
           },
           {
+            "name": "height",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "numImages",
             "description": null,
             "type": {
@@ -341,6 +353,18 @@
           },
           {
             "name": "seed",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "width",
             "description": null,
             "type": {
               "kind": "SCALAR",
