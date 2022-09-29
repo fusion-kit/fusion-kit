@@ -2,6 +2,7 @@ subscription DownloadModel($modelId: ID!) {
   downloadModel(modelId: $modelId) {
     __typename
     ...on ModelDownloadComplete {
+      id
       name
       weightsFilename
       configFilename

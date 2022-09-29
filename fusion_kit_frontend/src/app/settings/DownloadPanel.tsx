@@ -9,6 +9,7 @@ import { unreachable } from "../../utils";
 import { ErrorBox } from "../ErrorBox";
 import { ProgressBar } from "../ProgressBar";
 import { DownloadState, useDownloadModel } from "./hooks";
+import { SettingsModel } from "../../generated/graphql";
 
 interface DownloadableModel {
   name: string,
@@ -24,12 +25,13 @@ const MODELS: DownloadableModel[] = [
 
 interface DownloadPanelProps {
   open: boolean,
+  onAddModel: (_model: SettingsModel) => void,
   onClose: () => void,
 }
 
 export const DownloadPanel: React.FC<DownloadPanelProps> = (props) => {
   const {
-    open, onClose,
+    open, onAddModel, onClose,
   } = props;
 
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
@@ -79,6 +81,7 @@ export const DownloadPanel: React.FC<DownloadPanelProps> = (props) => {
                 >
                   <DownloadScreen
                     modelId={selectedModel}
+                    onAddModel={onAddModel}
                     onBack={() => setSelectedModel(null)}
                   />
                 </div>
@@ -116,20 +119,22 @@ const DownloadSelector: React.FC<DownloadSelectorProps> = (props) => {
 
 interface DownloadScreenProps {
   modelId: string | null,
+  onAddModel: (_model: SettingsModel) => void,
   onBack: () => void,
 }
 
 const DownloadScreen: React.FC<DownloadScreenProps> = (props) => {
-  const { modelId, onBack } = props;
+  const { modelId, onAddModel, onBack } = props;
 
   const [agreed, setAgreed] = useState(false);
   const agreeId = useId();
 
   const { downloadModel, downloadState, canDownload } = useDownloadModel();
 
-  const onDownloadComplete = useCallback(() => {
+  const onDownloadComplete = useCallback((model: SettingsModel) => {
+    onAddModel(model);
     onBack();
-  }, [onBack]);
+  }, [onAddModel, onBack]);
   const onDownloadModel = useCallback(() => {
     if (modelId != null && canDownload) {
       downloadModel({ modelId, onDownloadComplete });

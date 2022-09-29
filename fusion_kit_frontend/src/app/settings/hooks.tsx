@@ -26,7 +26,8 @@ interface UseSettings {
   saveError: ApolloError | undefined,
   currentSettings: Settings,
   setCurrentSettings: React.Dispatch<React.SetStateAction<Settings>>,
-  addModel: () => void,
+  addModel: (_newModel: SettingsModel) => void,
+  createModel: () => void,
   updateModel: (_id: string, _f: (_currentModel: SettingsModel) => SettingsModel) => void,
   removeModel: (_id: string) => void,
   setActiveModel: (_id: string) => void,
@@ -79,15 +80,33 @@ export function useSettings(): UseSettings {
     });
   }, [currentSettings, updateSettings]);
 
-  const addModel = useCallback(() => {
+  const addModel = useCallback((newModel: SettingsModel) => {
     setCurrentSettings((currentSettings) => {
       const hasActiveModel: boolean = currentSettings.models.some((model) => model.isActive);
       return {
         ...currentSettings,
-        models: [...currentSettings.models, createNewModel(!hasActiveModel)],
+        models: [
+          ...currentSettings.models,
+          {
+            ...newModel,
+            isActive: !hasActiveModel,
+          },
+        ],
       };
     });
   }, []);
+
+  const createModel = useCallback(() => {
+    addModel({
+      id: ulid(),
+      isActive: false,
+      name: "",
+      weightsFilename: "",
+      configFilename: DEFAULT_CONFIG_FILENAME,
+      width: 512,
+      height: 512,
+    });
+  }, [addModel]);
 
   const removeModel = useCallback((id: string) => {
     setCurrentSettings((currentSettings) => {
@@ -136,6 +155,7 @@ export function useSettings(): UseSettings {
     currentSettings,
     setCurrentSettings,
     addModel,
+    createModel,
     updateModel,
     removeModel,
     setActiveModel,
@@ -143,21 +163,9 @@ export function useSettings(): UseSettings {
   };
 }
 
-function createNewModel(isActive: boolean): SettingsModel {
-  return {
-    id: ulid(),
-    isActive,
-    name: "",
-    weightsFilename: "",
-    configFilename: DEFAULT_CONFIG_FILENAME,
-    width: 512,
-    height: 512,
-  };
-}
-
 interface DownloadModelOptions {
   modelId: string,
-  onDownloadComplete: () => void,
+  onDownloadComplete: (_model: SettingsModel) => void,
 }
 
 export type DownloadState =
@@ -187,7 +195,6 @@ export function useDownloadModel(): UseDownloadModel {
       _watermark: currentDownload.watermark, // Force re-subscription
     },
     skip: currentDownload.downloadOptions == null,
-    onSubscriptionComplete: currentDownload.downloadOptions?.onDownloadComplete,
   });
 
   const downloadModel = useCallback((opts: DownloadModelOptions) => {
@@ -196,6 +203,22 @@ export function useDownloadModel(): UseDownloadModel {
       downloadOptions: opts,
     }));
   }, []);
+
+  const onDownloadComplete = currentDownload.downloadOptions?.onDownloadComplete;
+  const downloadModelState = downloadResult.data?.downloadModel;
+  useEffect(() => {
+    if (downloadModelState?.__typename === "ModelDownloadComplete") {
+      onDownloadComplete?.({
+        isActive: false,
+        id: downloadModelState.id,
+        name: downloadModelState.name,
+        weightsFilename: downloadModelState.weightsFilename,
+        configFilename: downloadModelState.configFilename,
+        width: downloadModelState.width,
+        height: downloadModelState.height,
+      });
+    }
+  }, [onDownloadComplete, downloadModelState]);
 
   const downloadState = getDownloadState(downloadResult);
 
