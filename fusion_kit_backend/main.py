@@ -1,3 +1,4 @@
+import argparse
 from io import BytesIO
 import os
 import sys
@@ -69,7 +70,14 @@ def get_image(request):
     data.seek(0)
     return StreamingResponse(data, media_type='image/png')
 
+parser = argparse.ArgumentParser(description='FusionKit server')
+parser.add_argument('-p', '--port', default=2425, help='server port')
+parser.add_argument('-a', '--address', default='0.0.0.0', help='server address')
+parser.add_argument('--cors', default='*', help='comma-separated list of origins to allow for API access')
+
 async def main():
+    args = parser.parse_args()
+
     # Spawn is required when CUDA is initialized in the parent process
     multiprocessing.set_start_method('spawn')
 
@@ -97,7 +105,7 @@ async def main():
             print('Not serving static files (static files not found)')
 
         middleware = [
-            Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["POST"])
+            Middleware(CORSMiddleware, allow_origins=args.cors.split(','), allow_methods=["POST"])
         ]
 
         app = Starlette(debug=True, routes=routes, middleware=middleware)
@@ -105,7 +113,7 @@ async def main():
 
         logging.getLogger("uvicorn").propagate = False
 
-        config = uvicorn.Config(app, host='0.0.0.0', port=2425)
+        config = uvicorn.Config(app, host=args.address, port=args.port)
         server = uvicorn.Server(config)
         await server.serve()
 
