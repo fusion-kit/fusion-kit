@@ -4,7 +4,6 @@ import { AppLayout } from "./app/AppLayout";
 import { DreamPage } from "./app/dream/DreamPage";
 import { ErrorPage, NotFoundResponse } from "./app/ErrorPage";
 import { GalleryPage } from "./app/GalleryPage";
-import { ImageLabPage } from "./app/ImageLabPage";
 import { SettingsPage } from "./app/settings/SettingsPage";
 
 export const App: React.FC = () => {
@@ -20,10 +19,6 @@ export const App: React.FC = () => {
         {
           path: "/gallery",
           element: <GalleryPage />,
-        },
-        {
-          path: "/image-lab",
-          element: <ImageLabPage />,
         },
         {
           path: "/settings",

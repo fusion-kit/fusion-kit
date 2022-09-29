@@ -1,6 +1,6 @@
 import { Dialog, Transition } from "@headlessui/react";
 import {
-  Bars3Icon, BeakerIcon, Cog6ToothIcon, PaintBrushIcon, Squares2X2Icon, XMarkIcon,
+  Bars3Icon, Cog6ToothIcon, PaintBrushIcon, Squares2X2Icon, XMarkIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import React, { Fragment, useState } from "react";
@@ -13,9 +13,6 @@ const navigation = [
   },
   {
     name: "Gallery", href: "/gallery", icon: Squares2X2Icon,
-  },
-  {
-    name: "Image Lab", href: "/image-lab", icon: BeakerIcon,
   },
   {
     name: "Settings", href: "/settings", icon: Cog6ToothIcon,

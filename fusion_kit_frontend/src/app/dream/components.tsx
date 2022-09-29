@@ -1,7 +1,7 @@
 import React from "react";
 import { clsx } from "clsx";
 import { ArrowDownTrayIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
-import { BeakerIcon, BookmarkIcon } from "@heroicons/react/24/solid";
+import { BookmarkIcon } from "@heroicons/react/24/solid";
 import {
   DreamImage, getDreamImageUri, isDreamImageLoading, getDreamImageProgress, getDreamImageDimensions,
 } from "./hooks";
@@ -59,9 +59,6 @@ export const ShowDreamImage: React.FC<ShowDreamImageProps> = (props) => {
         </DreamImageActionButton>
         <DreamImageActionButton label="Open in new window">
           <ArrowTopRightOnSquareIcon className="h-full w-full" aria-hidden="true" />
-        </DreamImageActionButton>
-        <DreamImageActionButton label="Edit in lab">
-          <BeakerIcon className="h-full w-full" aria-hidden="true" />
         </DreamImageActionButton>
       </div>
     </div>
