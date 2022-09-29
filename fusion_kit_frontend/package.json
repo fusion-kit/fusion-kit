@@ -17,6 +17,7 @@
     "@heroicons/react": "^2.0.10",
     "apollo-upload-client": "^17.0.0",
     "clsx": "^1.2.1",
+    "filesize": "^10.0.2",
     "framer-motion": "^7.3.5",
     "graphql": "^16.6.0",
     "graphql-ws": "^5.11.1",
