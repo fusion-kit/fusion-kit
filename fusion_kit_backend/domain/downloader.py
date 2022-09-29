@@ -12,6 +12,8 @@ def resolve_model_download_type(obj, *_):
 
 MODELS = {
     '01GE3DCJF6388V175BF3A08R3W': {
+        # Licensed under the CreativeML Open RAIL-M license. See the file
+        # `licenses/stable-diffusion-license.txt` for details.
         'name': 'Stable Diffusion v1.4',
         'weights_url': 'https://models.fusionkit.dev/models/sd-v1-4.ckpt',
         'weights_sha256': 'fe4efff1e174c627256e44ec2991ba279b3816e364b49f9be2abc0b3ff3f8556',
