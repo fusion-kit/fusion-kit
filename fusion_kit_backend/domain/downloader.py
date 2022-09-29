@@ -31,7 +31,6 @@ async def download_model(id, data_dir):
     weights_dl_filename = weights_filename + '.download'
 
     if os.path.exists(weights_filename):
-        print("file already exists, hashing...")
         actual_weights_hash = hashlib.sha256()
         async with aiofiles.open(weights_filename, 'rb') as weights_file:
             while True:
@@ -42,28 +41,22 @@ async def download_model(id, data_dir):
 
         print(f"got hash: {actual_weights_hash.hexdigest()}")
         if actual_weights_hash.hexdigest().lower() == model['weights_sha256'].lower():
-            print(f"hash matched")
             yield {
                 'status': 'complete',
                 'model': model,
             }
             return
         else:
-            print(f"hash did not match")
             raise Exception(f'Could not download model: file {weights_filename} already exists but the hash does not match')
-
-    print(f"downloading file")
 
     async with aiohttp.ClientSession() as session:
         dl_timeout = aiohttp.ClientTimeout(total=None, connect=60, sock_connect=60, sock_read=60)
         response = await session.get(model['weights_url'], timeout=dl_timeout)
         async with response:
             if not response.ok:
-                print(f'respone error: {response.status}')
                 raise Exception(f'Model download responded with a status of {response.status} and is not currently available. Try updating FusionKit or trying again later.')
 
             total_bytes = response.headers.get('content-length', None)
-            print(f'total bytes: {total_bytes}')
             downloaded_bytes = 0
 
             yield {
@@ -88,9 +81,7 @@ async def download_model(id, data_dir):
                         'downloaded_bytes': downloaded_bytes
                     }
 
-    print('finished download, renaming file')
     os.rename(weights_dl_filename, weights_filename)
-    print('done')
     yield {
         'status': 'complete',
         'model': model,
