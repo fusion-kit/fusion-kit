@@ -1,6 +1,8 @@
 from ariadne import ObjectType, SubscriptionType, make_executable_schema, convert_kwargs_to_snake_case, snake_case_fallback_resolvers, upload_scalar
 from domain.dream import gql_dream
 from domain.dream_image import gql_dream_image
+from domain.downloader import gql_model_download
+import domain.downloader
 
 query = ObjectType("Query")
 
@@ -42,6 +44,42 @@ async def watch_dream_generator(obj, info, dream_id):
 async def watch_dream_resolver(dream_state, info, dream_id):
     return dream_state
 
+@subscription.source("downloadModel")
+@convert_kwargs_to_snake_case
+async def download_model_generator(obj, info, model_id):
+    manager = info.context['manager']
+
+    download_coro = domain.downloader.download_model(
+        id=model_id,
+        data_dir=manager.data_dir,
+    )
+    async for state in download_coro:
+        if state['status'] == 'downloading':
+            yield {
+                'status': 'ModelDownloadProgress',
+                'downloaded_bytes': state['downloaded_bytes'],
+                'total_bytes': state['total_bytes'],
+            }
+        elif state['status'] == 'complete':
+            yield {
+                'status': 'ModelDownloadComplete',
+                'name': state['model']['name'],
+                'weights_filename': state['model']['weights_filename'],
+                'config_filename': state['model']['config_filename'],
+                'width': state['model']['width'],
+                'height': state['model']['height'],
+            }
+        else:
+            print(f"unknown download state status: {state['status']}")
+            raise Exception('Unknown download state')
+
+
+@subscription.field("downloadModel")
+@convert_kwargs_to_snake_case
+async def download_model_resolver(download_state, info, model_id):
+    return download_state
+
+
 def make_schema(type_defs):
     return make_executable_schema(
         type_defs,
@@ -51,7 +89,8 @@ def make_schema(type_defs):
         snake_case_fallback_resolvers,
         upload_scalar,
         gql_dream,
-        gql_dream_image
+        gql_dream_image,
+        gql_model_download,
     )
 
 def context_builder(manager):

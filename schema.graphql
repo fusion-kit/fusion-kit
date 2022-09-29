@@ -9,6 +9,7 @@ type Mutation {
 
 type Subscription {
   watchDream(dreamId: ID!): Dream!
+  downloadModel(modelId: ID!): ModelDownload!
 }
 
 scalar Upload
@@ -143,3 +144,24 @@ input SettingsModelInput {
   width: Int!
   height: Int!
 }
+
+type ModelDownloadComplete {
+  name: String!
+  weightsFilename: String!
+  configFilename: String!
+  width: Int!
+  height: Int!
+}
+
+type ModelDownloadProgress {
+  downloadedBytes: Bytes!
+  totalBytes: Bytes
+}
+
+scalar Bytes
+
+type ModelDownloadError {
+  message: String!
+}
+
+union ModelDownload = ModelDownloadComplete | ModelDownloadProgress | ModelDownloadError
