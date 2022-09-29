@@ -3,7 +3,7 @@ import { clsx } from "clsx";
 import { ArrowDownTrayIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
 import { BeakerIcon, BookmarkIcon } from "@heroicons/react/24/solid";
 import {
-  DreamImage, getDreamImageUri, isDreamImageLoading, getDreamImageProgress,
+  DreamImage, getDreamImageUri, isDreamImageLoading, getDreamImageProgress, getDreamImageDimensions,
 } from "./hooks";
 
 interface ShowDreamImageProps {
@@ -16,11 +16,15 @@ export const ShowDreamImage: React.FC<ShowDreamImageProps> = (props) => {
   const imageUri = getDreamImageUri(image);
   const isLoading = isDreamImageLoading(image);
   const progress = getDreamImageProgress(image);
+  const dimensions = getDreamImageDimensions(image);
 
   return (
     <div className="flex flex-col lg:h-full">
       <div className="min-h-0">
-        <BigImageContainer widthRatio={1} heightRatio={1}>
+        <BigImageContainer
+          widthRatio={dimensions?.width ?? 1}
+          heightRatio={dimensions?.height ?? 1}
+        >
           {imageUri != null ? (
             <div
               className={clsx(
@@ -89,7 +93,7 @@ type BigImageContainerProps = React.PropsWithChildren<{
 export const BigImageContainer: React.FC<BigImageContainerProps> = (props) => {
   const { widthRatio, heightRatio } = props;
   return (
-    <div className="h-full max-h-[70vmin] lg:w-full lg:max-h-full">
+    <div className="h-full">
       <div
         className="max-w-[70vmin] lg:max-w-full lg:max-h-full m-auto relative"
         style={{ aspectRatio: `${widthRatio} / ${heightRatio}` }}

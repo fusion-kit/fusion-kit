@@ -55,7 +55,7 @@ export type DreamState =
     type: "error",
     message: string,
     dream?: Dream & {__typename: "StoppedDream"},
-  };
+};
 
 export type Dream = WatchDreamSubscription["watchDream"];
 
@@ -291,6 +291,35 @@ export function getDreamImageProgress(dreamImage: DreamImage | null): number | n
       return dreamImage.numFinishedSteps / dreamImage.numTotalSteps;
     case "FinishedDreamImage":
       return null;
+    case "StoppedDreamImage":
+      return null;
+    default:
+      return unreachable(dreamImage);
+  }
+}
+
+export function getDreamImageDimensions(dreamImage: DreamImage | null): Dimensions | null {
+  if (dreamImage == null) {
+    return null;
+  }
+
+  switch (dreamImage.__typename) {
+    case "PendingDreamImage":
+      return null;
+    case "RunningDreamImage":
+      if (dreamImage.previewWidth != null && dreamImage.previewHeight != null) {
+        return {
+          width: dreamImage.previewWidth,
+          height: dreamImage.previewHeight,
+        };
+      } else {
+        return null;
+      }
+    case "FinishedDreamImage":
+      return {
+        width: dreamImage.width,
+        height: dreamImage.height,
+      };
     case "StoppedDreamImage":
       return null;
     default:

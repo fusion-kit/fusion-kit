@@ -9,9 +9,13 @@ subscription WatchDream($dreamId: ID!) {
         numFinishedSteps
         numTotalSteps
         previewImagePath
+        previewWidth
+        previewHeight
       }
       ...on FinishedDreamImage {
         imagePath
+        width
+        height
       }
     }
     ...on RunningDream {
