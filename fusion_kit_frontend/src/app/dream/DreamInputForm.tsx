@@ -10,7 +10,9 @@ import { clsx } from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
 import Dropzone from "react-dropzone";
 import { clamp } from "../../utils";
-import { DreamOptions, UpdateDreamOptions, useFileObjectUrl } from "./hooks";
+import {
+  DreamOptions, UpdateDreamOptions, useFileObjectUrl, useImageDimensions,
+} from "./hooks";
 import { DreamSampler } from "../../generated/graphql";
 import { DropdownInput, NumberInput, OptionalNumberInput } from "../inputs";
 
@@ -193,6 +195,16 @@ interface OptionsFormProps {
 const OptionsForm: React.FC<OptionsFormProps> = (props) => {
   const { options, updateOptions } = props;
 
+  const baseImageUrl = useFileObjectUrl(options.baseImage);
+  const baseImageDimensions = useImageDimensions(baseImageUrl);
+
+  const effectiveDimensions = options.baseImage == null || baseImageDimensions == null
+    ? {
+      width: options.width,
+      height: options.height,
+    }
+    : baseImageDimensions;
+
   return (
     <>
       <div className="m-6 grid grid-cols-1 gap-y-6 gap-x-8 sm:grid-cols-6">
@@ -214,6 +226,32 @@ const OptionsForm: React.FC<OptionsFormProps> = (props) => {
               seed: newValue != null ? clamp(newValue, 0, Number.MAX_SAFE_INTEGER) : null,
             })}
           />
+        </div>
+        <div className="sm:col-span-6 grid grid-cols-1 gap-x-8 sm:grid-cols-6">
+          <div className="sm:col-span-3">
+            <NumberInput
+              label="Width"
+              value={effectiveDimensions.width}
+              onChange={(width) => updateOptions({ width })}
+              disabled={options.baseImage != null}
+            />
+          </div>
+          <div className="sm:col-span-3">
+            <NumberInput
+              label="Height"
+              value={effectiveDimensions.height}
+              onChange={(height) => updateOptions({ height })}
+              disabled={options.baseImage != null}
+            />
+          </div>
+          <div
+            className={clsx(
+              "sm:col-span-6 text-center text-gray-500 h-0 transition-opacity",
+              options.baseImage != null ? "" : "opacity-0",
+            )}
+          >
+            <p>Edit base image to change width and height</p>
+          </div>
         </div>
         <div className="sm:col-span-6">
           <ImageInput

@@ -10,11 +10,14 @@ import {
   WatchDreamDocument, WatchDreamSubscription,
 } from "../../generated/graphql";
 import { clamp, unreachable } from "../../utils";
+import { Dimensions } from "../image-editor/hooks";
 
 export interface DreamOptions {
   prompt: string,
   numImages: number,
   seed: number | null,
+  width: number,
+  height: number,
   baseImage: File | Blob | null,
   baseImageMask: File | Blob | null,
   baseImageMaskType: DreamBaseImageMaskType,
@@ -306,4 +309,28 @@ export function useFileObjectUrl(file: File | Blob | null): string | null {
   }, [file]);
 
   return objectUrl;
+}
+
+export function useImageDimensions(url: string | null): Dimensions | null {
+  const [dimensions, setDimensions] = useState<Dimensions | null>(null);
+
+  useEffect(() => {
+    setDimensions(null);
+
+    if (url != null) {
+      const image = new Image();
+      image.onload = () => {
+        setDimensions({ width: image.width, height: image.height });
+      };
+      image.src = url;
+
+      return () => {
+        image.src = "";
+      };
+    } else {
+      return undefined;
+    }
+  }, [url]);
+
+  return dimensions;
 }

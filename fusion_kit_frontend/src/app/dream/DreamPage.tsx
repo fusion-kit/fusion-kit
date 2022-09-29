@@ -14,6 +14,8 @@ export const DreamPage: React.FC = () => {
     prompt: "",
     numImages: 1,
     seed: null,
+    width: 512,
+    height: 512,
     baseImage: null,
     baseImageMask: null,
     baseImageMaskType: DreamBaseImageMaskType.ReplaceMasked,
