@@ -22,6 +22,10 @@ class FusionKitManager():
         self.db_engine = db_config.db_engine
         self.data_dir = data_dir
 
+        # Run datababase migrations
+        with self.db_engine.connect() as db_conn:
+            db.run_db_migrations(db_config=db_config, db_conn=db_conn)
+
         self.settings = Settings.get_default_settings()
         with db.Session() as session:
             result = session.execute(

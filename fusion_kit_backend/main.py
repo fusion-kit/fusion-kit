@@ -64,9 +64,6 @@ async def main():
     multiprocessing.set_start_method('spawn')
 
     async with FusionKitManager(db_config=db_config, data_dir=data_dir) as manager:
-        # Run datababase migrations
-        db.run_db_migrations(db_config=db_config, db_conn=manager.db_conn)
-
         context_builder = domain.graphql.context_builder(manager)
 
         schema = domain.graphql.make_schema(type_defs)
