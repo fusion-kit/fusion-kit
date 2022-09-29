@@ -1,5 +1,6 @@
 import { Switch } from "@headlessui/react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/20/solid";
+import { CheckIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import React, { useCallback, useId } from "react";
 import { ErrorBox } from "../ErrorBox";
@@ -9,7 +10,8 @@ import { useSettings } from "./hooks";
 export const SettingsPage: React.FC = () => {
   const {
     currentSettings, setCurrentSettings, loadError,
-    addModel, updateModel, removeModel, canSave, saveSettings, saveError,
+    addModel, updateModel, removeModel, setActiveModel,
+    canSave, saveSettings, saveError,
   } = useSettings();
 
   const formId = useId();
@@ -52,8 +54,8 @@ export const SettingsPage: React.FC = () => {
             {currentSettings.models.map((model, index) => {
               return (
                 <div key={model.id} className={clsx("pb-4 grid grid-cols-6 gap-4", index === 0 ? "" : "pt-4")}>
-                  <div className="flex justify-between col-span-6">
-                    <div>
+                  <div className="flex flex-wrap justify-between col-span-6">
+                    <div className="flex-1">
                       <label htmlFor={`${formId}-name-${model.id}`} className="block text-sm font-medium text-gray-700">
                         Model name
                       </label>
@@ -67,7 +69,22 @@ export const SettingsPage: React.FC = () => {
                         className="mt-1 flex rounded-md shadow-sm border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       />
                     </div>
-                    <div className="self-end">
+                    <div className="self-end space-x-2 mt-2">
+                      <button
+                        type="button"
+                        className="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-indigo-200"
+                        onClick={() => setActiveModel(model.id)}
+                        disabled={model.isActive}
+                      >
+                        {model.isActive ? (
+                          <>
+                            <CheckIcon className="-ml-0.5 mr-2 h-4 w-4" aria-hidden="true" />
+                            Acitve model
+                          </>
+                        ) : (
+                          <>Set active model</>
+                        )}
+                      </button>
                       <button
                         type="button"
                         className="inline-flex items-center rounded-md border border-transparent bg-red-600 px-3 py-2 text-sm font-medium leading-4 text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
