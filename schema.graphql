@@ -110,7 +110,7 @@ type Settings {
 
   device: String!
   showPreviews: Boolean!
-  stepsPerPreview: Int
+  stepsPerPreview: Int!
   useFullPrecision: Boolean!
   models: [SettingsModel!]!
   activeModel: SettingsModel
@@ -129,7 +129,7 @@ type SettingsModel {
 input SettingsInput {
   device: String!
   showPreviews: Boolean!
-  stepsPerPreview: Int
+  stepsPerPreview: Int!
   useFullPrecision: Boolean!
   models: [SettingsModelInput!]!
 }

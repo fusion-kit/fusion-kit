@@ -216,7 +216,7 @@ export const SettingsPage: React.FC = () => {
               <div className="col-span-6 sm:col-span-2">
                 <NumberInput
                   label="Steps per preview"
-                  value={currentSettings.stepsPerPreview ?? null}
+                  value={currentSettings.stepsPerPreview}
                   onChange={(stepsPerPreview) => {
                     setCurrentSettings((s) => ({ ...s, stepsPerPreview }));
                   }}

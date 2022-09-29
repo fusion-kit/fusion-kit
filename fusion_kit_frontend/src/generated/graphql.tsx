@@ -124,7 +124,7 @@ export type Settings = {
   models: Array<SettingsModel>;
   modelsFilePath: Scalars['String'];
   showPreviews: Scalars['Boolean'];
-  stepsPerPreview?: Maybe<Scalars['Int']>;
+  stepsPerPreview: Scalars['Int'];
   useFullPrecision: Scalars['Boolean'];
 };
 
@@ -132,7 +132,7 @@ export type SettingsInput = {
   device: Scalars['String'];
   models: Array<SettingsModelInput>;
   showPreviews: Scalars['Boolean'];
-  stepsPerPreview?: InputMaybe<Scalars['Int']>;
+  stepsPerPreview: Scalars['Int'];
   useFullPrecision: Scalars['Boolean'];
 };
 
@@ -188,7 +188,7 @@ export type SubscriptionWatchDreamArgs = {
 export type GetSettingsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetSettingsQuery = { __typename?: 'Query', settings: { __typename?: 'Settings', availableDevices: Array<string>, modelsFilePath: string, device: string, showPreviews: boolean, stepsPerPreview?: number | null, useFullPrecision: boolean, models: Array<{ __typename?: 'SettingsModel', isActive: boolean, id: string, name: string, weightsFilename: string, configFilename: string, width: number, height: number }> } };
+export type GetSettingsQuery = { __typename?: 'Query', settings: { __typename?: 'Settings', availableDevices: Array<string>, modelsFilePath: string, device: string, showPreviews: boolean, stepsPerPreview: number, useFullPrecision: boolean, models: Array<{ __typename?: 'SettingsModel', isActive: boolean, id: string, name: string, weightsFilename: string, configFilename: string, width: number, height: number }> } };
 
 export type StartDreamMutationVariables = Exact<{
   options: DreamOptionsInput;
