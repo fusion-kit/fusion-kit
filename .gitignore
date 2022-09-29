@@ -6,7 +6,7 @@ src/k-diffusion
 condaenv.*.requirements.txt
 
 # Alembic migration DB
-/fusion_kit_backend/alembic.db
+/fusion_kit_server/alembic.db
 
 ### Standard Python ignores ###
 

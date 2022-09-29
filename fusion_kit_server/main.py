@@ -30,8 +30,8 @@ else:
     project_path = os.path.realpath(os.path.join(os.path.realpath(__file__), '..', '..'))
 
 graphql_schema_path = os.path.join(project_path, "schema.graphql")
-alembic_ini_path = os.path.join(project_path, "fusion_kit_backend", "alembic.ini")
-alembic_script_path = os.path.join(project_path, "fusion_kit_backend", "alembic")
+alembic_ini_path = os.path.join(project_path, "fusion_kit_server", "alembic.ini")
+alembic_script_path = os.path.join(project_path, "fusion_kit_server", "alembic")
 default_model_config = os.path.join(project_path, "invoke_ai", "configs", "stable-diffusion", "v1-inference.yaml")
 frontend_dir = os.path.join(project_path, "fusion_kit_client", "dist")
 

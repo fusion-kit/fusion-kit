@@ -7,15 +7,15 @@ block_cipher = None
 datas = [
     ('schema.graphql', '.'),
     ('fusion_kit_client/dist', 'fusion_kit_client/dist'),
-    ('fusion_kit_backend/alembic.ini', 'fusion_kit_backend'),
-    ('fusion_kit_backend/alembic', 'fusion_kit_backend/alembic'),
+    ('fusion_kit_server/alembic.ini', 'fusion_kit_server'),
+    ('fusion_kit_server/alembic', 'fusion_kit_server/alembic'),
     ('invoke_ai/configs/stable-diffusion/v1-inference.yaml', 'invoke_ai/configs/stable-diffusion'),
     ('src/clip/clip/bpe_simple_vocab_16e6.txt.gz', 'clip')
 ]
 datas += copy_metadata('transformers', recursive=True)
 
 a = Analysis(
-    ['fusion_kit_backend/main.py'],
+    ['fusion_kit_server/main.py'],
     pathex=[],
     binaries=[],
     datas=datas,
