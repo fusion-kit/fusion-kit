@@ -542,7 +542,9 @@ function downloadProgressLabel(downloadState: DownloadState): string {
 
   const { downloadedBytes, totalBytes } = downloadState;
 
-  const toFilesize = (bytes: number) => filesize(bytes, { base: 2 });
+  const toFilesize = (bytes: number) => filesize(bytes, {
+    base: 2, round: 1, pad: true, precision: 4,
+  });
 
   if (totalBytes != null) {
     return `Downloading [${toFilesize(downloadedBytes)} / ${toFilesize(totalBytes)}]`;

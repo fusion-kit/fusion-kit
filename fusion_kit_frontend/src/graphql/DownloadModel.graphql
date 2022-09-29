@@ -1,0 +1,19 @@
+subscription DownloadModel($modelId: ID!) {
+  downloadModel(modelId: $modelId) {
+    __typename
+    ...on ModelDownloadComplete {
+      name
+      weightsFilename
+      configFilename
+      width
+      height
+    }
+    ...on ModelDownloadProgress {
+      downloadedBytes
+      totalBytes
+    }
+    ...on ModelDownloadError {
+      message
+    }
+  }
+}

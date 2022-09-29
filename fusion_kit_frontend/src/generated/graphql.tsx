@@ -63,6 +63,28 @@ export type FinishedDreamImage = DreamImage & {
   seed: Scalars['Int'];
 };
 
+export type ModelDownload = ModelDownloadComplete | ModelDownloadError | ModelDownloadProgress;
+
+export type ModelDownloadComplete = {
+  __typename?: 'ModelDownloadComplete';
+  configFilename: Scalars['String'];
+  height: Scalars['Int'];
+  name: Scalars['String'];
+  weightsFilename: Scalars['String'];
+  width: Scalars['Int'];
+};
+
+export type ModelDownloadError = {
+  __typename?: 'ModelDownloadError';
+  message: Scalars['String'];
+};
+
+export type ModelDownloadProgress = {
+  __typename?: 'ModelDownloadProgress';
+  downloadedBytes: Scalars['Int'];
+  totalBytes?: Maybe<Scalars['Int']>;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   startDream: Dream;
@@ -177,13 +199,26 @@ export enum StoppedDreamReason {
 
 export type Subscription = {
   __typename?: 'Subscription';
+  downloadModel: ModelDownload;
   watchDream: Dream;
+};
+
+
+export type SubscriptionDownloadModelArgs = {
+  modelId: Scalars['ID'];
 };
 
 
 export type SubscriptionWatchDreamArgs = {
   dreamId: Scalars['ID'];
 };
+
+export type DownloadModelSubscriptionVariables = Exact<{
+  modelId: Scalars['ID'];
+}>;
+
+
+export type DownloadModelSubscription = { __typename?: 'Subscription', downloadModel: { __typename: 'ModelDownloadComplete', name: string, weightsFilename: string, configFilename: string, width: number, height: number } | { __typename: 'ModelDownloadError', message: string } | { __typename: 'ModelDownloadProgress', downloadedBytes: number, totalBytes?: number | null } };
 
 export type GetSettingsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -212,6 +247,7 @@ export type WatchDreamSubscriptionVariables = Exact<{
 export type WatchDreamSubscription = { __typename?: 'Subscription', watchDream: { __typename: 'FinishedDream', id: string, images: Array<{ __typename: 'FinishedDreamImage', imagePath: string, id: string }> } | { __typename: 'PendingDream', id: string, images: Array<{ __typename: 'PendingDreamImage', id: string }> } | { __typename: 'RunningDream', numFinishedImages: number, numTotalImages: number, numFinishedSteps: number, numTotalSteps: number, id: string, images: Array<{ __typename: 'FinishedDreamImage', imagePath: string, id: string } | { __typename: 'PendingDreamImage', id: string } | { __typename: 'RunningDreamImage', numFinishedSteps: number, numTotalSteps: number, previewImagePath?: string | null, id: string } | { __typename: 'StoppedDreamImage', id: string }> } | { __typename: 'StoppedDream', reason: StoppedDreamReason, message?: string | null, id: string, images: Array<{ __typename: 'FinishedDreamImage', imagePath: string, id: string } | { __typename: 'PendingDreamImage', id: string } | { __typename: 'RunningDreamImage', numFinishedSteps: number, numTotalSteps: number, previewImagePath?: string | null, id: string } | { __typename: 'StoppedDreamImage', id: string }> } };
 
 
+export const DownloadModelDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"subscription","name":{"kind":"Name","value":"DownloadModel"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"modelId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"downloadModel"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"modelId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"modelId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"ModelDownloadComplete"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"weightsFilename"}},{"kind":"Field","name":{"kind":"Name","value":"configFilename"}},{"kind":"Field","name":{"kind":"Name","value":"width"}},{"kind":"Field","name":{"kind":"Name","value":"height"}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"ModelDownloadProgress"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"downloadedBytes"}},{"kind":"Field","name":{"kind":"Name","value":"totalBytes"}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"ModelDownloadError"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]} as unknown as DocumentNode<DownloadModelSubscription, DownloadModelSubscriptionVariables>;
 export const GetSettingsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetSettings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"settings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"availableDevices"}},{"kind":"Field","name":{"kind":"Name","value":"modelsFilePath"}},{"kind":"Field","name":{"kind":"Name","value":"device"}},{"kind":"Field","name":{"kind":"Name","value":"showPreviews"}},{"kind":"Field","name":{"kind":"Name","value":"stepsPerPreview"}},{"kind":"Field","name":{"kind":"Name","value":"useFullPrecision"}},{"kind":"Field","name":{"kind":"Name","value":"models"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"isActive"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"weightsFilename"}},{"kind":"Field","name":{"kind":"Name","value":"configFilename"}},{"kind":"Field","name":{"kind":"Name","value":"width"}},{"kind":"Field","name":{"kind":"Name","value":"height"}}]}}]}}]}}]} as unknown as DocumentNode<GetSettingsQuery, GetSettingsQueryVariables>;
 export const StartDreamDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"StartDream"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"options"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"DreamOptionsInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"startDream"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"options"},"value":{"kind":"Variable","name":{"kind":"Name","value":"options"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<StartDreamMutation, StartDreamMutationVariables>;
 export const UpdateSettingsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateSettings"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"newSettings"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"SettingsInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateSettings"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"newSettings"},"value":{"kind":"Variable","name":{"kind":"Name","value":"newSettings"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}}]}}]}}]} as unknown as DocumentNode<UpdateSettingsMutation, UpdateSettingsMutationVariables>;

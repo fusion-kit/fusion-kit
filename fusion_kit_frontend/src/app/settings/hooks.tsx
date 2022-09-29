@@ -1,10 +1,15 @@
-import { ApolloError, useMutation, useQuery } from "@apollo/client";
+import {
+  ApolloError, SubscriptionResult, useMutation, useQuery, useSubscription,
+} from "@apollo/client";
 import React, {
   useCallback, useEffect, useState,
 } from "react";
 import { ulid } from "ulid";
 
-import { GetSettingsDocument, GetSettingsQuery, UpdateSettingsDocument } from "../../generated/graphql";
+import {
+  DownloadModelDocument, DownloadModelSubscription,
+  GetSettingsDocument, GetSettingsQuery, UpdateSettingsDocument,
+} from "../../generated/graphql";
 import { unreachable } from "../../utils";
 
 export type Settings = GetSettingsQuery["settings"];
@@ -167,14 +172,32 @@ interface UseDownloadModel {
   canDownload: boolean,
 }
 
+interface CurrentDownload {
+  watermark: number,
+  downloadOptions?: DownloadModelOptions,
+}
+
 export function useDownloadModel(): UseDownloadModel {
-  const [downloadState, setDownloadState] = useState<DownloadState>({
-    state: "waiting",
+  const [currentDownload, setCurrentDownload] = useState<CurrentDownload>({
+    watermark: 0,
+  });
+  const downloadResult = useSubscription(DownloadModelDocument, {
+    variables: {
+      modelId: currentDownload.downloadOptions?.modelId!,
+      _watermark: currentDownload.watermark, // Force re-subscription
+    },
+    skip: currentDownload.downloadOptions == null,
+    onSubscriptionComplete: currentDownload.downloadOptions?.onDownloadComplete,
   });
 
-  const downloadModel = useCallback((_opts: DownloadModelOptions) => {
-    setDownloadState({ state: "error", message: "not implemented" });
+  const downloadModel = useCallback((opts: DownloadModelOptions) => {
+    setCurrentDownload(({ watermark }) => ({
+      watermark: watermark + 1,
+      downloadOptions: opts,
+    }));
   }, []);
+
+  const downloadState = getDownloadState(downloadResult);
 
   const canDownload = canStartDownload(downloadState);
 
@@ -183,6 +206,52 @@ export function useDownloadModel(): UseDownloadModel {
     downloadState,
     canDownload,
   };
+}
+
+function getDownloadState(
+  downloadResult: SubscriptionResult<DownloadModelSubscription>,
+): DownloadState {
+  const { data, loading, error } = downloadResult;
+
+  if (error != null) {
+    return {
+      state: "error",
+      message: error.message,
+    };
+  }
+
+  if (data == null) {
+    if (!loading) {
+      return {
+        state: "waiting",
+      };
+    } else {
+      return {
+        state: "downloading",
+        downloadedBytes: 0,
+      };
+    }
+  }
+
+  switch (data.downloadModel.__typename) {
+    case "ModelDownloadComplete":
+      return {
+        state: "complete",
+      };
+    case "ModelDownloadProgress":
+      return {
+        state: "downloading",
+        downloadedBytes: data.downloadModel.downloadedBytes,
+        totalBytes: data.downloadModel.totalBytes ?? undefined,
+      };
+    case "ModelDownloadError":
+      return {
+        state: "error",
+        message: data.downloadModel.message,
+      };
+    default:
+      return unreachable(data.downloadModel);
+  }
 }
 
 function canStartDownload(state: DownloadState): boolean {
