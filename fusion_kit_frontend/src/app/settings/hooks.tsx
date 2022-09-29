@@ -54,7 +54,17 @@ export function useSettings(): UseSettings {
       variables: {
         newSettings: {
           device: currentSettings.device,
-          models: currentSettings.models,
+          models: currentSettings.models.map((model) => (
+            {
+              isActive: model.isActive,
+              id: model.id,
+              name: model.name,
+              weightsFilename: model.weightsFilename,
+              configFilename: model.configFilename,
+              width: model.width,
+              height: model.height,
+            }
+          )),
           showPreviews: currentSettings.showPreviews,
           stepsPerPreview: currentSettings.stepsPerPreview,
           useFullPrecision: currentSettings.useFullPrecision,
