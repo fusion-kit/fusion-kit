@@ -72,6 +72,15 @@ export const DownloadPanel: React.FC<DownloadPanelProps> = (props) => {
                     Select a model to download
                   </Dialog.Title>
                   <DownloadSelector onSelect={(id) => setSelectedModel(id)} />
+                  <div className="mt-4 flex justify-end space-x-2 border-t pt-4 border-gray-200">
+                    <button
+                      type="button"
+                      className="inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto sm:text-sm"
+                      onClick={onClose}
+                    >
+                      Close
+                    </button>
+                  </div>
                 </div>
                 <div
                   className={clsx(
