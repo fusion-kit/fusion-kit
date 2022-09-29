@@ -25,9 +25,25 @@ class DreamImage():
 
     ### GraphQL resolvers ###
 
+    def width(self, info):
+        manager = info.context['manager']
+        return manager.get_image_dimensions(self.image_key)['width']
+
+    def height(self, info):
+        manager = info.context['manager']
+        return manager.get_image_dimensions(self.image_key)['height']
+
     def image_path(self, info):
         manager = info.context['manager']
         return manager.get_image_uri(self.image_key)
+
+    def preview_width(self, info):
+        manager = info.context['manager']
+        return manager.get_image_dimensions(self.image_key)['width']
+
+    def preview_height(self, info):
+        manager = info.context['manager']
+        return manager.get_image_dimensions(self.image_key)['height']
 
     def preview_image_path(self, info):
         manager = info.context['manager']

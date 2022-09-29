@@ -119,8 +119,6 @@ class Dreamer():
 
         if base_image is not None:
             assert base_image_decimation is not None, 'base_image_decimation is required if base_image is set'
-            assert width is None, 'width cannot be set if base_image is set'
-            assert height is None, 'height cannot be set if base_image is set'
             base_image_decimation = numpy.clip(base_image_decimation, 0.0, 1.0)
 
             # Reduce the sampler steps when using a base image

@@ -239,6 +239,13 @@ class FusionKitManager():
 
         return self.registered_images[key]
 
+    def get_image_dimensions(self, key):
+        image = self.get_image(key)
+        return {
+            'width': image.width,
+            'height': image.height,
+        }
+
     def get_image_by_path(self, path):
         result = re.search(r'^/images/(.*)\.png$', path)
         if result is None:
