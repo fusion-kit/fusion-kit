@@ -90,3 +90,47 @@ export const NumberInput: React.FC<NumberInputProps> = (props) => {
     />
   );
 };
+
+interface DropdownInputProps<V extends string> {
+  label: string,
+  options: DropdownOption<V>[],
+  value: V,
+  onChange: (_newValue: V) => void,
+}
+
+interface DropdownOption<V extends string> {
+  label: string,
+  value: V,
+}
+
+export const DropdownInput = <V extends string = string>(
+  props: DropdownInputProps<V>,
+) => {
+  const {
+    label, options, value, onChange,
+  } = props;
+
+  const selectId = useId();
+
+  const onSelectChange: React.ChangeEventHandler<HTMLSelectElement> = useCallback((e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onChange(e.target.value as V);
+  }, [onChange]);
+
+  return (
+    <>
+      <label htmlFor={selectId} className="block text-sm font-medium text-gray-700">{label}</label>
+      <select
+        id={selectId}
+        value={value}
+        onChange={onSelectChange}
+        className="block w-full max-w-lg rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:max-w-xs sm:text-sm"
+      >
+        {options.map((option) => (
+          <option key={option.value}>{option.label}</option>
+        ))}
+      </select>
+    </>
+  );
+};

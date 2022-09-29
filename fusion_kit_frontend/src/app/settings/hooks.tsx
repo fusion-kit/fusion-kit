@@ -5,6 +5,7 @@ import React, {
 import { ulid } from "ulid";
 
 import { GetSettingsDocument, GetSettingsQuery, UpdateSettingsDocument } from "../../generated/graphql";
+import { unreachable } from "../../utils";
 
 export type Settings = GetSettingsQuery["settings"];
 
@@ -147,4 +148,54 @@ function createNewModel(isActive: boolean): SettingsModel {
     width: 512,
     height: 512,
   };
+}
+
+interface DownloadModelOptions {
+  modelId: string,
+  onDownloadComplete: () => void,
+}
+
+export type DownloadState =
+  | { state: "waiting" }
+  | { state: "downloading", downloadedBytes: number, totalBytes?: number }
+  | { state: "complete" }
+  | { state: "error", message: string };
+
+interface UseDownloadModel {
+  downloadModel: (_opts: DownloadModelOptions) => void,
+  downloadState: DownloadState,
+  canDownload: boolean,
+}
+
+export function useDownloadModel(): UseDownloadModel {
+  const [downloadState, setDownloadState] = useState<DownloadState>({
+    state: "waiting",
+  });
+
+  const downloadModel = useCallback((_opts: DownloadModelOptions) => {
+    setDownloadState({ state: "error", message: "not implemented" });
+  }, []);
+
+  const canDownload = canStartDownload(downloadState);
+
+  return {
+    downloadModel,
+    downloadState,
+    canDownload,
+  };
+}
+
+function canStartDownload(state: DownloadState): boolean {
+  switch (state.state) {
+    case "waiting":
+      return true;
+    case "downloading":
+      return false;
+    case "error":
+      return true;
+    case "complete":
+      return false;
+    default:
+      return unreachable(state);
+  }
 }
