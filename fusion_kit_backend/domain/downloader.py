@@ -15,7 +15,7 @@ MODELS = {
         # Licensed under the CreativeML Open RAIL-M license. See the file
         # `licenses/stable-diffusion-license.txt` for details.
         'name': 'Stable Diffusion v1.4',
-        'weights_url': 'https://models.fusionkit.dev/models/sd-v1-4.ckpt',
+        'weights_url': 'https://content.fusionkit.dev/models/sd-v1-4.ckpt',
         'weights_sha256': 'fe4efff1e174c627256e44ec2991ba279b3816e364b49f9be2abc0b3ff3f8556',
         'weights_filename': 'sd-v1-4.ckpt',
         'config_filename': 'v1-inference.yaml', # TODO: Don't hardcode
@@ -54,7 +54,7 @@ async def download_model(id, data_dir):
         response = await session.get(model['weights_url'], timeout=dl_timeout)
         async with response:
             if not response.ok:
-                raise Exception(f'Model download responded with a status of {response.status} and is not currently available. Try updating FusionKit or trying again later.')
+                raise Exception(f'Model download responded with a status of {response.status} and is not currently available. Try updating FusionKit or try again later.')
 
             total_bytes = response.headers.get('content-length', None)
             downloaded_bytes = 0
