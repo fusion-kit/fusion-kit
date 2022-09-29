@@ -200,7 +200,13 @@ export function useDreamOptions(initialDefaultOptions: DreamOptions): UseDreamOp
       return;
     }
 
-    const { activeModel } = settingsResult.data.settings;
+    const { isReady, activeModel } = settingsResult.data.settings;
+
+    if (!isReady) {
+      navigate("/settings", {
+        replace: true,
+      });
+    }
 
     if (activeModel != null) {
       setOptions((opts) => ({
