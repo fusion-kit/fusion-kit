@@ -33,6 +33,8 @@ dependencies:
     - -e git+https://github.com/lstein/GFPGAN.git@8d2447a2d918f8eba5a4a01463fd48e45126a379#egg=gfpgan
     - -e ./invoke_ai
     # Custom dependencies
+    - aiofiles==22.1.0
+    - aiohttp==3.8.3
     - ariadne[asgi-file-uploads]==0.16.1b1
     - broadcaster==0.2.0
     - starlette==0.20.4
