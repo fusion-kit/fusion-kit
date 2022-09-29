@@ -3,14 +3,14 @@ from ldm.generate import Generate
 import numpy
 import os
 from PIL import Image
+from transformers import CLIPTokenizer, CLIPTextModel, logging
 from ulid import ULID
 
 def chunk(iterator, size):
     iterator = iter(iterator)
     return iter(lambda: tuple(islice(iterator, size)), ())
 
-CONFIG_FILE = 'invoke_ai/configs/stable-diffusion/v1-inference.yaml'
-CKPT_FILE = 'invoke_ai/models/ldm/stable-diffusion-v1/model.ckpt'
+CLIP_VERSION = 'openai/clip-vit-large-patch14'
 
 class Dreamer():
     def __init__(
@@ -18,6 +18,12 @@ class Dreamer():
         settings,
         data_dir,
     ):
+        # Load the CLIP models to download required model files (these will get cached)
+        logging.set_verbosity_error()
+        CLIPTokenizer.from_pretrained(CLIP_VERSION)
+        CLIPTextModel.from_pretrained(CLIP_VERSION)
+        logging.set_verbosity_warning()
+
         active_model = next((model for model in settings['models'] if model['is_active']), None)
 
         if active_model is not None:
