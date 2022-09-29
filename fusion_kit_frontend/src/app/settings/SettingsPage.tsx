@@ -25,7 +25,7 @@ export const SettingsPage: React.FC = () => {
 
   return (
     <form
-      className="space-y-6 px-2 py-6 sm:px-6 bg-gray-100 h-full absolute lg:static inset-0 overflow-auto lg:overflow-visible"
+      className="space-y-6 px-2 py-6 sm:px-6 bg-gray-100 h-full absolute lg:static inset-0 overflow-auto"
       onSubmit={onSaveSettings}
     >
       {loadError != null ? (
