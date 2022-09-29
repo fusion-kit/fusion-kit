@@ -14,7 +14,8 @@ from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import StreamingResponse
-from starlette.routing import Route, WebSocketRoute
+from starlette.routing import Route, WebSocketRoute, Mount
+from starlette.staticfiles import StaticFiles
 import uvicorn
 import domain.graphql
 from manager import FusionKitManager
@@ -31,6 +32,7 @@ graphql_schema_path = os.path.join(project_path, "schema.graphql")
 alembic_ini_path = os.path.join(project_path, "fusion_kit_backend", "alembic.ini")
 alembic_script_path = os.path.join(project_path, "fusion_kit_backend", "alembic")
 default_model_config = os.path.join(project_path, "invoke_ai", "configs", "stable-diffusion", "v1-inference.yaml")
+frontend_dir = os.path.join(project_path, "fusion_kit_frontend", "dist")
 
 data_dir = appdirs.user_data_dir("fusion-kit")
 images_dir = os.path.join(data_dir, "images")
@@ -88,6 +90,11 @@ async def main():
             WebSocketRoute("/graphql", endpoint=graphql_app),
             Route("/images/{image_path:path}", get_image, methods=["GET"]),
         ]
+
+        if os.path.isfile(os.path.join(frontend_dir, 'index.html')):
+            routes.append(Mount("/", app=StaticFiles(directory=frontend_dir, html=True), name='static'))
+        else:
+            print('Not serving static files (static files not found)')
 
         middleware = [
             Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["POST"])
