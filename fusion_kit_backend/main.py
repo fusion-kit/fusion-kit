@@ -33,7 +33,7 @@ graphql_schema_path = os.path.join(project_path, "schema.graphql")
 alembic_ini_path = os.path.join(project_path, "fusion_kit_backend", "alembic.ini")
 alembic_script_path = os.path.join(project_path, "fusion_kit_backend", "alembic")
 default_model_config = os.path.join(project_path, "invoke_ai", "configs", "stable-diffusion", "v1-inference.yaml")
-frontend_dir = os.path.join(project_path, "fusion_kit_frontend", "dist")
+frontend_dir = os.path.join(project_path, "fusion_kit_client", "dist")
 
 data_dir = appdirs.user_data_dir("fusion-kit")
 images_dir = os.path.join(data_dir, "images")

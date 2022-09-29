@@ -1,2 +1,2 @@
 schema: "./schema.graphql"
-documents: "fusion_kit_frontend/src/**/*.graphql"
+documents: "fusion_kit_client/src/**/*.graphql"
