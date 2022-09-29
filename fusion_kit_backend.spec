@@ -6,6 +6,7 @@ block_cipher = None
 
 datas = [
     ('schema.graphql', '.'),
+    ('fusion_kit_frontend/dist', 'fusion_kit_frontend/dist'),
     ('fusion_kit_backend/alembic.ini', 'fusion_kit_backend'),
     ('fusion_kit_backend/alembic', 'fusion_kit_backend/alembic'),
     ('invoke_ai/configs/stable-diffusion/v1-inference.yaml', 'invoke_ai/configs/stable-diffusion'),
