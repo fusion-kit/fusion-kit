@@ -1,5 +1,6 @@
 from io import BytesIO
 import os
+import sys
 import multiprocessing
 import shutil
 import asyncio
@@ -18,7 +19,14 @@ import uvicorn
 import domain.graphql
 from manager import FusionKitManager
 
-project_path = os.path.realpath(os.path.join(os.path.realpath(__file__), "..", ".."))
+if getattr(sys, 'frozen', False):
+    # Fix multiprocessing infinite loop
+    multiprocessing.freeze_support()
+
+    project_path = os.path.realpath(os.path.join(os.path.realpath(__file__), '..'))
+else:
+    project_path = os.path.realpath(os.path.join(os.path.realpath(__file__), '..', '..'))
+
 graphql_schema_path = os.path.join(project_path, "schema.graphql")
 alembic_ini_path = os.path.join(project_path, "fusion_kit_backend", "alembic.ini")
 alembic_script_path = os.path.join(project_path, "fusion_kit_backend", "alembic")
