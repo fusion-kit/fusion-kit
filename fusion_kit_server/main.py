@@ -72,7 +72,7 @@ def get_image(request):
 
 parser = argparse.ArgumentParser(description='FusionKit server')
 parser.add_argument('-p', '--port', default=2424, help='server port')
-parser.add_argument('-a', '--address', default='0.0.0.0', help='server address')
+parser.add_argument('-a', '--address', default='127.0.0.1', help='server address')
 parser.add_argument('--cors', default='*', help='comma-separated list of origins to allow for API access')
 
 async def main():
