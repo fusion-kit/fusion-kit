@@ -5,6 +5,9 @@ import codegen from "vite-plugin-graphql-codegen";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  build: {
+    sourcemap: true,
+  },
   plugins: [
     react(),
     checker({
