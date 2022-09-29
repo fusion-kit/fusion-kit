@@ -4,6 +4,7 @@ import clsx from "clsx";
 import React, {
   Fragment, useCallback, useId, useState,
 } from "react";
+import { filesize } from "filesize";
 import { unreachable } from "../../utils";
 import { ErrorBox } from "../ErrorBox";
 import { ProgressBar } from "../ProgressBar";
@@ -517,15 +518,14 @@ const DownloadStatus: React.FC<DownloadStatusProps> = (props) => {
         </ErrorBox>
       );
     case "downloading": {
-      const progressKnown = downloadState.totalBytes != null && downloadState.totalBytes > 0;
-      const progress = downloadState.downloadedBytes / Math.max(downloadState.totalBytes ?? 1, 1);
+      const { downloadedBytes, totalBytes } = downloadState;
 
       return (
         <div className="h-8 rounded-md overflow-hidden shadow">
           <ProgressBar
-            status={progressKnown ? "loading" : "indeterminate"}
-            progress={progressKnown ? progress : 1}
-            label="Downloading"
+            status={downloadedBytes > 0 || totalBytes != null ? "loading" : "indeterminate"}
+            progress={totalBytes != null ? downloadedBytes / totalBytes : 1}
+            label={downloadProgressLabel(downloadState)}
           />
         </div>
       );
@@ -534,3 +534,21 @@ const DownloadStatus: React.FC<DownloadStatusProps> = (props) => {
       return unreachable(downloadState);
   }
 };
+
+function downloadProgressLabel(downloadState: DownloadState): string {
+  if (downloadState.state !== "downloading") {
+    throw new Error("tried to get download progress label but was not downloading");
+  }
+
+  const { downloadedBytes, totalBytes } = downloadState;
+
+  const toFilesize = (bytes: number) => filesize(bytes, { base: 2 });
+
+  if (totalBytes != null) {
+    return `Downloading [${toFilesize(downloadedBytes)} / ${toFilesize(totalBytes)}]`;
+  } else if (downloadedBytes > 0) {
+    return `Downloading [${toFilesize(downloadedBytes)}]`;
+  } else {
+    return "Downloading";
+  }
+}
