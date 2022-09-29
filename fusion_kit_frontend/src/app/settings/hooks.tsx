@@ -31,10 +31,11 @@ interface UseSettings {
   updateModel: (_id: string, _f: (_currentModel: SettingsModel) => SettingsModel) => void,
   removeModel: (_id: string) => void,
   setActiveModel: (_id: string) => void,
-  saveSettings: () => void,
+  saveSettings: () => Promise<boolean>,
 }
 
 const DEFAULT_SETTINGS: Settings = {
+  isReady: true,
   availableDevices: [],
   device: "",
   models: [],
@@ -56,8 +57,8 @@ export function useSettings(): UseSettings {
     }
   }, [settingsQueryResult]);
 
-  const saveSettings = useCallback(() => {
-    updateSettings({
+  const saveSettings = useCallback(async () => {
+    const success = await updateSettings({
       variables: {
         newSettings: {
           device: currentSettings.device,
@@ -77,7 +78,9 @@ export function useSettings(): UseSettings {
           useFullPrecision: currentSettings.useFullPrecision,
         },
       },
-    });
+    }).then((res) => res.data != null).catch(() => false);
+
+    return success;
   }, [currentSettings, updateSettings]);
 
   const addModel = useCallback((newModel: SettingsModel) => {

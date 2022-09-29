@@ -1,14 +1,17 @@
 import { Switch } from "@headlessui/react";
-import { ArrowDownTrayIcon, TrashIcon } from "@heroicons/react/20/solid";
+import { ArrowDownTrayIcon, TrashIcon, InformationCircleIcon } from "@heroicons/react/20/solid";
 import { CheckIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import React, { useCallback, useId, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ErrorBox } from "../ErrorBox";
 import { DropdownInput, NumberInput } from "../inputs";
 import { DownloadPanel } from "./DownloadPanel";
 import { useSettings } from "./hooks";
 
 export const SettingsPage: React.FC = () => {
+  const navigate = useNavigate();
+
   const {
     currentSettings, setCurrentSettings, loadError,
     createModel, addModel, updateModel, removeModel, setActiveModel,
@@ -19,14 +22,17 @@ export const SettingsPage: React.FC = () => {
 
   const [showDownloads, setShowDownloads] = useState(false);
 
-  const onSaveSettings: React.FormEventHandler = useCallback((e) => {
+  const onSaveSettings: React.FormEventHandler = useCallback(async (e) => {
     e.stopPropagation();
     e.preventDefault();
 
     if (canSave) {
-      saveSettings();
+      const saved = await saveSettings();
+      if (saved) {
+        navigate("/");
+      }
     }
-  }, [saveSettings, canSave]);
+  }, [saveSettings, canSave, navigate]);
 
   return (
     <>
@@ -34,6 +40,21 @@ export const SettingsPage: React.FC = () => {
         className="space-y-6 px-2 py-6 sm:px-6 bg-gray-100 h-full absolute lg:static inset-0 overflow-auto"
         onSubmit={onSaveSettings}
       >
+        {currentSettings.isReady ? null : (
+          <div className="rounded-md bg-indigo-50 p-4 my-4 shadow">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <InformationCircleIcon className="h-5 w-5 text-indigo-400" aria-hidden="true" />
+              </div>
+              <div className="ml-3 text-sm text-indigo-700">
+                <h3 className="text-sm font-medium text-indigo-800">Set up FusionKit</h3>
+                <div className="mt-2 text-sm text-indigo-700">
+                  <p>Download or add a model to start using FusionKit</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         {loadError != null ? (
           <ErrorBox className="shadow">
             <h3 className="text-sm font-medium text-red-800">Failed to load current settings</h3>
@@ -53,7 +74,7 @@ export const SettingsPage: React.FC = () => {
             </div>
             <div className="mt-5 md:col-span-2 md:mt-0 divide-y divide-gray-300">
               {currentSettings.models.length === 0 ? (
-                <p className="py-4 text-gray-500 text-center">Add a model to use Stable Diffusion</p>
+                <p className="py-4 text-gray-500 text-center">Add a model to use FusionKit</p>
               ) : null}
               {currentSettings.models.map((model, index) => {
                 return (

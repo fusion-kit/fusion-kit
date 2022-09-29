@@ -1,5 +1,6 @@
 query GetSettings {
   settings {
+    isReady
     availableDevices
     modelsFilePath
 
