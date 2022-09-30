@@ -27,6 +27,7 @@ const createWindow = (): void => {
     height: 600,
     width: 800,
     title: "FusionKit [Loading...]",
+    autoHideMenuBar: true,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
     },
