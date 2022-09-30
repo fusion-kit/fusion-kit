@@ -10,6 +10,7 @@ dependencies:
   - cudatoolkit=11.3
   - numpy=1.19.2
   # Custom dependencies
+  - nodejs=18.10.0
   - pyinstaller=5.1
   - pip:
     - albumentations==0.4.3
