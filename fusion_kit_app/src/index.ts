@@ -26,6 +26,7 @@ const createWindow = (): void => {
   const mainWindow = new BrowserWindow({
     height: 600,
     width: 800,
+    title: "FusionKit [Loading...]",
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
     },
@@ -53,7 +54,11 @@ const createWindow = (): void => {
 
   serverProcess.on("close", (code, signal) => {
     console.error(`Server process exited with code ${code} / signal ${signal}`);
-    mainWindow.loadFile(MAIN_WINDOW_WEBPACK_ENTRY)
+    try {
+      mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+    } catch (exception) {
+      console.warn("could not show error page", exception);
+    }
   })
 };
 
