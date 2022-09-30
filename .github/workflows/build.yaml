@@ -1,0 +1,19 @@
+name: build
+on:
+  push:
+    branches:
+      - wip/ci
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Install Anaconda environment
+        run: $CONDA/bin/conda env update --file conda-linux.yaml --name base
+      - name: Test PyTorch
+        run: $CONDA/bin/python -c 'import torch; print(torch.zeros(1))'
+      - name: Test PyInstaller
+        run: $CONDA/bin/pyinstaller --version
+
