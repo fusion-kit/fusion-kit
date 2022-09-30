@@ -1,11 +1,12 @@
 import { Dialog, Transition } from "@headlessui/react";
 import {
-  Bars3Icon, Cog6ToothIcon, PaintBrushIcon, Squares2X2Icon, XMarkIcon,
+  Bars3Icon, Cog6ToothIcon, MegaphoneIcon, PaintBrushIcon, Squares2X2Icon, XMarkIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import React, { Fragment, useState } from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import logo from "../assets/logo.svg";
+import { useIsUpdateAvailable } from "./hooks";
 
 const navigation = [
   {
@@ -21,6 +22,7 @@ const navigation = [
 
 export const AppLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className="flex h-full">
       <Transition.Root show={sidebarOpen} as={Fragment}>
@@ -189,6 +191,56 @@ export const AppLayout: React.FC = () => {
         </div>
         <div className="flex flex-1 flex-col lg:flex-row h-full relative">
           <Outlet />
+        </div>
+      </div>
+      <UpdateBanner />
+    </div>
+  );
+};
+
+const UpdateBanner: React.FC = () => {
+  const isUpdateAvailable = useIsUpdateAvailable();
+  const [isVisible, setIsVisible] = useState(true);
+
+  if (!isUpdateAvailable || !isVisible) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-x-0 bottom-0 pb-2 sm:pb-5">
+      <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+        <div className="rounded-lg bg-indigo-600 p-2 shadow-lg sm:p-3">
+          <div className="flex flex-wrap items-center justify-between">
+            <div className="flex w-0 flex-1 items-center">
+              <span className="flex rounded-lg bg-indigo-800 p-2">
+                <MegaphoneIcon className="h-6 w-6 text-white" aria-hidden="true" />
+              </span>
+              <p className="ml-3 truncate font-medium text-white">
+                <span className="md:hidden">FusionKit update available</span>
+                <span className="hidden md:inline">A new version of FusionKit is now available</span>
+              </p>
+            </div>
+            <div className="order-3 mt-2 w-full flex-shrink-0 sm:order-2 sm:mt-0 sm:w-auto">
+              <a
+                href="https://github.com/fusion-kit/fusion-kit"
+                className="flex items-center justify-center rounded-md border border-transparent bg-white px-4 py-2 text-sm font-medium text-indigo-600 shadow-sm hover:bg-indigo-50"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Download now
+              </a>
+            </div>
+            <div className="order-2 flex-shrink-0 sm:order-3 sm:ml-2">
+              <button
+                type="button"
+                className="-mr-1 flex rounded-md p-2 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-white"
+                onClick={() => setIsVisible(false)}
+              >
+                <span className="sr-only">Dismiss</span>
+                <XMarkIcon className="h-6 w-6 text-white" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

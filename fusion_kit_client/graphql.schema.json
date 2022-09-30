@@ -1007,6 +1007,18 @@
         "description": null,
         "fields": [
           {
+            "name": "isUpdateAvailable",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "settings",
             "description": null,
             "args": [],

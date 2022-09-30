@@ -1,0 +1,3 @@
+query IsUpdateAvailable {
+  isUpdateAvailable
+}
