@@ -21,7 +21,10 @@ def get_default_device():
     devices = get_available_devices()
 
     sorted_devices = sorted(devices.items(), key=lambda pair: pair[1])
-    return sorted_devices[-1][0]
+    if len(sorted_devices) > 0:
+        return sorted_devices[-1][0]
+    else:
+        return '' # HACK: Should return `None` instead of an empty string
 
 # Don't allow path separators in filenames (avoids path traversal issues)
 FILENAME_REGEX = r'\A[^/\\]*\Z'
@@ -53,7 +56,9 @@ class Settings():
         for model in self.models:
             errors += self._validate_model(model, data_dir)
 
-        if self.device not in get_available_devices():
+        if get_default_device() == '':
+            errors.append(f'no active devices found (only Nvidia GPUs and Apple Silicon are currently supported)')
+        elif self.device not in get_available_devices():
             errors.append(f'unsupported device: {self.device}')
 
         return errors
