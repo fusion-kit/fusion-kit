@@ -1,0 +1,50 @@
+# Based on `environment.yml` from InvokeAI
+name: fusion-kit-linux
+channels:
+  - conda-forge
+  - pytorch
+  - defaults
+dependencies:
+  - python=3.8.5
+  - pip=20.3
+  - cudatoolkit=11.3
+  - pytorch=1.11.0
+  - torchvision=0.12.0
+  - numpy=1.19.2
+  # Custom dependencies
+  - pyinstaller=5.1
+  - pip:
+    - albumentations==0.4.3
+    - opencv-python==4.5.5.64
+    - pudb==2019.2
+    - imageio==2.9.0
+    - imageio-ffmpeg==0.4.2
+    - pytorch-lightning==1.4.2
+    - omegaconf==2.1.1
+    - realesrgan==0.2.5.0
+    - test-tube>=0.7.5
+    - streamlit==1.12.0
+    - pillow==9.2.0
+    - einops==0.3.0
+    - torch-fidelity==0.3.0
+    - transformers==4.19.2
+    - torchmetrics==0.6.0
+    - kornia==0.6.0
+    - -e git+https://github.com/openai/CLIP.git@d50d76daa670286dd6cacf3bcd80b5e4823fc8e1#egg=clip
+    - -e git+https://github.com/CompVis/taming-transformers.git@24268930bf1dce879235a7fddd0b2355b84d7ea6#egg=taming-transformers
+    - -e git+https://github.com/lstein/k-diffusion.git@ef1bf07627c9a10ba9137e68a0206b844544a7d9#egg=k-diffusion
+    - -e git+https://github.com/lstein/GFPGAN.git@8d2447a2d918f8eba5a4a01463fd48e45126a379#egg=gfpgan
+    - -e ./invoke_ai
+    # Custom dependencies
+    - aiofiles==22.1.0
+    - aiohttp==3.8.3
+    - ariadne[asgi-file-uploads]==0.16.1b1
+    - broadcaster==0.2.0
+    - starlette==0.20.4
+    - uvicorn==0.18.3
+    - websockets==10.3
+    - sqlalchemy==1.4.41
+    - python-ulid==1.1.0
+    - alembic==1.8.1
+    - appdirs==1.4.4
+    - blurhash-numba==0.0.1
