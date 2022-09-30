@@ -1,7 +1,7 @@
 import aiohttp
 from packaging import version
 
-CURRENT_VERSION = version.parse('0.0.0')
+CURRENT_VERSION = version.parse('0.1.0')
 LATEST_VERSION_URL = 'https://content.fusionkit.dev/latest-version.json'
 
 

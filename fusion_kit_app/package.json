@@ -1,7 +1,7 @@
 {
   "name": "fusion_kit_app",
   "productName": "fusion_kit_app",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "My Electron application description",
   "main": ".webpack/main",
   "scripts": {
