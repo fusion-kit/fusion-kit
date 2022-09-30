@@ -83,6 +83,7 @@ export const AppLayout: React.FC = () => {
                           key={item.href}
                           to={item.href}
                           end
+                          onClick={() => setSidebarOpen(false)}
                           className={({ isActive }) => clsx(
                             isActive
                               ? "bg-gray-100 text-gray-900"
@@ -136,6 +137,7 @@ export const AppLayout: React.FC = () => {
                       key={item.href}
                       to={item.href}
                       end
+                      onClick={() => setSidebarOpen(false)}
                       className={({ isActive }) => clsx(
                         isActive
                           ? "bg-gray-200 text-gray-900"
