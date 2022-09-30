@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, shell } from 'electron';
 import { spawn, ChildProcess, ChildProcessWithoutNullStreams } from 'child_process';
 import { join } from 'path';
 
@@ -59,6 +59,12 @@ const createWindow = (): void => {
     } catch (exception) {
       console.warn("could not show error page", exception);
     }
+  });
+
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    console.info("Opening external link...");
+    shell.openExternal(url);
+    return { action: "deny" };
   })
 };
 
