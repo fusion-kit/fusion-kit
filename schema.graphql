@@ -1,4 +1,5 @@
 type Query {
+  isUpdateAvailable: Boolean
   settings: Settings!
 }
 

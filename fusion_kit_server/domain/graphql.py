@@ -2,9 +2,14 @@ from ariadne import ObjectType, SubscriptionType, make_executable_schema, conver
 from domain.dream import gql_dream
 from domain.dream_image import gql_dream_image
 from domain.downloader import gql_model_download
+import domain.versions
 import domain.downloader
 
 query = ObjectType("Query")
+
+@query.field("isUpdateAvailable")
+async def resolve_is_update_available(*_):
+    return await domain.versions.is_update_available()
 
 @query.field("settings")
 def resolve_settings(_, info):
