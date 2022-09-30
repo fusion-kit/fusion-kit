@@ -23,8 +23,8 @@ jobs:
           npm run build
       - name: Build server
         run: |
-          $CONDA/bin/conda activate fusion-kit-linux
-          $CONDA/bin/pyinstaller fusion_kit_server.spec --noconfirm
+          $CONDA/bin/activate fusion-kit-linux
+          pyinstaller fusion_kit_server.spec --noconfirm
       - name: Build app
         run: |
           cd fusion_kit_app
