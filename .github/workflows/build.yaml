@@ -10,6 +10,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v3
+        with:
+          submodules: recursive
       - name: Install Anaconda environment
         run: $CONDA/bin/conda env update --file conda-linux.yaml --name base
       - name: Test PyTorch
