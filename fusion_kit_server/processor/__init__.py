@@ -81,6 +81,10 @@ class Processor():
 
         self.restart_task = asyncio.create_task(finish_restart(self))
 
+    def terminate(self):
+        print("terminating runner")
+        self.runner_process.terminate()
+
 async def runner_broadcaster(processor):
     loop = asyncio.get_running_loop()
     while True:

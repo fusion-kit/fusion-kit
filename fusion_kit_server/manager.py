@@ -52,15 +52,16 @@ class FusionKitManager():
 
 
         self.broadcast = Broadcast("memory://")
+        self.active_dreams = {}
+        self.registered_images = {}
+
+    async def __aenter__(self):
         self.processor = Processor(
             broadcast=self.broadcast,
             settings=self.settings.to_json(),
             data_dir=self.data_dir,
         )
-        self.active_dreams = {}
-        self.registered_images = {}
 
-    async def __aenter__(self):
         self.db_conn = self.db_engine.connect()
         await self.broadcast.connect()
         return self
@@ -68,6 +69,7 @@ class FusionKitManager():
     async def __aexit__(self, exc_type, exc_value, traceback):
         await self.broadcast.disconnect()
         self.db_conn.close()
+        self.processor.terminate()
 
     async def start_dream(self, input_options):
         dream_id = f'd_{ULID()}'
