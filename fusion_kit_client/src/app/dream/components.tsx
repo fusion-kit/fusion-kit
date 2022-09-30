@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { clsx } from "clsx";
 import { ArrowDownTrayIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
 import {
@@ -12,6 +12,7 @@ interface ShowDreamImageProps {
 export const ShowDreamImage: React.FC<ShowDreamImageProps> = (props) => {
   const { image } = props;
 
+  const isComplete = image?.__typename === "FinishedDreamImage";
   const imageUri = getDreamImageUri(image);
   const isLoading = isDreamImageLoading(image);
   const progress = getDreamImageProgress(image);
@@ -50,48 +51,63 @@ export const ShowDreamImage: React.FC<ShowDreamImageProps> = (props) => {
         </BigImageContainer>
       </div>
       <div className="mx-auto py-2 max-w-lg lg:max-w-full lg:pb-0 flex space-x-2">
-        <DreamImageActionButton label="Download">
+        <DreamImageActionLink
+          label="Download"
+          href={imageUri ?? "#"}
+          disabled={!isComplete || imageUri == null}
+          download
+          target="_blank"
+        >
           <ArrowDownTrayIcon className="h-8 w-8" aria-hidden="true" />
-        </DreamImageActionButton>
-        <DreamImageActionButton label="Open in new window">
+        </DreamImageActionLink>
+        <DreamImageActionLink
+          label="Open in new window"
+          href={imageUri ?? "#"}
+          disabled={!isComplete || imageUri == null}
+          target="_blank"
+        >
           <ArrowTopRightOnSquareIcon className="h-full w-full" aria-hidden="true" />
-        </DreamImageActionButton>
+        </DreamImageActionLink>
       </div>
     </div>
   );
 };
 
-type DreamImageActionButtonProps = React.PropsWithChildren<{
+type DreamImageActionLinkProps = React.PropsWithChildren<{
   label: string,
+  href: string,
+  disabled?: boolean,
+  target?: string,
+  download?: boolean,
 }>;
 
-const DreamImageActionButton: React.FC<DreamImageActionButtonProps> = (props) => {
+const DreamImageActionLink: React.FC<DreamImageActionLinkProps> = (props) => {
+  const {
+    label, href, disabled = false, target, download,
+  } = props;
+
+  const onClick: React.MouseEventHandler = useCallback((e) => {
+    if (disabled) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, [disabled]);
+
   return (
-    <button
-      type="button"
-      title={props.label}
-      className="flex h-10 w-10 p-1.5 items-center justify-center rounded-full text-gray-400 border-2 border-gray-400 hover:text-gray-600 hover:border-gray-600 focus:outline-none focus:border-blue-600 focus:text-blue-600"
+    <a
+      href={href}
+      target={target}
+      title={label}
+      download={download}
+      className={clsx(
+        "flex h-10 w-10 p-1.5 items-center justify-center rounded-full border-2 focus:outline-none focus:border-blue-600 focus:text-blue-600",
+        disabled ? "text-gray-200 border-gray-200 cursor-not-allowed" : "text-gray-400 border-gray-400 hover:text-gray-600 hover:border-gray-600",
+      )}
+      onClick={onClick}
     >
       {props.children}
       <span className="sr-only">{props.label}</span>
-    </button>
-  );
-};
-
-type DreamImageActionButtonProps = React.PropsWithChildren<{
-  label: string,
-}>;
-
-const DreamImageActionLink: React.FC<DreamImageActionButtonProps> = (props) => {
-  return (
-    <button
-      type="button"
-      title={props.label}
-      className="flex h-10 w-10 p-1.5 items-center justify-center rounded-full text-gray-400 border-2 border-gray-400 hover:text-gray-600 hover:border-gray-600 focus:outline-none focus:border-blue-600 focus:text-blue-600"
-    >
-      {props.children}
-      <span className="sr-only">{props.label}</span>
-    </button>
+    </a>
   );
 };
 
