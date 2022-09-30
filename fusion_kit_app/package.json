@@ -26,17 +26,7 @@
       },
       "makers": [
         {
-          "name": "@electron-forge/maker-squirrel",
-          "config": {
-            "name": "fusion_kit_app"
-          }
-        },
-        {
-          "name": "@electron-forge/maker-zip",
-          "platforms": [
-            "darwin",
-            "linux"
-          ]
+          "name": "@electron-forge/maker-zip"
         }
       ],
       "plugins": [
