@@ -11,6 +11,7 @@ from ariadne.asgi import GraphQL
 from ariadne.asgi.handlers import GraphQLTransportWSHandler
 import db
 import logging
+from packaging import version
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
@@ -19,6 +20,7 @@ from starlette.routing import Route, WebSocketRoute, Mount
 from starlette.staticfiles import StaticFiles
 import uvicorn
 import domain.graphql
+import domain.versions
 from manager import FusionKitManager
 
 if getattr(sys, 'frozen', False):
@@ -80,6 +82,15 @@ async def main():
 
     # Spawn is required when CUDA is initialized in the parent process
     multiprocessing.set_start_method('spawn')
+
+    if await domain.versions.is_update_available():
+        print('========================================')
+        print()
+        print('An update for FusionKit is available!')
+        print('https://github.com/fusion-kit/fusion-kit')
+        print()
+        print('========================================')
+        print()
 
     async with FusionKitManager(db_config=db_config, data_dir=data_dir) as manager:
         context_builder = domain.graphql.context_builder(manager)
