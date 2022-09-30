@@ -1,7 +1,6 @@
 import React from "react";
 import { clsx } from "clsx";
 import { ArrowDownTrayIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
-import { BookmarkIcon } from "@heroicons/react/24/solid";
 import {
   DreamImage, getDreamImageUri, isDreamImageLoading, getDreamImageProgress, getDreamImageDimensions,
 } from "./hooks";
@@ -51,9 +50,6 @@ export const ShowDreamImage: React.FC<ShowDreamImageProps> = (props) => {
         </BigImageContainer>
       </div>
       <div className="mx-auto py-2 max-w-lg lg:max-w-full lg:pb-0 flex space-x-2">
-        <DreamImageActionButton label="Bookmark">
-          <BookmarkIcon className="h-8 w-8" aria-hidden="true" />
-        </DreamImageActionButton>
         <DreamImageActionButton label="Download">
           <ArrowDownTrayIcon className="h-8 w-8" aria-hidden="true" />
         </DreamImageActionButton>
@@ -70,6 +66,23 @@ type DreamImageActionButtonProps = React.PropsWithChildren<{
 }>;
 
 const DreamImageActionButton: React.FC<DreamImageActionButtonProps> = (props) => {
+  return (
+    <button
+      type="button"
+      title={props.label}
+      className="flex h-10 w-10 p-1.5 items-center justify-center rounded-full text-gray-400 border-2 border-gray-400 hover:text-gray-600 hover:border-gray-600 focus:outline-none focus:border-blue-600 focus:text-blue-600"
+    >
+      {props.children}
+      <span className="sr-only">{props.label}</span>
+    </button>
+  );
+};
+
+type DreamImageActionButtonProps = React.PropsWithChildren<{
+  label: string,
+}>;
+
+const DreamImageActionLink: React.FC<DreamImageActionButtonProps> = (props) => {
   return (
     <button
       type="button"
