@@ -4,7 +4,7 @@ from ariadne import ObjectType
 import torch.cuda
 
 def get_available_devices():
-    available_devices = {'cpu': 0}
+    available_devices = {}
 
     if torch.cuda.is_available():
         available_devices['cuda'] = 20
