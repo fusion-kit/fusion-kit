@@ -12,6 +12,9 @@ def get_available_devices():
         for index in range(torch.cuda.device_count()):
             available_devices[f'cuda:{index}'] = 10
 
+    if torch.backends.mps.is_available():
+        available_devices['mps'] = 19
+
     return available_devices
 
 def get_default_device():
