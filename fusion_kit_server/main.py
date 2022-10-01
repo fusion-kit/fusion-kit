@@ -31,6 +31,12 @@ if getattr(sys, 'frozen', False):
 else:
     project_path = os.path.realpath(os.path.join(os.path.realpath(__file__), '..', '..'))
 
+# Some operations required for Stable Diffusion aren't
+# implemented in the PyTorch MPS backend yet, so fall back to
+# the CPU when required. See this issue:
+# https://github.com/pytorch/pytorch/issues/77764
+os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
+
 graphql_schema_path = os.path.join(project_path, "schema.graphql")
 alembic_ini_path = os.path.join(project_path, "fusion_kit_server", "alembic.ini")
 alembic_script_path = os.path.join(project_path, "fusion_kit_server", "alembic")
