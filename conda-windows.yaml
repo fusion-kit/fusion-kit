@@ -1,4 +1,4 @@
-# Based on `environment.yml` from InvokeAI
+# Based on `environment.yaml` from InvokeAI
 name: fusion-kit-windows
 channels:
   - conda-forge

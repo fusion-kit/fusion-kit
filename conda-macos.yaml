@@ -1,0 +1,59 @@
+# Based on `environment-mac.yaml` from InvokeAI
+name: fusion-kit-macos
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python==3.10.5
+  - pip==22.2.2
+  - pytorch
+  - torchvision
+  - albumentations==1.2.1
+  - coloredlogs==15.0.1
+  - einops==0.4.1
+  - grpcio==1.46.4
+  - humanfriendly==10.0
+  - imageio==2.21.2
+  - imageio-ffmpeg==0.4.7
+  - imgaug==0.4.0
+  - kornia==0.6.7
+  - mpmath==1.2.1
+  - nomkl
+  - numpy==1.23.2
+  - omegaconf==2.1.1
+  - onnx==1.12.0
+  - onnxruntime==1.12.1
+  - pudb==2022.1
+  - pytorch-lightning==1.6.5
+  - scipy==1.9.1
+  - streamlit==1.12.2
+  - sympy==1.10.1
+  - tensorboard==2.9.0
+  - torchmetrics==0.9.3
+  # Custom dependencies
+  - nodejs=18.10.0
+  - pyinstaller=5.1
+  - pip:
+    - opencv-python==4.6.0
+    - realesrgan==0.2.5.0
+    - test-tube==0.7.5
+    - transformers==4.21.2
+    - torch-fidelity==0.3.0
+    - -e git+https://github.com/CompVis/taming-transformers.git@24268930bf1dce879235a7fddd0b2355b84d7ea6#egg=taming-transformers
+    - -e git+https://github.com/openai/CLIP.git@d50d76daa670286dd6cacf3bcd80b5e4823fc8e1#egg=clip
+    - git+https://github.com/Birch-san/k-diffusion.git@7f16b2c33411f26b3eae78d10648d625cb0c1095#egg=k-diffusion
+    - -e git+https://github.com/lstein/GFPGAN.git@65034f83e732e18add4a033ff39440617b5c5c6a#egg=gfpgan
+    - -e ./invoke_ai
+    # Custom dependencies
+    - aiofiles==22.1.0
+    - aiohttp==3.8.3
+    - ariadne[asgi-file-uploads]==0.16.1b1
+    - broadcaster==0.2.0
+    - starlette==0.20.4
+    - uvicorn==0.18.3
+    - websockets==10.3
+    - sqlalchemy==1.4.41
+    - python-ulid==1.1.0
+    - alembic==1.8.1
+    - appdirs==1.4.4
+    - blurhash-numba==0.0.1
