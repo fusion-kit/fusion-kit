@@ -1,6 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import copy_metadata
+import os
+import sys
+from PyInstaller.utils.hooks import copy_metadata, collect_data_files
 
+sys.setrecursionlimit(sys.getrecursionlimit() * 5)
 
 block_cipher = None
 
@@ -13,10 +16,23 @@ datas = [
     ('src/clip/clip/bpe_simple_vocab_16e6.txt.gz', 'clip')
 ]
 datas += copy_metadata('transformers', recursive=True)
+datas += copy_metadata('rich', recursive=True)
+datas += collect_data_files('kornia', include_py_files=True)
+
+pathex = []
+
+# HACK: For some reason, on macOS, the built binary doesn't run unless the paths
+# for some vendored libraries from `wandb` are included in `pathex`
+if sys.platform.startswith('darwin'):
+    import wandb
+
+    wandb_dir = os.path.dirname(os.path.realpath(wandb.__file__))
+    pathex.append(os.path.join(wandb_dir, 'vendor', 'gql-0.2.0'))
+    pathex.append(os.path.join(wandb_dir, 'vendor', 'graphql-core-1.1'))
 
 a = Analysis(
     ['fusion_kit_server/main.py'],
-    pathex=[],
+    pathex=pathex,
     binaries=[],
     datas=datas,
     hiddenimports=[
